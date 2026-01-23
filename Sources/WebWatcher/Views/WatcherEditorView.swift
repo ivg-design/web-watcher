@@ -24,6 +24,10 @@ struct WatcherEditorView: View {
     @State private var notificationBodyTemplate: String = ""
     @State private var showingIconPicker = false
 
+    // Safari behavior
+    @State private var forceRefresh: Bool = false
+    @State private var refreshDelay: Double = 2.0
+
     @State private var testResult: String?
     @State private var isTesting: Bool = false
     @State private var previewStatus: String?
@@ -150,6 +154,31 @@ struct WatcherEditorView: View {
 
                     // Sound
                     Toggle("Play sound with notification", isOn: $notificationSound)
+
+                    // Force Refresh
+                    VStack(alignment: .leading, spacing: 4) {
+                        Toggle("Force refresh before checking", isOn: $forceRefresh)
+                        Text("Reloads the Safari tab before scraping. Enable this if values appear stale or don't update (Safari suspends background tabs).")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if forceRefresh {
+                            HStack {
+                                Text("Settle delay:")
+                                    .font(.caption)
+                                Slider(value: $refreshDelay, in: 0.5...5.0, step: 0.5)
+                                    .frame(width: 120)
+                                Text(String(format: "%.1fs", refreshDelay))
+                                    .font(.caption)
+                                    .frame(width: 30)
+                            }
+                            .padding(.top, 4)
+                            Text("Time to wait after page loads for dynamic content to update.")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
 
                     Divider()
 
@@ -332,6 +361,8 @@ struct WatcherEditorView: View {
                 customIconPath = watcher.customIconPath ?? ""
                 notificationTitle = watcher.notificationTitle ?? ""
                 notificationBodyTemplate = watcher.notificationBodyTemplate ?? ""
+                forceRefresh = watcher.forceRefresh
+                refreshDelay = watcher.refreshDelay
             }
         }
     }
@@ -389,6 +420,8 @@ struct WatcherEditorView: View {
         watcher.customIconPath = customIconPath.isEmpty ? nil : customIconPath
         watcher.notificationTitle = notificationTitle.isEmpty ? nil : notificationTitle
         watcher.notificationBodyTemplate = notificationBodyTemplate.isEmpty ? nil : notificationBodyTemplate
+        watcher.forceRefresh = forceRefresh
+        watcher.refreshDelay = refreshDelay
 
         if isEditing {
             store.update(watcher)

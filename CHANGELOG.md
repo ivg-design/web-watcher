@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-23
+
+### Added
+
+- **Force Refresh option** - Reloads Safari tab before scraping to fix stale content
+  - Safari aggressively suspends background tabs, causing DOM reads to return outdated values
+  - Enable "Force refresh before checking" in watcher settings to force a page reload
+- **Configurable settle delay** - Slider to set wait time (0.5s - 5.0s) after page reload
+  - Allows dynamic JavaScript content to fully update before scraping
+  - Default: 2.0 seconds
+- Background-safe refresh - Safari stays in background, focus is preserved
+- Version number displayed in menu bar popover header
+- Info button in popover header linking to GitHub README documentation
+
+### Fixed
+
+- Safari background tab suspension causing stale/outdated notification counts
+- Dynamic content not updating without manual page reload
+- Version display in Settings now reads from bundle (was hardcoded as 1.0.0)
+
+### Technical
+
+- Added `forceRefresh` and `refreshDelay` properties to Watcher model
+- AppleScript waits for `document.readyState === "complete"` before scraping
+- Backwards-compatible Codable implementation (existing watchers load with defaults)
+
 ## [1.1.0] - 2026-01-23
 
 ### Changed

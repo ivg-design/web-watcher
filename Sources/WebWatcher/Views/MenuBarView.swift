@@ -14,14 +14,27 @@ struct MenuBarView: View {
             HStack {
                 Text("Web Watcher")
                     .font(.headline)
+                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
                 Spacer()
+
+                Button(action: {
+                    if let url = URL(string: "https://github.com/ivg-design/web-watcher#readme") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                }
+                .buttonStyle(.plain)
+                .help("View documentation")
+
                 if watcherService.isRunning {
                     Circle()
                         .fill(.green)
                         .frame(width: 8, height: 8)
-                    Text("Active")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
             }
             .padding(.horizontal)

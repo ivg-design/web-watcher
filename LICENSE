@@ -1,6 +1,6 @@
-MIT License
+MIT License with Attribution Requirement
 
-Copyright (c) 2025 Ivan Googhwin
+Copyright (c) 2025-2026 IVGDesign
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -9,8 +9,20 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+2. ATTRIBUTION REQUIREMENT: Any use, modification, or distribution of this
+   Software, whether in source or binary form, must include clear and visible
+   attribution to the original author(s) in one of the following ways:
+   - In the application's About section or credits
+   - In the README or documentation of derivative works
+   - In a visible location within the user interface (for GUI applications)
+
+   Attribution must include:
+   - The project name: "WebWatcher"
+   - The original author: "IVGDesign"
+   - A link to the original repository (if publicly available)
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,

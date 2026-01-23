@@ -68,7 +68,7 @@ enum CheckInterval: Int, Codable, CaseIterable {
 }
 
 /// A single watcher configuration
-struct Watcher: Identifiable, Codable {
+struct Watcher: Identifiable {
     var id: UUID
     var name: String
     var url: String
@@ -84,6 +84,10 @@ struct Watcher: Identifiable, Codable {
     var customIconPath: String? // Path to custom icon image
     var notificationTitle: String? // Custom title (defaults to watcher name)
     var notificationBodyTemplate: String? // Custom body template with {value} placeholder
+
+    // Safari behavior
+    var forceRefresh: Bool // Reload tab before checking (fixes Safari suspending background tabs)
+    var refreshDelay: Double // Seconds to wait after reload before scraping (default 2.0)
 
     // State
     var lastValue: String?
@@ -104,7 +108,9 @@ struct Watcher: Identifiable, Codable {
         actionURL: String? = nil,
         customIconPath: String? = nil,
         notificationTitle: String? = nil,
-        notificationBodyTemplate: String? = nil
+        notificationBodyTemplate: String? = nil,
+        forceRefresh: Bool = false,
+        refreshDelay: Double = 2.0
     ) {
         self.id = id
         self.name = name
@@ -119,6 +125,8 @@ struct Watcher: Identifiable, Codable {
         self.customIconPath = customIconPath
         self.notificationTitle = notificationTitle
         self.notificationBodyTemplate = notificationBodyTemplate
+        self.forceRefresh = forceRefresh
+        self.refreshDelay = refreshDelay
         self.lastValue = nil
         self.lastCheck = nil
         self.lastError = nil
@@ -158,6 +166,40 @@ struct Watcher: Identifiable, Codable {
     var mayHaveIssue: Bool {
         guard let value = lastValue else { return false }
         return value.hasPrefix("NO_NUMBER:")
+    }
+}
+
+// MARK: - Codable (with backwards compatibility)
+extension Watcher: Codable {
+    enum CodingKeys: String, CodingKey {
+        case id, name, url, selector, selectorType, watchType, interval, isEnabled
+        case notificationSound, actionURL, customIconPath, notificationTitle, notificationBodyTemplate
+        case forceRefresh, refreshDelay
+        case lastValue, lastCheck, lastError, consecutiveErrors
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        url = try container.decode(String.self, forKey: .url)
+        selector = try container.decode(String.self, forKey: .selector)
+        selectorType = try container.decode(SelectorType.self, forKey: .selectorType)
+        watchType = try container.decode(WatchType.self, forKey: .watchType)
+        interval = try container.decode(CheckInterval.self, forKey: .interval)
+        isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+        notificationSound = try container.decode(Bool.self, forKey: .notificationSound)
+        actionURL = try container.decodeIfPresent(String.self, forKey: .actionURL)
+        customIconPath = try container.decodeIfPresent(String.self, forKey: .customIconPath)
+        notificationTitle = try container.decodeIfPresent(String.self, forKey: .notificationTitle)
+        notificationBodyTemplate = try container.decodeIfPresent(String.self, forKey: .notificationBodyTemplate)
+        // Backwards compatibility: default to false if not present
+        forceRefresh = try container.decodeIfPresent(Bool.self, forKey: .forceRefresh) ?? false
+        refreshDelay = try container.decodeIfPresent(Double.self, forKey: .refreshDelay) ?? 2.0
+        lastValue = try container.decodeIfPresent(String.self, forKey: .lastValue)
+        lastCheck = try container.decodeIfPresent(Date.self, forKey: .lastCheck)
+        lastError = try container.decodeIfPresent(String.self, forKey: .lastError)
+        consecutiveErrors = try container.decodeIfPresent(Int.self, forKey: .consecutiveErrors) ?? 0
     }
 }
 

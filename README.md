@@ -4,7 +4,7 @@ A lightweight macOS menu bar utility that monitors websites for changes and deli
 
 ![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.0-orange)
-![License](https://img.shields.io/badge/License-MIT-green)
+![License](https://img.shields.io/badge/License-MIT%20with%20Attribution-green)
 
 ## Features
 
@@ -19,6 +19,7 @@ A lightweight macOS menu bar utility that monitors websites for changes and deli
   - Element existence/disappearance detection
 - **Native Notifications** - Rich macOS notifications with custom icons, titles, and body templates
 - **Configurable Intervals** - Check every 15s, 30s, 1, 2, 5, 10, or 30 minutes
+- **Force Refresh** - Optional page reload before checking (fixes Safari's background tab suspension)
 - **Custom Icons** - Set different notification icons for different watchers
 - **Launch at Login** - Optionally start automatically when you log in
 - **Persistent Configuration** - Your watchers are saved and restored between sessions
@@ -29,8 +30,8 @@ A lightweight macOS menu bar utility that monitors websites for changes and deli
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/aspect-build/web-watcher.git
-   cd web-watcher/WebWatcher
+   git clone https://github.com/ivg-design/web-watcher.git
+   cd web-watcher
    ```
 
 2. Build with Xcode:
@@ -166,9 +167,19 @@ Settings are stored in:
 2. Ensure "Allow Notifications" is enabled
 3. Set alert style to "Banners" or "Alerts" (not "None")
 
+### Stale/outdated values (not updating)
+
+Safari suspends background tabs to save resources. If you notice values not updating:
+
+1. Edit the watcher and enable **"Force refresh before checking"**
+2. Adjust the **settle delay** if needed (default 2.0s works for most sites)
+3. This forces a page reload before each check, ensuring fresh content
+
+**Note:** Force refresh adds latency to each check but guarantees up-to-date values.
+
 ### Element not found after sleep
 
-Safari tabs may suspend after sleep. Click on the Safari window to wake it up, then WebWatcher will work again.
+Safari tabs may suspend after sleep. Click on the Safari window to wake it up, or enable "Force refresh" in watcher settings for automatic recovery.
 
 ## Architecture
 
@@ -201,7 +212,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License with Attribution Requirement** - see the [LICENSE](LICENSE) file for details.
+
+**Attribution required**: Any use or distribution must include visible attribution to the original author (IVGDesign) and project name (WebWatcher).
 
 ## Acknowledgments
 

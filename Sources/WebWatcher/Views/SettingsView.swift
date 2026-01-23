@@ -115,7 +115,7 @@ struct SettingsView: View {
                                 Text("Web Watcher")
                                     .font(.headline)
                                 Spacer()
-                                Text("v1.0.0")
+                                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")")
                                     .foregroundColor(.secondary)
                             }
                             Text("Monitor web pages for changes and get native macOS notifications.")

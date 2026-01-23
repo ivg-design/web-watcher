@@ -45,6 +45,39 @@ class SafariScraper {
         let js = generateJavaScript(for: watcher)
         let escapedJS = js.replacingOccurrences(of: "\"", with: "\\\"")
 
+        // Optional reload block - forces Safari to refresh stale tabs
+        let reloadBlock: String
+        if watcher.forceRefresh {
+            let settleDelay = watcher.refreshDelay
+            reloadBlock = """
+
+            -- Reload the tab to get fresh content (Safari suspends background tabs)
+            tell foundTab
+                set currentURL to URL of foundTab
+                set URL of foundTab to currentURL
+            end tell
+
+            -- Wait for page to finish loading (up to 15 seconds)
+            set maxWait to 15
+            set waitCount to 0
+            repeat while waitCount < maxWait
+                delay 0.5
+                set waitCount to waitCount + 0.5
+                try
+                    tell foundTab
+                        set loadState to do JavaScript "document.readyState"
+                        if loadState is "complete" then exit repeat
+                    end tell
+                end try
+            end repeat
+
+            -- Additional settle time for dynamic content (configurable)
+            delay \(settleDelay)
+"""
+        } else {
+            reloadBlock = ""
+        }
+
         // AppleScript that finds the tab by URL and executes JavaScript
         // Saves and restores frontmost app to prevent Safari from stealing focus
         return """
@@ -74,7 +107,7 @@ class SafariScraper {
             if foundTab is missing value then
                 return "ERROR:Tab not found. Open \(escapedURL) in Safari."
             end if
-
+        \(reloadBlock)
             -- Execute JavaScript in the found tab
             tell foundTab
                 set jsResult to do JavaScript "\(escapedJS)"
