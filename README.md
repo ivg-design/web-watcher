@@ -120,6 +120,33 @@ Settings are stored in:
 ~/Library/Application Support/WebWatcher/settings.json
 ```
 
+## Important Limitations
+
+### Authentication / Logged-in Content
+
+**WebWatcher uses Safari's cookies and sessions.** This has important implications:
+
+- **To monitor sites that require login** (like Contra messages, private dashboards, etc.), you **must be logged into that site in Safari**
+- WebWatcher shares session data with Safari via `WKWebsiteDataStore.default()`
+- **Chrome, Firefox, and other browsers do NOT share sessions** with WebWatcher
+- If your Safari session expires, WebWatcher will see the logged-out page
+
+**How to set up for authenticated sites:**
+
+1. Open **Safari** (not Chrome/Firefox)
+2. Navigate to the site you want to monitor (e.g., Contra.com)
+3. Log in and ensure "Remember me" or "Stay logged in" is checked
+4. Now WebWatcher will be able to see your logged-in content
+
+**Warning:** If WebWatcher reports finding elements but you're not logged into Safari, it's likely finding elements on the **public/logged-out version** of the page, not your actual private content.
+
+### Other Limitations
+
+- Some sites with aggressive bot detection may block headless WebViews
+- Sites using advanced anti-scraping techniques may not work
+- Two-factor authentication prompts cannot be handled automatically
+- Session timeouts vary by site - you may need to re-login periodically in Safari
+
 ## Permissions
 
 WebWatcher requires the following permissions:
