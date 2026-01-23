@@ -52,10 +52,11 @@ struct SettingsView: View {
                                 Text("Page load delay:")
                                 Spacer()
                                 Picker("", selection: $settings.pageLoadDelay) {
-                                    Text("1 second").tag(1.0)
                                     Text("2 seconds").tag(2.0)
                                     Text("3 seconds").tag(3.0)
                                     Text("5 seconds").tag(5.0)
+                                    Text("10 seconds").tag(10.0)
+                                    Text("15 seconds").tag(15.0)
                                 }
                                 .frame(width: 120)
                             }

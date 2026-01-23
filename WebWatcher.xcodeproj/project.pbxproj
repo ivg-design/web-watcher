@@ -10,7 +10,6 @@
 		AA0000010000000000000001 /* WebWatcherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000001 /* WebWatcherApp.swift */; };
 		AA0000010000000000000002 /* Watcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000002 /* Watcher.swift */; };
 		AA0000010000000000000003 /* WatcherStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000003 /* WatcherStore.swift */; };
-		AA0000010000000000000004 /* WebScraper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000004 /* WebScraper.swift */; };
 		AA0000010000000000000005 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000005 /* NotificationService.swift */; };
 		AA0000010000000000000006 /* WatcherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000006 /* WatcherService.swift */; };
 		AA0000010000000000000007 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000007 /* MenuBarView.swift */; };
@@ -18,13 +17,13 @@
 		AA0000010000000000000009 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000009 /* AppSettings.swift */; };
 		AA0000010000000000000010 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000010 /* SettingsView.swift */; };
 		AA0000010000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000011 /* Assets.xcassets */; };
+		AA0000010000000000000014 /* SafariScraper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000014 /* SafariScraper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		AA0000020000000000000001 /* WebWatcherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebWatcherApp.swift; sourceTree = "<group>"; };
 		AA0000020000000000000002 /* Watcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watcher.swift; sourceTree = "<group>"; };
 		AA0000020000000000000003 /* WatcherStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatcherStore.swift; sourceTree = "<group>"; };
-		AA0000020000000000000004 /* WebScraper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebScraper.swift; sourceTree = "<group>"; };
 		AA0000020000000000000005 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		AA0000020000000000000006 /* WatcherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatcherService.swift; sourceTree = "<group>"; };
 		AA0000020000000000000007 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
@@ -32,6 +31,7 @@
 		AA0000020000000000000009 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		AA0000020000000000000010 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AA0000020000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000020000000000000014 /* SafariScraper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariScraper.swift; sourceTree = "<group>"; };
 		AA0000030000000000000001 /* WebWatcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebWatcher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000040000000000000001 /* WebWatcher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WebWatcher.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -97,9 +97,9 @@
 		AA0000110000000000000001 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000020000000000000004 /* WebScraper.swift */,
 				AA0000020000000000000005 /* NotificationService.swift */,
 				AA0000020000000000000006 /* WatcherService.swift */,
+				AA0000020000000000000014 /* SafariScraper.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -186,13 +186,13 @@
 				AA0000010000000000000001 /* WebWatcherApp.swift in Sources */,
 				AA0000010000000000000002 /* Watcher.swift in Sources */,
 				AA0000010000000000000003 /* WatcherStore.swift in Sources */,
-				AA0000010000000000000004 /* WebScraper.swift in Sources */,
 				AA0000010000000000000005 /* NotificationService.swift in Sources */,
 				AA0000010000000000000006 /* WatcherService.swift in Sources */,
 				AA0000010000000000000007 /* MenuBarView.swift in Sources */,
 				AA0000010000000000000008 /* WatcherEditorView.swift in Sources */,
 				AA0000010000000000000009 /* AppSettings.swift in Sources */,
 				AA0000010000000000000010 /* SettingsView.swift in Sources */,
+				AA0000010000000000000014 /* SafariScraper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -338,6 +338,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "WebWatcher needs to read web pages from Safari to monitor for changes.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -368,6 +369,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "WebWatcher needs to read web pages from Safari to monitor for changes.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

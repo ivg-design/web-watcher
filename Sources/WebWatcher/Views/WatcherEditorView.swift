@@ -59,7 +59,7 @@ struct WatcherEditorView: View {
 
                     // URL
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("URL to Monitor")
+                        Text("URL to Monitor (must be open in Safari)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         TextField("https://example.com/page", text: $url)
@@ -264,12 +264,24 @@ struct WatcherEditorView: View {
                         }
 
                         if let result = testResult {
+                            let isError = result.starts(with: "Error") ||
+                                          result.contains("ELEMENT_NOT_FOUND") ||
+                                          result.contains("NO_NUMBER:")
+                            let isWarning = result.contains("NO_NUMBER:")
+
                             HStack(alignment: .top) {
-                                Image(systemName: result.starts(with: "Error") ? "xmark.circle" : "checkmark.circle")
-                                    .foregroundColor(result.starts(with: "Error") ? .red : .green)
-                                Text(result)
-                                    .font(.caption)
-                                    .foregroundColor(result.starts(with: "Error") ? .red : .primary)
+                                Image(systemName: isError ? (isWarning ? "exclamationmark.triangle" : "xmark.circle") : "checkmark.circle")
+                                    .foregroundColor(isError ? (isWarning ? .orange : .red) : .green)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(result)
+                                        .font(.caption)
+                                        .foregroundColor(isError ? (isWarning ? .orange : .red) : .primary)
+                                    if result.contains("ELEMENT_NOT_FOUND") {
+                                        Text("Check your selector - element doesn't exist on page")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
                             }
                             .padding(8)
                             .background(Color.gray.opacity(0.1))
@@ -338,7 +350,7 @@ struct WatcherEditorView: View {
         )
 
         Task {
-            let scraper = WebScraper()
+            let scraper = SafariScraper.shared
             let result = await scraper.check(testWatcher)
 
             await MainActor.run {
@@ -346,7 +358,17 @@ struct WatcherEditorView: View {
                 if let error = result.error {
                     testResult = "Error: \(error)"
                 } else if let value = result.value {
-                    testResult = "Found: \"\(value)\""
+                    // Format special error values
+                    if value == "ELEMENT_NOT_FOUND" {
+                        testResult = "ELEMENT_NOT_FOUND - Selector doesn't match any element"
+                    } else if value.hasPrefix("NO_NUMBER:") {
+                        let content = String(value.dropFirst(10))
+                        testResult = "NO_NUMBER: Found text \"\(content)\" but no number"
+                    } else if value == "0" {
+                        testResult = "Found: 0 (no badge visible - element is empty)"
+                    } else {
+                        testResult = "Found: \"\(value)\""
+                    }
                 } else {
                     testResult = "No value found (element may not exist)"
                 }

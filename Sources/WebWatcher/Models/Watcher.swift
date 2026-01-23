@@ -135,16 +135,29 @@ struct Watcher: Identifiable, Codable {
         }
         switch watchType {
         case .badgeNumber:
-            return value == "0" ? "No new" : "\(value) new"
+            if value == "ELEMENT_NOT_FOUND" || value == "NO_BADGE" || value == "0" || value.hasPrefix("NO_NUMBER:") {
+                return "Nothing new"
+            } else {
+                return "\(value) new"
+            }
         case .elementCount:
+            if value == "0" {
+                return "Nothing new"
+            }
             return "\(value) items"
         case .textChange:
             return "Last: \(value.prefix(30))..."
         case .elementExists:
-            return value == "true" ? "Present" : "Not found"
+            return value == "true" ? "Present" : "Nothing new"
         case .elementDisappears:
             return value == "true" ? "Still there" : "Gone"
         }
+    }
+
+    /// Whether the current value indicates a potential issue with the selector
+    var mayHaveIssue: Bool {
+        guard let value = lastValue else { return false }
+        return value.hasPrefix("NO_NUMBER:")
     }
 }
 

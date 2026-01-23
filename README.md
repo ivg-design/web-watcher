@@ -9,15 +9,17 @@ A lightweight macOS menu bar utility that monitors websites for changes and deli
 ## Features
 
 - **Menu Bar App** - Lives quietly in your menu bar, no dock icon clutter
+- **Safari Integration** - Uses your existing Safari sessions (no separate login required!)
 - **Multiple Watchers** - Monitor multiple websites simultaneously
 - **Flexible Selectors** - Use CSS selectors or XPath expressions to target specific elements
 - **Watch Types**:
-  - Detect any changes to element content
-  - Watch for specific text to appear
-  - Watch for specific text to disappear
+  - Badge/Number tracking (e.g., notification counts)
+  - Element count monitoring
+  - Text change detection
+  - Element existence/disappearance detection
 - **Native Notifications** - Rich macOS notifications with custom icons, titles, and body templates
-- **Configurable Intervals** - Check every 1, 5, 15, 30 minutes or hourly
-- **Custom Icons** - Set different notification icons for different watchers (e.g., Contra icon for Contra, Rive icon for Rive)
+- **Configurable Intervals** - Check every 15s, 30s, 1, 2, 5, 10, or 30 minutes
+- **Custom Icons** - Set different notification icons for different watchers
 - **Launch at Login** - Optionally start automatically when you log in
 - **Persistent Configuration** - Your watchers are saved and restored between sessions
 
@@ -28,85 +30,108 @@ A lightweight macOS menu bar utility that monitors websites for changes and deli
 1. Clone the repository:
    ```bash
    git clone https://github.com/aspect-build/web-watcher.git
-   cd web-watcher
+   cd web-watcher/WebWatcher
    ```
 
-2. Open in Xcode:
+2. Build with Xcode:
    ```bash
-   open WebWatcher.xcodeproj
+   xcodebuild -scheme WebWatcher -configuration Release build
    ```
 
-3. Build and run (⌘R)
+3. Copy to Applications:
+   ```bash
+   cp -R ~/Library/Developer/Xcode/DerivedData/WebWatcher-*/Build/Products/Release/WebWatcher.app /Applications/
+   ```
 
 ### Requirements
 
 - macOS 13.0 or later
+- Safari (for authenticated content)
 - Xcode 15.0 or later (for building from source)
+
+## Setup
+
+### One-Time Safari Setup
+
+WebWatcher reads content from Safari tabs using AppleScript. You need to enable this once:
+
+1. Open Safari → Settings → Advanced
+2. Check **"Show Develop menu in menu bar"**
+3. In the menu bar: Develop → **"Allow JavaScript from Apple Events"**
+
+### Permissions
+
+On first run, WebWatcher will request:
+
+1. **Automation permission** - To read content from Safari tabs
+2. **Notification permission** - To deliver native macOS notifications
+   - Go to System Settings → Notifications → WebWatcher
+   - Enable "Allow Notifications"
+   - Set alert style to "Banners" or "Alerts"
 
 ## Usage
 
+### How It Works
+
+WebWatcher reads content directly from your Safari tabs. This means:
+
+- **You stay logged in** - Uses your existing Safari sessions
+- **No separate login needed** - If you're logged into a site in Safari, WebWatcher can read it
+- **Safari must have the tab open** - Keep the monitored page open in Safari (can be minimized)
+
 ### Adding a Watcher
 
-1. Click the WebWatcher icon in your menu bar
-2. Click the "+" button to add a new watcher
-3. Configure your watcher:
-   - **Name**: A friendly name for this watcher
-   - **URL**: The webpage to monitor
+1. **Open the site in Safari** and log in if needed
+2. Click the WebWatcher icon in your menu bar
+3. Click the "+" button to add a new watcher
+4. Configure your watcher:
+   - **Name**: A friendly name (e.g., "Contra Notifications")
+   - **URL**: The base URL of the page open in Safari (e.g., `https://contra.com`)
    - **Selector**: CSS selector or XPath to the element you want to watch
-   - **Selector Type**: Choose between CSS or XPath
-   - **Watch Type**: What kind of change to detect
-   - **Check Interval**: How often to check for changes
-   - **Custom Icon**: (Optional) Path to a custom notification icon
-   - **Notification Title/Body**: Customize the notification appearance
+   - **Watch Type**: Badge Number for notification counts
+   - **Check Interval**: How often to check
+5. Click **"Test Selector"** to verify it works
+6. Click "Save"
 
-4. Click "Save"
+### Finding Selectors
+
+In Safari, right-click on the element you want to monitor → **Inspect Element**. Look for:
+
+- `data-testid` attributes (most stable): `[data-testid="unread-notifications-count"]`
+- Unique class names: `.notification-badge`
+- Unique IDs: `#message-count`
+
+**Tip:** `data-testid` attributes are kept stable by developers for testing purposes.
 
 ### Selector Examples
 
 **CSS Selectors:**
 ```css
+/* Data attribute (recommended) */
+[data-testid="unread-notifications-count"]
+
 /* Element with specific class */
 .message-badge
 
-/* Element with ID */
-#notification-count
-
 /* Nested element */
 .inbox .unread-count
-
-/* Attribute selector */
-[data-testid="message-indicator"]
 ```
 
 **XPath Expressions:**
 ```xpath
-/* Element by class */
-//div[@class='message-badge']
-
-/* Element containing text */
-//span[contains(text(), 'unread')]
-
-/* Nested path */
-//div[@id='inbox']//span[@class='count']
+//div[@data-testid='notification-count']
+//span[contains(@class, 'badge')]
 ```
 
 ### Notification Templates
 
 Use placeholders in your notification body:
-- `{value}` - The current value of the watched element
-- `{name}` - The name of the watcher
+- `{value}` - The current value (e.g., "3")
+- `{name}` - The watcher name
 
 Example: `You have {value} new messages in {name}`
 
 ## Configuration
-
-### Settings
-
-Access settings via the gear icon in the popover:
-
-- **Launch at Login** - Start WebWatcher when you log into your Mac
-- **Default Check Interval** - Default interval for new watchers
-- **Page Load Delay** - Wait time after page loads before checking (useful for JavaScript-heavy sites)
 
 ### Data Storage
 
@@ -120,42 +145,30 @@ Settings are stored in:
 ~/Library/Application Support/WebWatcher/settings.json
 ```
 
-## Important Limitations
+## Troubleshooting
 
-### Authentication / Logged-in Content
+### "Tab not found" error
 
-**WebWatcher uses Safari's cookies and sessions.** This has important implications:
+- Ensure Safari has the page open (check the URL matches)
+- The URL in WebWatcher should match the Safari tab (use base domain like `https://contra.com`)
+- Don't use `www.` if Safari shows it without
 
-- **To monitor sites that require login** (like Contra messages, private dashboards, etc.), you **must be logged into that site in Safari**
-- WebWatcher shares session data with Safari via `WKWebsiteDataStore.default()`
-- **Chrome, Firefox, and other browsers do NOT share sessions** with WebWatcher
-- If your Safari session expires, WebWatcher will see the logged-out page
+### "Allow JavaScript from Apple Events" error
 
-**How to set up for authenticated sites:**
+1. Open Safari → Settings → Advanced
+2. Enable "Show Develop menu in menu bar"
+3. Menu bar: Develop → "Allow JavaScript from Apple Events"
+4. Restart Safari
 
-1. Open **Safari** (not Chrome/Firefox)
-2. Navigate to the site you want to monitor (e.g., Contra.com)
-3. Log in and ensure "Remember me" or "Stay logged in" is checked
-4. Now WebWatcher will be able to see your logged-in content
+### Notifications not appearing
 
-**Warning:** If WebWatcher reports finding elements but you're not logged into Safari, it's likely finding elements on the **public/logged-out version** of the page, not your actual private content.
+1. Check System Settings → Notifications → WebWatcher
+2. Ensure "Allow Notifications" is enabled
+3. Set alert style to "Banners" or "Alerts" (not "None")
 
-### Other Limitations
+### Element not found after sleep
 
-- Some sites with aggressive bot detection may block headless WebViews
-- Sites using advanced anti-scraping techniques may not work
-- Two-factor authentication prompts cannot be handled automatically
-- Session timeouts vary by site - you may need to re-login periodically in Safari
-
-## Permissions
-
-WebWatcher requires the following permissions:
-
-- **Notifications** - To deliver native macOS notifications
-  - Go to System Settings → Notifications → WebWatcher
-  - Enable "Allow Notifications"
-  - Set alert style to "Banners" or "Alerts"
-  - Enable "Play sound for notifications"
+Safari tabs may suspend after sleep. Click on the Safari window to wake it up, then WebWatcher will work again.
 
 ## Architecture
 
@@ -167,37 +180,20 @@ Sources/WebWatcher/
 │   ├── WatcherStore.swift   # Persistence layer
 │   └── AppSettings.swift    # Global settings
 ├── Services/
-│   ├── WebScraper.swift     # WKWebView-based web scraping
+│   ├── SafariScraper.swift  # AppleScript-based Safari scraping
 │   ├── WatcherService.swift # Background monitoring service
 │   └── NotificationService.swift # Native notification handling
-├── Views/
-│   ├── MenuBarView.swift    # Main popover UI
-│   ├── WatcherEditorView.swift # Add/edit watcher form
-│   └── SettingsView.swift   # Settings screen
-└── Assets.xcassets/         # App icons
+└── Views/
+    ├── MenuBarView.swift    # Main popover UI
+    ├── WatcherEditorView.swift # Add/edit watcher form
+    └── SettingsView.swift   # Settings screen
 ```
 
-## Troubleshooting
+## Known Limitations
 
-### Notifications not appearing
-
-1. Check System Settings → Notifications → WebWatcher
-2. Ensure "Allow Notifications" is enabled
-3. Set alert style to "Banners" or "Alerts" (not "None")
-4. Enable "Play sound for notifications" if you want audio
-
-### Element not found
-
-1. Verify the URL is correct and accessible
-2. Check your selector in browser DevTools
-3. Increase "Page Load Delay" in settings for JavaScript-heavy sites
-4. Try using XPath if CSS selector isn't working
-
-### App not starting at login
-
-1. Go to Settings in the app
-2. Toggle "Launch at Login" off and on again
-3. Check System Settings → General → Login Items
+- **Requires Safari** - The monitored page must be open in a Safari tab
+- **Sleep/Wake** - Safari tabs may need interaction after waking from sleep
+- **No Firefox/Chrome** - Only Safari is supported (AppleScript limitation)
 
 ## Contributing
 
@@ -210,5 +206,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Built with SwiftUI and AppKit
-- Uses WKWebView for web scraping
+- Uses AppleScript for Safari integration
 - SF Symbols for UI icons

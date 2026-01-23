@@ -9,7 +9,7 @@ class WatcherService: ObservableObject {
 
     private var store: WatcherStore
     private var timers: [UUID: Timer] = [:]
-    private let scraper = WebScraper()
+    private let scraper = SafariScraper.shared
 
     init(store: WatcherStore) {
         self.store = store

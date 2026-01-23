@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-23
+
+### Changed
+
+- **Major architecture change**: Switched from WKWebView to Safari AppleScript integration
+- WebWatcher now reads content directly from Safari tabs instead of isolated WebView
+- No separate login required - uses your existing Safari sessions
+- Removed WebScraper.swift and LoginWebView.swift (no longer needed)
+- Standardized status messages to show "Nothing new" consistently
+
+### Added
+
+- SafariScraper.swift - AppleScript-based Safari tab scraping
+- Focus preservation - Safari stays minimized when checking tabs
+- Better handling of missing badge elements (returns "0" instead of error)
+
+### Fixed
+
+- SwiftUI not updating when watcher results change
+- Badge monitoring now correctly shows "0" when no badge is visible
+
+### Removed
+
+- In-app login browser (LoginWebView) - no longer needed with Safari integration
+- WKWebView-based WebScraper - replaced with SafariScraper
+
+### Notes
+
+- Requires Safari with "Allow JavaScript from Apple Events" enabled
+- Monitored pages must be open in Safari tabs
+
 ## [1.0.1] - 2026-01-22
 
 ### Fixed

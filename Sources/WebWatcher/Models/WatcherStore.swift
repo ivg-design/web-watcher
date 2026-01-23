@@ -70,14 +70,16 @@ class WatcherStore: ObservableObject {
 
     func updateResult(for watcherId: UUID, value: String?, error: String?) {
         if let index = watchers.firstIndex(where: { $0.id == watcherId }) {
-            watchers[index].lastValue = value
-            watchers[index].lastCheck = Date()
-            watchers[index].lastError = error
+            var updated = watchers[index]
+            updated.lastValue = value
+            updated.lastCheck = Date()
+            updated.lastError = error
             if error != nil {
-                watchers[index].consecutiveErrors += 1
+                updated.consecutiveErrors += 1
             } else {
-                watchers[index].consecutiveErrors = 0
+                updated.consecutiveErrors = 0
             }
+            watchers[index] = updated  // Replace to trigger SwiftUI update
             save()
         }
     }
