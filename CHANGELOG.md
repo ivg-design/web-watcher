@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2026-01-23
+## [1.2.0] (Build 3) - 2026-01-23
 
 ### Added
 
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AppleScript waits for `document.readyState === "complete"` before scraping
 - Backwards-compatible Codable implementation (existing watchers load with defaults)
 
-## [1.1.0] - 2026-01-23
+## [1.1.0] (Build 2) - 2026-01-23
 
 ### Changed
 
@@ -62,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Requires Safari with "Allow JavaScript from Apple Events" enabled
 - Monitored pages must be open in Safari tabs
 
-## [1.0.1] - 2026-01-22
+## [1.0.1] (Build 1) - 2026-01-22
 
 ### Fixed
 
@@ -78,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better timeout handling using Swift structured concurrency
 - Cleaner separation of concerns in web scraping code
 
-## [1.0.0] - 2026-01-22
+## [1.0.0] (Build 1) - 2026-01-22
 
 ### Added
 
