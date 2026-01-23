@@ -2,113 +2,109 @@ import Foundation
 import WebKit
 
 /// Service that loads web pages and extracts content using CSS selectors or XPath
-class WebScraper: NSObject {
-    private var webView: WKWebView?
-    private var completion: ((Result<String, Error>) -> Void)?
-    private var watchType: WatchType = .textChange
-    private var selector: String = ""
-    private var selectorType: SelectorType = .css
-
-    private let timeout: TimeInterval = 30
-
-    override init() {
-        super.init()
-    }
+class WebScraperActor {
+    static let shared = WebScraperActor()
 
     /// Check a watcher and return the result
     func check(_ watcher: Watcher) async -> WatchResult {
-        let result = await withCheckedContinuation { continuation in
+        await withCheckedContinuation { continuation in
             Task { @MainActor in
-                self.performCheck(watcher) { result in
+                let scraper = WebScraperWorker(watcher: watcher) { result in
                     continuation.resume(returning: result)
                 }
+                scraper.start()
             }
         }
-        return result
+    }
+}
+
+/// Worker class that handles a single web scraping operation
+@MainActor
+class WebScraperWorker: NSObject, WKNavigationDelegate {
+    private var webView: WKWebView?
+    private var completion: ((WatchResult) -> Void)?
+    private let watcher: Watcher
+    private var hasCompleted = false
+    private let timeout: TimeInterval = 30
+    private var timeoutTask: Task<Void, Never>?
+
+    init(watcher: Watcher, completion: @escaping (WatchResult) -> Void) {
+        self.watcher = watcher
+        self.completion = completion
+        super.init()
     }
 
-    @MainActor
-    private func performCheck(_ watcher: Watcher, completion: @escaping (WatchResult) -> Void) {
-        // Configure WebView with persistent data store (keeps cookies/session)
-        let config = WKWebViewConfiguration()
-        config.websiteDataStore = .default() // Use default store to share Safari cookies
+    func start() {
+        guard let url = URL(string: watcher.url) else {
+            complete(value: nil, error: "Invalid URL")
+            return
+        }
 
-        // Allow JavaScript
+        // Configure WebView
+        let config = WKWebViewConfiguration()
+        config.websiteDataStore = .default()
         config.defaultWebpagePreferences.allowsContentJavaScript = true
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
         self.webView = webView
-        self.selector = watcher.selector
-        self.selectorType = watcher.selectorType
-        self.watchType = watcher.watchType
-
-        self.completion = { result in
-            let watchResult: WatchResult
-            switch result {
-            case .success(let value):
-                let hasChanged = watcher.lastValue != nil && watcher.lastValue != value
-                watchResult = WatchResult(
-                    watcherId: watcher.id,
-                    value: value,
-                    error: nil,
-                    hasChanged: hasChanged,
-                    timestamp: Date()
-                )
-            case .failure(let error):
-                watchResult = WatchResult(
-                    watcherId: watcher.id,
-                    value: nil,
-                    error: error.localizedDescription,
-                    hasChanged: false,
-                    timestamp: Date()
-                )
-            }
-            completion(watchResult)
-        }
-
-        guard let url = URL(string: watcher.url) else {
-            self.completion?(.failure(WebScraperError.invalidURL))
-            return
-        }
 
         let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
         webView.load(request)
 
-        // Timeout handler
-        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
-            if self?.completion != nil {
-                self?.completion?(.failure(WebScraperError.timeout))
-                self?.cleanup()
+        // Start timeout
+        timeoutTask = Task {
+            try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+            if !Task.isCancelled {
+                self.complete(value: nil, error: "Request timed out")
             }
         }
     }
 
-    @MainActor
+    private func complete(value: String?, error: String?) {
+        guard !hasCompleted else { return }
+        hasCompleted = true
+
+        timeoutTask?.cancel()
+        webView?.stopLoading()
+        webView?.navigationDelegate = nil
+        webView = nil
+
+        let hasChanged = value != nil && watcher.lastValue != nil && watcher.lastValue != value
+        let result = WatchResult(
+            watcherId: watcher.id,
+            value: value,
+            error: error,
+            hasChanged: hasChanged,
+            timestamp: Date()
+        )
+
+        completion?(result)
+        completion = nil
+    }
+
     private func extractContent() {
         guard let webView = webView else {
-            completion?(.failure(WebScraperError.noWebView))
+            complete(value: nil, error: "WebView not available")
             return
         }
 
-        let js = generateJavaScript(for: watchType, selector: selector, selectorType: selectorType)
+        let js = generateJavaScript(for: watcher.watchType, selector: watcher.selector, selectorType: watcher.selectorType)
 
         webView.evaluateJavaScript(js) { [weak self] result, error in
             guard let self = self else { return }
 
             if let error = error {
-                self.completion?(.failure(error))
+                self.complete(value: nil, error: error.localizedDescription)
             } else if let value = result as? String {
-                self.completion?(.success(value))
+                self.complete(value: value, error: nil)
             } else if let value = result as? Int {
-                self.completion?(.success(String(value)))
+                self.complete(value: String(value), error: nil)
             } else if let value = result as? Bool {
-                self.completion?(.success(String(value)))
+                self.complete(value: String(value), error: nil)
             } else {
-                self.completion?(.success(""))
+                self.complete(value: "", error: nil)
             }
-
-            self.cleanup()
         }
     }
 
@@ -117,7 +113,6 @@ class WebScraper: NSObject {
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "'", with: "\\'")
 
-        // Helper function to get element(s) based on selector type
         let getElementJS: String
         let getElementsJS: String
 
@@ -191,53 +186,31 @@ class WebScraper: NSObject {
         }
     }
 
-    @MainActor
-    private func cleanup() {
-        webView?.stopLoading()
-        webView = nil
-        completion = nil
-    }
-}
+    // MARK: - WKNavigationDelegate
 
-// MARK: - WKNavigationDelegate
-
-extension WebScraper: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        // Wait a bit for JavaScript to execute on the page
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.extractContent()
+        // Wait for JavaScript to execute
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+            if !hasCompleted {
+                extractContent()
+            }
         }
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        completion?(.failure(error))
-        Task { @MainActor in
-            cleanup()
-        }
+        complete(value: nil, error: error.localizedDescription)
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        completion?(.failure(error))
-        Task { @MainActor in
-            cleanup()
-        }
+        complete(value: nil, error: error.localizedDescription)
     }
 }
 
-// MARK: - Errors
+// MARK: - Legacy interface for compatibility
 
-enum WebScraperError: LocalizedError {
-    case invalidURL
-    case timeout
-    case noWebView
-    case notLoggedIn
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidURL: return "Invalid URL"
-        case .timeout: return "Request timed out"
-        case .noWebView: return "WebView not available"
-        case .notLoggedIn: return "Not logged in"
-        }
+class WebScraper: NSObject {
+    func check(_ watcher: Watcher) async -> WatchResult {
+        await WebScraperActor.shared.check(watcher)
     }
 }

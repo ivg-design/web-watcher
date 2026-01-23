@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-01-22
+## [1.0.1] - 2026-01-22
+
+### Fixed
+
+- Fixed Swift task continuation leak in WebScraper causing watchers to hang
+- Refactored WebScraper to use actor-based architecture for better concurrency handling
+- Fixed app sandbox restrictions that prevented file browsing and web requests
+- Disabled app sandbox for proper WKWebView and file picker functionality
+- Fixed notification delegate to properly show banners in foreground
+
+### Changed
+
+- Improved WebScraper reliability with dedicated worker class per request
+- Better timeout handling using Swift structured concurrency
+- Cleaner separation of concerns in web scraping code
+
+## [1.0.0] - 2026-01-22
 
 ### Added
 
@@ -14,11 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for multiple website watchers
 - CSS selector support for element targeting
 - XPath expression support for element targeting
-- Three watch types:
-  - Any change detection
-  - Text appearance detection
-  - Text disappearance detection
-- Configurable check intervals (1, 5, 15, 30 minutes, 1 hour)
+- Watch types:
+  - Badge/Number tracking
+  - Element count monitoring
+  - Text change detection
+  - Element existence detection
+  - Element disappearance detection
+- Configurable check intervals (15s, 30s, 1min, 2min, 5min, 10min, 30min)
 - Native macOS notifications with:
   - Custom notification titles
   - Customizable body templates with `{value}` and `{name}` placeholders
@@ -28,8 +46,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Launch at login option
   - Default check interval configuration
   - Page load delay configuration
-- Persistent storage of watchers and settings
-- Permission handling for notifications
-- Proper entitlements for:
-  - Outgoing network connections
-  - User notifications
+- Persistent storage of watchers and settings in ~/Library/Application Support/WebWatcher/
+- Custom app icon

@@ -8,6 +8,7 @@ class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
     private override init() {
         super.init()
+        // Set delegate to handle foreground notifications
         UNUserNotificationCenter.current().delegate = self
     }
 
@@ -52,15 +53,20 @@ class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     func sendPreview(watcher: Watcher, testValue: String = "3") {
         let content = buildNotificationContent(watcher: watcher, newValue: testValue, oldValue: "0", isPreview: true)
 
+        // Always play sound for preview
+        content.sound = UNNotificationSound.default
+
         let request = UNNotificationRequest(
             identifier: "preview-\(UUID().uuidString)",
             content: content,
-            trigger: nil
+            trigger: nil  // Deliver immediately
         )
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
                 print("Failed to send preview notification: \(error)")
+            } else {
+                print("Preview notification sent successfully")
             }
         }
     }
@@ -166,8 +172,9 @@ class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        // Show notification even when app is active
-        completionHandler([.banner, .sound])
+        // Show notification even when app is active - include all options
+        print("Notification will present in foreground: \(notification.request.content.title)")
+        completionHandler([.banner, .sound, .badge, .list])
     }
 
     /// Handle notification click
