@@ -14,7 +14,7 @@ struct MenuBarView: View {
             HStack {
                 Text("Web Watcher")
                     .font(.headline)
-                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")")
+                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"))")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
