@@ -2,6 +2,8 @@
 
 A macOS menu bar app that monitors websites for changes and sends native notifications.
 
+https://github.com/user-attachments/assets/8adbf24e-0b20-4d1a-8bc1-d2593f2a02f7
+
 ## The problem
 
 Notification badges get lost in browser tabs. Emails land in spam. Platform notifications assume you're checking constantly.
