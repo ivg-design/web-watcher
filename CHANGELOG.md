@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] (Build 5) - 2026-01-25
+
+### Added
+
+- **Custom Badge Attribute support** - Specify a custom HTML attribute to read badge values from
+  - Essential for modern web components that use Shadow DOM (e.g., Reddit's `<dynamic-badge initial-count="5">`)
+  - New "Badge Attribute" field appears when Badge/Number watch type is selected
+  - Examples: `initial-count`, `data-count`, `aria-label`
+- **Auto-detection of common badge attributes** - When no custom attribute is specified, automatically checks:
+  - `initial-count` (Reddit)
+  - `data-count` (common pattern)
+  - `count`
+  - Falls back to `innerText`/`textContent`
+
+### Technical
+
+- Added `badgeAttribute` property to Watcher model with backwards-compatible Codable support
+- Updated SafariScraper to prioritize custom attribute over default detection chain
+
 ## [1.2.0] (Build 4) - 2026-01-24
 
 ### Changed

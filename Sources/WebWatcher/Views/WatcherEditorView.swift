@@ -24,6 +24,9 @@ struct WatcherEditorView: View {
     @State private var notificationBodyTemplate: String = ""
     @State private var showingIconPicker = false
 
+    // Badge extraction
+    @State private var badgeAttribute: String = ""
+
     // Safari behavior
     @State private var forceRefresh: Bool = false
     @State private var refreshDelay: Double = 2.0
@@ -124,6 +127,22 @@ struct WatcherEditorView: View {
                         Text(watchType.description)
                             .font(.caption2)
                             .foregroundColor(.secondary)
+                    }
+
+                    // Badge Attribute (only for Badge/Number watch type)
+                    if watchType == .badgeNumber {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Badge Attribute (optional)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            TextField("e.g., initial-count, data-count", text: $badgeAttribute)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(.body, design: .monospaced))
+                            Text("For web components with Shadow DOM. The attribute name on the element that holds the badge value. Leave empty to use innerText.")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
 
                     // Interval
@@ -358,6 +377,7 @@ struct WatcherEditorView: View {
                 interval = watcher.interval
                 notificationSound = watcher.notificationSound
                 actionURL = watcher.actionURL ?? ""
+                badgeAttribute = watcher.badgeAttribute ?? ""
                 customIconPath = watcher.customIconPath ?? ""
                 notificationTitle = watcher.notificationTitle ?? ""
                 notificationBodyTemplate = watcher.notificationBodyTemplate ?? ""
@@ -377,7 +397,8 @@ struct WatcherEditorView: View {
             selector: selector,
             selectorType: selectorType,
             watchType: watchType,
-            interval: .seconds30
+            interval: .seconds30,
+            badgeAttribute: badgeAttribute.isEmpty ? nil : badgeAttribute
         )
 
         Task {
@@ -417,6 +438,7 @@ struct WatcherEditorView: View {
         watcher.interval = interval
         watcher.notificationSound = notificationSound
         watcher.actionURL = actionURL.isEmpty ? nil : actionURL
+        watcher.badgeAttribute = badgeAttribute.isEmpty ? nil : badgeAttribute
         watcher.customIconPath = customIconPath.isEmpty ? nil : customIconPath
         watcher.notificationTitle = notificationTitle.isEmpty ? nil : notificationTitle
         watcher.notificationBodyTemplate = notificationBodyTemplate.isEmpty ? nil : notificationBodyTemplate

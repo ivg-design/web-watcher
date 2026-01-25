@@ -80,6 +80,9 @@ struct Watcher: Identifiable {
     var notificationSound: Bool
     var actionURL: String? // URL to open when notification is clicked
 
+    // Badge extraction
+    var badgeAttribute: String? // Custom attribute to read for badge value (e.g., "initial-count", "data-count")
+
     // Notification customization
     var customIconPath: String? // Path to custom icon image
     var notificationTitle: String? // Custom title (defaults to watcher name)
@@ -106,6 +109,7 @@ struct Watcher: Identifiable {
         isEnabled: Bool = true,
         notificationSound: Bool = true,
         actionURL: String? = nil,
+        badgeAttribute: String? = nil,
         customIconPath: String? = nil,
         notificationTitle: String? = nil,
         notificationBodyTemplate: String? = nil,
@@ -122,6 +126,7 @@ struct Watcher: Identifiable {
         self.isEnabled = isEnabled
         self.notificationSound = notificationSound
         self.actionURL = actionURL
+        self.badgeAttribute = badgeAttribute
         self.customIconPath = customIconPath
         self.notificationTitle = notificationTitle
         self.notificationBodyTemplate = notificationBodyTemplate
@@ -173,7 +178,7 @@ struct Watcher: Identifiable {
 extension Watcher: Codable {
     enum CodingKeys: String, CodingKey {
         case id, name, url, selector, selectorType, watchType, interval, isEnabled
-        case notificationSound, actionURL, customIconPath, notificationTitle, notificationBodyTemplate
+        case notificationSound, actionURL, badgeAttribute, customIconPath, notificationTitle, notificationBodyTemplate
         case forceRefresh, refreshDelay
         case lastValue, lastCheck, lastError, consecutiveErrors
     }
@@ -190,6 +195,7 @@ extension Watcher: Codable {
         isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
         notificationSound = try container.decode(Bool.self, forKey: .notificationSound)
         actionURL = try container.decodeIfPresent(String.self, forKey: .actionURL)
+        badgeAttribute = try container.decodeIfPresent(String.self, forKey: .badgeAttribute)
         customIconPath = try container.decodeIfPresent(String.self, forKey: .customIconPath)
         notificationTitle = try container.decodeIfPresent(String.self, forKey: .notificationTitle)
         notificationBodyTemplate = try container.decodeIfPresent(String.self, forKey: .notificationBodyTemplate)

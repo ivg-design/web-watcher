@@ -139,11 +139,35 @@ class SafariScraper {
         switch watcher.watchType {
         case .badgeNumber:
             // For badge numbers, missing element = no badge = 0 notifications
+            // If a custom attribute is specified, use it exclusively
+            // Otherwise, check common badge attributes first (for web components with shadow DOM)
+            // then fall back to innerText/textContent
+            let customAttr = watcher.badgeAttribute ?? ""
+            let escapedAttr = customAttr
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "'", with: "\\'")
+
+            let getValueJS: String
+            if !customAttr.isEmpty {
+                // Use the custom attribute exclusively
+                getValueJS = "el.getAttribute('\(escapedAttr)') || ''"
+            } else {
+                // Default: check common attributes then fall back to text content
+                getValueJS = """
+                el.getAttribute('initial-count')
+                                || el.getAttribute('data-count')
+                                || el.getAttribute('count')
+                                || el.innerText
+                                || el.textContent
+                                || ''
+                """
+            }
+
             return """
             (function() {
                 var el = \(getElementJS);
                 if (!el) return '0';
-                var text = el.innerText || el.textContent || '';
+                var text = \(getValueJS);
                 var trimmed = text.trim();
                 if (trimmed === '') return '0';
                 var match = trimmed.match(/\\\\d+/);

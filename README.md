@@ -111,6 +111,13 @@ macOS prompts for notification permission on first run. If you want to change se
 - Selector: `[data-sentry-component='Messages'] [class*='badge']`
 - Watch type: Badge/Number
 
+**Reddit notifications:**
+- URL: `https://www.reddit.com/`
+- Selector: `dynamic-badge[data-id="notification-count-element"]`
+- Watch type: Badge/Number
+- Badge Attribute: `initial-count`
+- Note: Reddit uses web components with Shadow DOM, so the badge value is in an attribute
+
 **LinkedIn notifications:**
 - URL: `https://www.linkedin.com/feed/`
 - Selector: `.notification-badge__count`
