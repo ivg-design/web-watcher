@@ -25,6 +25,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard shouldContinueAsPrimaryInstance() else {
+            NSApp.terminate(nil)
+            return
+        }
+
+        // Ensure launch-at-login registration points at the installed app location.
+        if Bundle.main.bundleURL.path.hasPrefix("/Applications/") {
+            AppSettings.shared.refreshLaunchAtLoginRegistrationIfNeeded()
+        }
+
         // Initialize store and service
         store = WatcherStore()
         watcherService = WatcherService(store: store)
@@ -116,6 +126,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             },
             onShowSettings: { [weak self] in
                 self?.showSettings()
+            },
+            onOpenWatcher: { [weak self] watcher in
+                self?.popover.performClose(nil)
+                BrowserNavigationService.shared.openWatcherDestination(watcher)
             }
         )
 
@@ -181,6 +195,49 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         watcherService.stop()
     }
+
+    /// Prevent duplicate menu bar instances; prefer the /Applications build when both are present.
+    private func shouldContinueAsPrimaryInstance() -> Bool {
+        guard let bundleID = Bundle.main.bundleIdentifier else {
+            return true
+        }
+
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        var otherInstances = NSRunningApplication
+            .runningApplications(withBundleIdentifier: bundleID)
+            .filter { $0.processIdentifier != currentPID }
+
+        guard !otherInstances.isEmpty else {
+            return true
+        }
+
+        let currentPath = Bundle.main.bundleURL.path
+        let currentInApplications = currentPath.hasPrefix("/Applications/")
+
+        if currentInApplications {
+            var terminatedAny = false
+            for other in otherInstances {
+                let otherPath = other.bundleURL?.path ?? ""
+                if !otherPath.hasPrefix("/Applications/") {
+                    terminatedAny = other.terminate() || terminatedAny
+                }
+            }
+
+            if terminatedAny {
+                Thread.sleep(forTimeInterval: 0.2)
+                otherInstances = NSRunningApplication
+                    .runningApplications(withBundleIdentifier: bundleID)
+                    .filter { $0.processIdentifier != currentPID }
+            }
+        }
+
+        guard !otherInstances.isEmpty else {
+            return true
+        }
+
+        otherInstances.first?.activate(options: [.activateIgnoringOtherApps])
+        return false
+    }
 }
 
 /// Wrapper view for the popover content that handles navigation
@@ -190,6 +247,7 @@ struct MenuBarContentView: View {
     var onAddWatcher: () -> Void
     var onEditWatcher: (Watcher) -> Void
     var onShowSettings: () -> Void
+    var onOpenWatcher: (Watcher) -> Void
 
     @State private var showingAddWatcher = false
     @State private var editingWatcher: Watcher?
@@ -225,7 +283,8 @@ struct MenuBarContentView: View {
                     }
                     showingSettings = false
                 }
-            )
+            ),
+            onOpenWatcher: onOpenWatcher
         )
     }
 }

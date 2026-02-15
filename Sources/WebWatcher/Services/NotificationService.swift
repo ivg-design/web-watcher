@@ -33,16 +33,21 @@ class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
     /// Send a notification for a watcher update
     func notify(watcher: Watcher, newValue: String, oldValue: String?) {
+        let identifier = "watcher-\(watcher.id.uuidString)"
         let content = buildNotificationContent(watcher: watcher, newValue: newValue, oldValue: oldValue)
+        let center = UNUserNotificationCenter.current()
 
-        // Create request with unique identifier
+        // Keep only a single active notification per watcher.
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+        center.removeDeliveredNotifications(withIdentifiers: [identifier])
+
         let request = UNNotificationRequest(
-            identifier: "watcher-\(watcher.id.uuidString)-\(Date().timeIntervalSince1970)",
+            identifier: identifier,
             content: content,
             trigger: nil // Deliver immediately
         )
 
-        UNUserNotificationCenter.current().add(request) { error in
+        center.add(request) { error in
             if let error = error {
                 print("Failed to send notification: \(error)")
             }
@@ -130,10 +135,18 @@ class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             content.sound = .default
         }
 
-        // Store action URL in userInfo
+        // Store destination information in userInfo for click handling.
+        var userInfo: [String: Any] = [
+            "watcherId": watcher.id.uuidString,
+            "watcherURL": watcher.url
+        ]
         if let actionURL = watcher.actionURL ?? URL(string: watcher.url)?.absoluteString {
-            content.userInfo = ["actionURL": actionURL, "watcherId": watcher.id.uuidString]
+            userInfo["actionURL"] = actionURL
         }
+        if let apiLookupCommand = watcher.apiLookupCommand, !apiLookupCommand.isEmpty {
+            userInfo["apiLookupCommand"] = apiLookupCommand
+        }
+        content.userInfo = userInfo
 
         return content
     }
@@ -185,10 +198,14 @@ class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
 
-        if let urlString = userInfo["actionURL"] as? String,
-           let url = URL(string: urlString) {
-            NSWorkspace.shared.open(url)
-        }
+        let actionURL = userInfo["actionURL"] as? String
+        let watcherURL = userInfo["watcherURL"] as? String
+        let apiLookupCommand = userInfo["apiLookupCommand"] as? String
+        BrowserNavigationService.shared.openDestination(
+            preferredURLString: actionURL,
+            fallbackURLString: watcherURL,
+            apiLookupCommand: apiLookupCommand
+        )
 
         completionHandler()
     }

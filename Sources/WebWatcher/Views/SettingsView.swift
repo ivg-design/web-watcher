@@ -4,6 +4,13 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var settings = AppSettings.shared
     @Environment(\.dismiss) var dismiss
+    @State private var notificationsGranted = false
+    @State private var safariAutomationGranted = false
+    @State private var systemEventsAutomationGranted = false
+    @State private var defaultBrowserAutomationGranted = false
+    @State private var defaultBrowserBundleID: String?
+    @State private var defaultBrowserName = "Default Browser"
+    @State private var isRefreshingPermissions = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -30,6 +37,68 @@ struct SettingsView: View {
 
                             Toggle("Show badge in menu bar", isOn: $settings.showMenuBarBadge)
                                 .help("Show unread count badge on menu bar icon")
+
+                            Toggle("Reuse existing browser tab by domain", isOn: $settings.reuseExistingBrowserTabByDomain)
+                                .help("When opening a watcher page, switch to an existing tab with the same domain instead of creating a new tab")
+                        }
+                        .padding(.vertical, 4)
+                    }
+
+                    // Permissions Section
+                    GroupBox(label: Label("Permissions", systemImage: "checkmark.shield")) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Button("Open System Automation Settings") {
+                                    BrowserNavigationService.shared.openAutomationSettings()
+                                }
+
+                                Spacer()
+
+                                Button("Refresh") {
+                                    refreshPermissionStatus()
+                                }
+                                .disabled(isRefreshingPermissions)
+                            }
+
+                            permissionStatusRow(
+                                title: "Notifications",
+                                granted: notificationsGranted,
+                                buttonTitle: notificationsGranted ? "Open" : "Fix",
+                                action: {
+                                    requestNotificationPermissionAndOpenSettings()
+                                }
+                            )
+
+                            permissionStatusRow(
+                                title: "Safari Automation",
+                                granted: safariAutomationGranted,
+                                buttonTitle: safariAutomationGranted ? "Open" : "Fix",
+                                action: {
+                                    requestAutomationPermission(bundleID: "com.apple.Safari", appName: "Safari")
+                                }
+                            )
+
+                            permissionStatusRow(
+                                title: "System Events Automation",
+                                granted: systemEventsAutomationGranted,
+                                buttonTitle: systemEventsAutomationGranted ? "Open" : "Fix",
+                                action: {
+                                    requestAutomationPermission(bundleID: "com.apple.systemevents", appName: "System Events")
+                                }
+                            )
+
+                            permissionStatusRow(
+                                title: "\(defaultBrowserName) Automation",
+                                granted: defaultBrowserAutomationGranted,
+                                buttonTitle: defaultBrowserAutomationGranted ? "Open" : "Fix",
+                                action: {
+                                    if let bundleID = defaultBrowserBundleID {
+                                        requestAutomationPermission(bundleID: bundleID, appName: defaultBrowserName)
+                                    } else {
+                                        BrowserNavigationService.shared.openAutomationSettings()
+                                    }
+                                }
+                            )
                         }
                         .padding(.vertical, 4)
                     }
@@ -71,9 +140,7 @@ struct SettingsView: View {
                     GroupBox(label: Label("Notifications", systemImage: "bell")) {
                         VStack(alignment: .leading, spacing: 12) {
                             Button("Open System Notification Settings") {
-                                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
-                                    NSWorkspace.shared.open(url)
-                                }
+                                openNotificationSettings()
                             }
 
                             Text("Configure notification banners, sounds, and grouping in System Settings.")
@@ -129,6 +196,89 @@ struct SettingsView: View {
             }
         }
         .frame(width: 450, height: 550)
+        .onAppear {
+            refreshPermissionStatus()
+        }
+    }
+
+    @ViewBuilder
+    private func permissionStatusRow(
+        title: String,
+        granted: Bool,
+        buttonTitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(granted ? Color.green : Color.red)
+                .frame(width: 9, height: 9)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                Text(granted ? "Granted" : "Not granted")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Button(buttonTitle, action: action)
+        }
+    }
+
+    /// Refresh all permission indicators shown in the Settings dashboard.
+    private func refreshPermissionStatus() {
+        isRefreshingPermissions = true
+
+        Task {
+            let notifications = await NotificationService.shared.checkPermission()
+            let safariAutomation = BrowserNavigationService.shared.hasAutomationPermission(bundleID: "com.apple.Safari")
+            let systemEventsAutomation = BrowserNavigationService.shared.hasAutomationPermission(bundleID: "com.apple.systemevents")
+            let defaultBrowserSnapshot = BrowserNavigationService.shared.defaultBrowserAutomationPermissionSnapshot()
+
+            await MainActor.run {
+                notificationsGranted = notifications
+                safariAutomationGranted = safariAutomation
+                systemEventsAutomationGranted = systemEventsAutomation
+
+                if let defaultBrowserSnapshot {
+                    defaultBrowserBundleID = defaultBrowserSnapshot.bundleID
+                    defaultBrowserName = defaultBrowserSnapshot.appName
+                    defaultBrowserAutomationGranted = defaultBrowserSnapshot.granted
+                } else {
+                    defaultBrowserBundleID = nil
+                    defaultBrowserName = "Default Browser"
+                    defaultBrowserAutomationGranted = false
+                }
+
+                isRefreshingPermissions = false
+            }
+        }
+    }
+
+    /// Request notifications permission and route the user to System Settings.
+    private func requestNotificationPermissionAndOpenSettings() {
+        Task {
+            _ = await NotificationService.shared.requestPermission()
+            await MainActor.run {
+                openNotificationSettings()
+                refreshPermissionStatus()
+            }
+        }
+    }
+
+    /// Trigger a single automation permission prompt and refresh dashboard state.
+    private func requestAutomationPermission(bundleID: String, appName: String) {
+        Task { @MainActor in
+            _ = BrowserNavigationService.shared.requestAutomationPermission(bundleID: bundleID, appName: appName)
+            refreshPermissionStatus()
+        }
+    }
+
+    private func openNotificationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     private func clearWebData() {

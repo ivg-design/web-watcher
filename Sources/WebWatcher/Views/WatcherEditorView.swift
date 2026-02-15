@@ -17,6 +17,7 @@ struct WatcherEditorView: View {
     @State private var interval: CheckInterval = .seconds30
     @State private var notificationSound: Bool = true
     @State private var actionURL: String = ""
+    @State private var apiLookupCommand: String = ""
 
     // Notification customization
     @State private var customIconPath: String = ""
@@ -164,11 +165,24 @@ struct WatcherEditorView: View {
                         Text("Action URL (optional)")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        TextField("URL to open when clicking notification", text: $actionURL)
+                        TextField("URL to open when clicking notification or row", text: $actionURL)
                             .textFieldStyle(.roundedBorder)
                         Text("Leave empty to use the monitored URL")
                             .font(.caption2)
                             .foregroundColor(.secondary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("API Lookup Command (optional)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        TextField("e.g., curl -s https://api.example.com/messages/latest", text: $apiLookupCommand)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(.body, design: .monospaced))
+                        Text("Runs when opening from row click or notification. Command must print a URL to stdout. Supports {url} and {domain} placeholders.")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     // Sound
@@ -377,6 +391,7 @@ struct WatcherEditorView: View {
                 interval = watcher.interval
                 notificationSound = watcher.notificationSound
                 actionURL = watcher.actionURL ?? ""
+                apiLookupCommand = watcher.apiLookupCommand ?? ""
                 badgeAttribute = watcher.badgeAttribute ?? ""
                 customIconPath = watcher.customIconPath ?? ""
                 notificationTitle = watcher.notificationTitle ?? ""
@@ -438,6 +453,7 @@ struct WatcherEditorView: View {
         watcher.interval = interval
         watcher.notificationSound = notificationSound
         watcher.actionURL = actionURL.isEmpty ? nil : actionURL
+        watcher.apiLookupCommand = apiLookupCommand.isEmpty ? nil : apiLookupCommand
         watcher.badgeAttribute = badgeAttribute.isEmpty ? nil : badgeAttribute
         watcher.customIconPath = customIconPath.isEmpty ? nil : customIconPath
         watcher.notificationTitle = notificationTitle.isEmpty ? nil : notificationTitle
@@ -485,6 +501,7 @@ struct WatcherEditorView: View {
                         interval: interval,
                         notificationSound: notificationSound,
                         actionURL: actionURL.isEmpty ? nil : actionURL,
+                        apiLookupCommand: apiLookupCommand.isEmpty ? nil : apiLookupCommand,
                         customIconPath: customIconPath.isEmpty ? nil : customIconPath,
                         notificationTitle: notificationTitle.isEmpty ? nil : notificationTitle,
                         notificationBodyTemplate: notificationBodyTemplate.isEmpty ? nil : notificationBodyTemplate

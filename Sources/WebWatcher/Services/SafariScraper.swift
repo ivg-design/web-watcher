@@ -2,8 +2,9 @@ import Foundation
 
 /// Scrapes web content from Safari using AppleScript
 /// This approach uses Safari's authenticated session and doesn't steal focus
-class SafariScraper {
+final class SafariScraper: @unchecked Sendable {
     static let shared = SafariScraper()
+    private let scriptQueue = DispatchQueue(label: "com.webwatcher.safari-scraper", qos: .userInitiated)
 
     /// Check a watcher by reading from Safari
     /// Safari must have the URL open in a tab
@@ -12,7 +13,7 @@ class SafariScraper {
         let script = generateAppleScript(for: watcher)
 
         return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
+            self.scriptQueue.async {
                 let result = self.executeAppleScript(script)
 
                 let watchResult: WatchResult
@@ -78,12 +79,15 @@ class SafariScraper {
             reloadBlock = ""
         }
 
-        // AppleScript that finds the tab by URL and executes JavaScript
-        // Saves and restores frontmost app to prevent Safari from stealing focus
+        // AppleScript that finds the tab by URL and executes JavaScript.
+        // Only restores focus if Safari is frontmost at the end of execution.
         return """
         -- Save the current frontmost app
+        set frontApp to ""
         tell application "System Events"
-            set frontApp to name of first application process whose frontmost is true
+            try
+                set frontApp to name of first application process whose frontmost is true
+            end try
         end tell
 
         set jsResult to ""
@@ -114,10 +118,23 @@ class SafariScraper {
             end tell
         end tell
 
-        -- Restore the frontmost app
-        tell application "System Events"
-            set frontmost of process frontApp to true
-        end tell
+        -- Restore the previous app only if Safari is currently frontmost
+        if frontApp is not "" and frontApp is not "Safari" then
+            set safariIsFrontmost to false
+            tell application "System Events"
+                try
+                    set safariIsFrontmost to frontmost of process "Safari"
+                end try
+            end tell
+
+            if safariIsFrontmost then
+                tell application "System Events"
+                    if exists process frontApp then
+                        set frontmost of process frontApp to true
+                    end if
+                end tell
+            end if
+        end if
 
         return jsResult
         """
@@ -224,10 +241,17 @@ class SafariScraper {
 
         if let error = error {
             let errorMessage = error[NSAppleScript.errorMessage] as? String ?? "Unknown AppleScript error"
+            let errorCode = error[NSAppleScript.errorNumber] as? Int
 
             // Check for common errors
             if errorMessage.contains("Allow JavaScript from Apple Events") {
                 return (nil, "Enable 'Allow JavaScript from Apple Events' in Safari Settings → Developer")
+            }
+            if errorCode == -1743 || errorMessage.localizedCaseInsensitiveContains("not authorized to send apple events") {
+                Task { @MainActor in
+                    _ = BrowserNavigationService.shared.ensureSafariAutomationPermissionForMonitoring()
+                }
+                return (nil, "Automation permission required. Enable Safari in System Settings -> Privacy & Security -> Automation -> WebWatcher.")
             }
 
             return (nil, errorMessage)

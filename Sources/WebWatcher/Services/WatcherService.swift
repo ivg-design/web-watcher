@@ -9,6 +9,7 @@ class WatcherService: ObservableObject {
 
     private var store: WatcherStore
     private var timers: [UUID: Timer] = [:]
+    private var inFlightWatcherIDs: Set<UUID> = []
     private let scraper = SafariScraper.shared
 
     init(store: WatcherStore) {
@@ -20,17 +21,26 @@ class WatcherService: ObservableObject {
         guard !isRunning else { return }
         isRunning = true
 
-        // Request notification permission
-        Task {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            let safariAllowed = BrowserNavigationService.shared.ensureSafariAutomationPermissionForMonitoring()
+            guard safariAllowed else {
+                self.isRunning = false
+                print("WatcherService start paused: Safari automation permission not granted")
+                return
+            }
+
+            // Request notification permission
             _ = await NotificationService.shared.requestPermission()
-        }
 
-        // Start timer for each enabled watcher
-        for watcher in store.watchers where watcher.isEnabled {
-            startTimer(for: watcher)
-        }
+            // Start timer for each enabled watcher
+            for watcher in self.store.watchers where watcher.isEnabled {
+                self.startTimer(for: watcher)
+            }
 
-        print("WatcherService started with \(timers.count) active watchers")
+            print("WatcherService started with \(self.timers.count) active watchers")
+        }
     }
 
     /// Stop all monitoring
@@ -68,6 +78,7 @@ class WatcherService: ObservableObject {
         // Stop existing timer
         timers[watcher.id]?.invalidate()
         timers.removeValue(forKey: watcher.id)
+        inFlightWatcherIDs.remove(watcher.id)
 
         // Start new timer if enabled
         if watcher.isEnabled && isRunning {
@@ -79,6 +90,7 @@ class WatcherService: ObservableObject {
     func watcherDeleted(_ watcherId: UUID) {
         timers[watcherId]?.invalidate()
         timers.removeValue(forKey: watcherId)
+        inFlightWatcherIDs.remove(watcherId)
     }
 
     // MARK: - Private
@@ -108,6 +120,14 @@ class WatcherService: ObservableObject {
     }
 
     private func performCheck(_ watcher: Watcher) async {
+        guard !inFlightWatcherIDs.contains(watcher.id) else {
+            return
+        }
+        inFlightWatcherIDs.insert(watcher.id)
+        defer {
+            inFlightWatcherIDs.remove(watcher.id)
+        }
+
         print("Checking: \(watcher.name)")
 
         let result = await scraper.check(watcher)

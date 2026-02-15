@@ -79,6 +79,7 @@ struct Watcher: Identifiable {
     var isEnabled: Bool
     var notificationSound: Bool
     var actionURL: String? // URL to open when notification is clicked
+    var apiLookupCommand: String? // Optional command to resolve a destination URL (prints URL to stdout)
 
     // Badge extraction
     var badgeAttribute: String? // Custom attribute to read for badge value (e.g., "initial-count", "data-count")
@@ -109,6 +110,7 @@ struct Watcher: Identifiable {
         isEnabled: Bool = true,
         notificationSound: Bool = true,
         actionURL: String? = nil,
+        apiLookupCommand: String? = nil,
         badgeAttribute: String? = nil,
         customIconPath: String? = nil,
         notificationTitle: String? = nil,
@@ -126,6 +128,7 @@ struct Watcher: Identifiable {
         self.isEnabled = isEnabled
         self.notificationSound = notificationSound
         self.actionURL = actionURL
+        self.apiLookupCommand = apiLookupCommand
         self.badgeAttribute = badgeAttribute
         self.customIconPath = customIconPath
         self.notificationTitle = notificationTitle
@@ -178,7 +181,7 @@ struct Watcher: Identifiable {
 extension Watcher: Codable {
     enum CodingKeys: String, CodingKey {
         case id, name, url, selector, selectorType, watchType, interval, isEnabled
-        case notificationSound, actionURL, badgeAttribute, customIconPath, notificationTitle, notificationBodyTemplate
+        case notificationSound, actionURL, apiLookupCommand, badgeAttribute, customIconPath, notificationTitle, notificationBodyTemplate
         case forceRefresh, refreshDelay
         case lastValue, lastCheck, lastError, consecutiveErrors
     }
@@ -195,6 +198,7 @@ extension Watcher: Codable {
         isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
         notificationSound = try container.decode(Bool.self, forKey: .notificationSound)
         actionURL = try container.decodeIfPresent(String.self, forKey: .actionURL)
+        apiLookupCommand = try container.decodeIfPresent(String.self, forKey: .apiLookupCommand)
         badgeAttribute = try container.decodeIfPresent(String.self, forKey: .badgeAttribute)
         customIconPath = try container.decodeIfPresent(String.self, forKey: .customIconPath)
         notificationTitle = try container.decodeIfPresent(String.self, forKey: .notificationTitle)

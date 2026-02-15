@@ -7,6 +7,7 @@ struct MenuBarView: View {
     @Binding var showingAddWatcher: Bool
     @Binding var editingWatcher: Watcher?
     @Binding var showingSettings: Bool
+    var onOpenWatcher: (Watcher) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -62,6 +63,9 @@ struct MenuBarView: View {
                         },
                         onCheckNow: {
                             watcherService.checkNow(watcher)
+                        },
+                        onOpen: {
+                            onOpenWatcher(watcher)
                         }
                     )
                 }
@@ -136,6 +140,7 @@ struct WatcherRowView: View {
     let onToggle: (Bool) -> Void
     let onEdit: () -> Void
     let onCheckNow: () -> Void
+    let onOpen: () -> Void
 
     @State private var isHovering = false
 
@@ -151,18 +156,23 @@ struct WatcherRowView: View {
             .scaleEffect(0.7)
 
             // Info
-            VStack(alignment: .leading, spacing: 2) {
-                Text(watcher.name)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
+            Button(action: onOpen) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(watcher.name)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
 
-                Text(watcher.statusDisplay)
-                    .font(.caption)
-                    .foregroundColor(watcher.lastError != nil ? .red : .secondary)
-                    .lineLimit(1)
+                        Text(watcher.statusDisplay)
+                            .font(.caption)
+                            .foregroundColor(watcher.lastError != nil ? .red : .secondary)
+                            .lineLimit(1)
+                    }
+                    Spacer()
+                }
             }
-
-            Spacer()
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
 
             // Actions (show on hover)
             if isHovering {

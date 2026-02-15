@@ -12,6 +12,7 @@ class AppSettings: ObservableObject {
     private let showMenuBarBadgeKey = "showMenuBarBadge"
     private let defaultCheckIntervalKey = "defaultCheckInterval"
     private let pageLoadDelayKey = "pageLoadDelay"
+    private let reuseExistingDomainTabKey = "reuseExistingDomainTab"
 
     @Published var launchAtLogin: Bool {
         didSet {
@@ -38,11 +39,21 @@ class AppSettings: ObservableObject {
         }
     }
 
+    @Published var reuseExistingBrowserTabByDomain: Bool {
+        didSet {
+            defaults.set(reuseExistingBrowserTabByDomain, forKey: reuseExistingDomainTabKey)
+        }
+    }
+
     private init() {
-        self.launchAtLogin = defaults.bool(forKey: launchAtLoginKey)
+        // Prefer the real service status to avoid stale toggle state.
+        self.launchAtLogin = SMAppService.mainApp.status == .enabled
         self.showMenuBarBadge = defaults.object(forKey: showMenuBarBadgeKey) as? Bool ?? true
         self.defaultCheckInterval = CheckInterval(rawValue: defaults.integer(forKey: defaultCheckIntervalKey)) ?? .seconds30
         self.pageLoadDelay = defaults.object(forKey: pageLoadDelayKey) as? Double ?? 2.0
+        self.reuseExistingBrowserTabByDomain = defaults.object(forKey: reuseExistingDomainTabKey) as? Bool ?? true
+
+        defaults.set(launchAtLogin, forKey: launchAtLoginKey)
     }
 
     private func updateLaunchAtLogin() {
@@ -60,5 +71,18 @@ class AppSettings: ObservableObject {
     /// Check current launch at login status
     func checkLaunchAtLoginStatus() -> Bool {
         return SMAppService.mainApp.status == .enabled
+    }
+
+    /// Re-register current app location for launch-at-login when enabled.
+    func refreshLaunchAtLoginRegistrationIfNeeded() {
+        guard launchAtLogin else { return }
+        do {
+            if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+            }
+            try SMAppService.mainApp.register()
+        } catch {
+            print("Failed to refresh launch at login registration: \(error)")
+        }
     }
 }

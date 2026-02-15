@@ -5,6 +5,108 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.11] (Build 17) - 2026-02-13
+
+### Added
+
+- New "Open System Automation Settings" button in Settings, alongside the existing notifications shortcut
+- New permission status dashboard in Settings with green/red indicators and action buttons for:
+  - Notifications
+  - Safari Automation
+  - System Events Automation
+  - Default browser automation
+
+## [1.4.10] (Build 16) - 2026-02-13
+
+### Fixed
+
+- Added missing hardened-runtime automation entitlement (`com.apple.security.automation.apple-events`) so WebWatcher can be listed under System Settings -> Privacy & Security -> Automation and request browser control permissions correctly
+
+## [1.4.9] (Build 15) - 2026-02-13
+
+### Fixed
+
+- Monitoring startup now waits for Safari automation permission instead of launching checks that immediately fail with repeated AppleEvents authorization errors
+- Safari automation authorization failures now trigger a targeted permission flow and user-facing guidance instead of raw "Not authorized to send Apple events" watcher errors
+- Automation alert retry instructions are now browser-specific (Safari monitoring vs Chromium tab-reuse action)
+
+## [1.4.8] (Build 14) - 2026-02-13
+
+### Fixed
+
+- Chrome automation permission requests now retry with WebWatcher activated in the foreground, so macOS can show consent and register Chrome under Automation
+- Added a direct AppleScript fallback permission probe for Chromium browsers when the AppleEvents preflight returns an unknown state
+- Reduced false "enable automation" loops by treating unknown consent state as a fallback-to-open case instead of a hard deny
+
+## [1.4.7] (Build 13) - 2026-02-13
+
+### Fixed
+
+- Browser automation permission requests now use the macOS AppleEvents permission API to more reliably trigger consent for the default browser (including Chrome)
+- Added an in-app "Reset Automation Permission" action when a browser is missing from the Automation list, so Chrome consent can be requested again
+- Updated AppleEvents usage description text to include both Safari monitoring and default-browser tab reuse behavior
+
+## [1.4.6] (Build 12) - 2026-02-11
+
+### Fixed
+
+- Browser automation AppleScript now targets the default browser by explicit bundle identifier (`application id`) to improve permission targeting and tab reuse reliability
+
+## [1.4.5] (Build 11) - 2026-02-11
+
+### Fixed
+
+- Fallback URL opens are now forced through the resolved default browser app, avoiding unexpected browser routing
+- Added explicit default-browser automation probes and clearer permission-failure handling for tab reuse
+
+## [1.4.4] (Build 10) - 2026-02-11
+
+### Fixed
+
+- Reuse logic now only checks the default browser for existing tabs, preventing unintended focus switches to other browsers (for example Safari) when Chrome is default
+
+## [1.4.3] (Build 9) - 2026-02-11
+
+### Fixed
+
+- Added timeouts to browser reuse AppleScript calls to prevent blocked automation checks from stopping fallback URL opens
+- Row click-to-open now uses an explicit button for more reliable click handling in the popover
+
+## [1.4.2] (Build 8) - 2026-02-11
+
+### Fixed
+
+- Tab reuse now matches by both exact host and root domain (e.g., sibling subdomains)
+- Reuse now checks the default browser first, then other supported running browsers for existing matching tabs before opening a new tab
+
+## [1.4.1] (Build 7) - 2026-02-11
+
+### Fixed
+
+- Browser tab reuse matching now correctly invokes local AppleScript handlers, allowing existing-tab activation in Google Chrome and Safari by domain
+
+## [1.4.0] (Build 6) - 2026-02-11
+
+### Added
+
+- API lookup command support on watchers to resolve message URLs dynamically before opening
+- Clickable watcher rows in the popover (outside toggle/reload/edit controls) to open watcher destinations
+- New setting: "Reuse existing browser tab by domain"
+- Browser navigation service that attempts domain-tab reuse in Safari and Chromium-based browsers
+
+### Changed
+
+- Notification clicks now use the same destination resolution flow as popover row clicks
+- Launch-at-login registration is refreshed from the installed app location when starting from `/Applications`
+
+### Fixed
+
+- Focus restoration now only happens when Safari is still frontmost after a scrape
+- Safari scraping requests are serialized to reduce focus churn from overlapping checks
+- Per-watcher in-flight guards prevent overlapping checks from stacking
+- Notification replacement now keeps a single active visible notification per watcher
+- Duplicate app instances are blocked at startup, preferring the `/Applications` instance
+
 ## [1.3.0] (Build 5) - 2026-01-25
 
 ### Added
