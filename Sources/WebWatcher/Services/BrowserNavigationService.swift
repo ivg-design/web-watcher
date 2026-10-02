@@ -43,9 +43,30 @@ final class BrowserNavigationService: @unchecked Sendable {
         }
     }
 
+    /// What we can say about an automation permission without prompting the user.
+    enum PermissionReport {
+        case granted
+        case denied
+        /// macOS will not reveal the answer without showing a consent prompt. This is
+        /// NOT the same as denied, and must not be reported as "not granted" — doing so
+        /// showed a red "Not granted" for permissions the user had actually allowed.
+        case undetermined
+
+        var isGranted: Bool { self == .granted }
+    }
+
     /// Check whether automation permission is currently granted for a target app bundle identifier.
     func hasAutomationPermission(bundleID: String) -> Bool {
-        requestAutomationPermissionState(bundleID: bundleID, askUserIfNeeded: false) == .allowed
+        automationPermissionReport(bundleID: bundleID) == .granted
+    }
+
+    /// Tri-state permission check that preserves the "can't tell" case.
+    func automationPermissionReport(bundleID: String) -> PermissionReport {
+        switch requestAutomationPermissionState(bundleID: bundleID, askUserIfNeeded: false) {
+        case .allowed: return .granted
+        case .denied:  return .denied
+        case .unknown: return .undetermined
+        }
     }
 
     /// Prompt for automation permission for a target app bundle identifier if needed.

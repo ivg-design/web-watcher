@@ -19,6 +19,47 @@
 			AA0000010000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000011 /* Assets.xcassets */; };
 			AA0000010000000000000014 /* SafariScraper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000014 /* SafariScraper.swift */; };
 			AA0000010000000000000015 /* BrowserNavigationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000015 /* BrowserNavigationService.swift */; };
+		AA0000010000000000000020 /* Observation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000020 /* Observation.swift */; };
+		AA0000010000000000000021 /* SiteProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000021 /* SiteProfile.swift */; };
+		AA0000010000000000000022 /* ProbeScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000022 /* ProbeScript.swift */; };
+		AA0000010000000000000030 /* GmailAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000030 /* GmailAccount.swift */; };
+		AA0000010000000000000031 /* GmailAccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000031 /* GmailAccountStore.swift */; };
+		AA0000010000000000000032 /* GmailMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000032 /* GmailMessage.swift */; };
+		AA0000010000000000000033 /* GmailAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000033 /* GmailAPIService.swift */; };
+		AA0000010000000000000034 /* GmailOAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000034 /* GmailOAuthService.swift */; };
+		AA0000010000000000000035 /* GmailPollingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000035 /* GmailPollingService.swift */; };
+		AA0000010000000000000036 /* OAuthLoopbackListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000036 /* OAuthLoopbackListener.swift */; };
+		AA0000010000000000000037 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000037 /* KeychainService.swift */; };
+		AA0000010000000000000038 /* WatcherRecipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000038 /* WatcherRecipe.swift */; };
+		AA0000010000000000000039 /* ProbeProgram.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000039 /* ProbeProgram.swift */; };
+		AA0000010000000000000040 /* ElementPickerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000040 /* ElementPickerModel.swift */; };
+		AA0000010000000000000041 /* ElementPickerSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000041 /* ElementPickerSection.swift */; };
+		AA0000010000000000000042 /* EmailWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000042 /* EmailWatcher.swift */; };
+		AA0000010000000000000043 /* EmailWatcherStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000043 /* EmailWatcherStore.swift */; };
+		AA0000010000000000000044 /* GoogleOAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000044 /* GoogleOAuthClient.swift */; };
+		AA0000010000000000000045 /* GmailAccountConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000045 /* GmailAccountConnector.swift */; };
+		AA0000010000000000000046 /* AddWatcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000046 /* AddWatcherView.swift */; };
+		AA0000010000000000000047 /* EmailWatcherEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000047 /* EmailWatcherEditorView.swift */; };
+		AA0000010000000000000048 /* NotificationIconStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000048 /* NotificationIconStore.swift */; };
+		AA0000010000000000000049 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000049 /* Models.swift */; };
+		AA0000010000000000000050 /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000050 /* JSON.swift */; };
+		AA0000010000000000000051 /* HTTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000051 /* HTTP.swift */; };
+		AA0000010000000000000052 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000052 /* Client.swift */; };
+		AA0000010000000000000053 /* Paths.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000053 /* Paths.swift */; };
+		AA0000010000000000000054 /* Listener.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000054 /* Listener.swift */; };
+		AA0000010000000000000055 /* CallbackServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000055 /* CallbackServer.swift */; };
+		AA0000010000000000000056 /* HeraldBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000056 /* HeraldBridge.swift */; };
+		AA0000010000000000000057 /* HeraldTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000057 /* HeraldTemplate.swift */; };
+		AA0000010000000000000058 /* HeraldComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000058 /* HeraldComponents.swift */; };
+		AA0000010000000000000059 /* HeraldActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000059 /* HeraldActions.swift */; };
+		AA0000010000000000000060 /* HeraldManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000060 /* HeraldManifest.swift */; };
+		AA0000010000000000000061 /* ComponentSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000061 /* ComponentSchema.swift */; };
+		AA0000010000000000000062 /* BuiltinTemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000062 /* BuiltinTemplates.swift */; };
+		AA0000010000000000000063 /* HeraldManifests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000063 /* HeraldManifests.swift */; };
+		AA0000010000000000000064 /* HeraldQuiet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000064 /* HeraldQuiet.swift */; };
+		AA0000010000000000000065 /* HeraldVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000065 /* HeraldVoice.swift */; };
+		AA0000010000000000000067 /* HeraldTemplateBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000067 /* HeraldTemplateBundle.swift */; };
+		AA0000010000000000000066 /* HeraldStacks.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000066 /* HeraldStacks.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +77,47 @@
 			AA0000020000000000000015 /* BrowserNavigationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserNavigationService.swift; sourceTree = "<group>"; };
 			AA0000030000000000000001 /* WebWatcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebWatcher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000040000000000000001 /* WebWatcher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WebWatcher.entitlements; sourceTree = "<group>"; };
+		AA0000020000000000000020 /* Observation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observation.swift; sourceTree = "<group>"; };
+		AA0000020000000000000021 /* SiteProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteProfile.swift; sourceTree = "<group>"; };
+		AA0000020000000000000022 /* ProbeScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProbeScript.swift; sourceTree = "<group>"; };
+		AA0000020000000000000030 /* GmailAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailAccount.swift; sourceTree = "<group>"; };
+		AA0000020000000000000031 /* GmailAccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailAccountStore.swift; sourceTree = "<group>"; };
+		AA0000020000000000000032 /* GmailMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailMessage.swift; sourceTree = "<group>"; };
+		AA0000020000000000000033 /* GmailAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailAPIService.swift; sourceTree = "<group>"; };
+		AA0000020000000000000034 /* GmailOAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailOAuthService.swift; sourceTree = "<group>"; };
+		AA0000020000000000000035 /* GmailPollingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailPollingService.swift; sourceTree = "<group>"; };
+		AA0000020000000000000036 /* OAuthLoopbackListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthLoopbackListener.swift; sourceTree = "<group>"; };
+		AA0000020000000000000037 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		AA0000020000000000000038 /* WatcherRecipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatcherRecipe.swift; sourceTree = "<group>"; };
+		AA0000020000000000000039 /* ProbeProgram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProbeProgram.swift; sourceTree = "<group>"; };
+		AA0000020000000000000040 /* ElementPickerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementPickerModel.swift; sourceTree = "<group>"; };
+		AA0000020000000000000041 /* ElementPickerSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementPickerSection.swift; sourceTree = "<group>"; };
+		AA0000020000000000000042 /* EmailWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailWatcher.swift; sourceTree = "<group>"; };
+		AA0000020000000000000043 /* EmailWatcherStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailWatcherStore.swift; sourceTree = "<group>"; };
+		AA0000020000000000000044 /* GoogleOAuthClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleOAuthClient.swift; sourceTree = "<group>"; };
+		AA0000020000000000000045 /* GmailAccountConnector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GmailAccountConnector.swift; sourceTree = "<group>"; };
+		AA0000020000000000000046 /* AddWatcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWatcherView.swift; sourceTree = "<group>"; };
+		AA0000020000000000000047 /* EmailWatcherEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailWatcherEditorView.swift; sourceTree = "<group>"; };
+		AA0000020000000000000048 /* NotificationIconStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationIconStore.swift; sourceTree = "<group>"; };
+		AA0000020000000000000049 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AA0000020000000000000050 /* JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
+		AA0000020000000000000051 /* HTTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTP.swift; sourceTree = "<group>"; };
+		AA0000020000000000000052 /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
+		AA0000020000000000000053 /* Paths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paths.swift; sourceTree = "<group>"; };
+		AA0000020000000000000054 /* Listener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Listener.swift; sourceTree = "<group>"; };
+		AA0000020000000000000055 /* CallbackServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallbackServer.swift; sourceTree = "<group>"; };
+		AA0000020000000000000056 /* HeraldBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldBridge.swift; sourceTree = "<group>"; };
+		AA0000020000000000000057 /* HeraldTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldTemplate.swift; sourceTree = "<group>"; };
+		AA0000020000000000000058 /* HeraldComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldComponents.swift; sourceTree = "<group>"; };
+		AA0000020000000000000059 /* HeraldActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldActions.swift; sourceTree = "<group>"; };
+		AA0000020000000000000060 /* HeraldManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldManifest.swift; sourceTree = "<group>"; };
+		AA0000020000000000000061 /* ComponentSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentSchema.swift; sourceTree = "<group>"; };
+		AA0000020000000000000062 /* BuiltinTemplates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuiltinTemplates.swift; sourceTree = "<group>"; };
+		AA0000020000000000000063 /* HeraldManifests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldManifests.swift; sourceTree = "<group>"; };
+		AA0000020000000000000064 /* HeraldQuiet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldQuiet.swift; sourceTree = "<group>"; };
+		AA0000020000000000000065 /* HeraldVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldVoice.swift; sourceTree = "<group>"; };
+		AA0000020000000000000067 /* HeraldTemplateBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldTemplateBundle.swift; sourceTree = "<group>"; };
+		AA0000020000000000000066 /* HeraldStacks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldStacks.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +161,7 @@
 			children = (
 				AA0000020000000000000001 /* WebWatcherApp.swift */,
 				AA0000100000000000000001 /* Models */,
+				AA0000240000000000000001 /* Herald */,
 				AA0000110000000000000001 /* Services */,
 				AA0000120000000000000001 /* Views */,
 				AA0000020000000000000011 /* Assets.xcassets */,
@@ -86,10 +169,43 @@
 			path = WebWatcher;
 			sourceTree = "<group>";
 		};
+		AA0000240000000000000001 /* Herald */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000020000000000000057 /* HeraldTemplate.swift */,
+				AA0000020000000000000058 /* HeraldComponents.swift */,
+				AA0000020000000000000059 /* HeraldActions.swift */,
+				AA0000020000000000000060 /* HeraldManifest.swift */,
+				AA0000020000000000000061 /* ComponentSchema.swift */,
+				AA0000020000000000000062 /* BuiltinTemplates.swift */,
+				AA0000020000000000000055 /* CallbackServer.swift */,
+				AA0000020000000000000054 /* Listener.swift */,
+				AA0000020000000000000053 /* Paths.swift */,
+				AA0000020000000000000052 /* Client.swift */,
+				AA0000020000000000000051 /* HTTP.swift */,
+				AA0000020000000000000050 /* JSON.swift */,
+				AA0000020000000000000049 /* Models.swift */,
+				AA0000020000000000000067 /* HeraldTemplateBundle.swift */,
+				AA0000020000000000000066 /* HeraldStacks.swift */,
+				AA0000020000000000000065 /* HeraldVoice.swift */,
+				AA0000020000000000000064 /* HeraldQuiet.swift */,
+			);
+			path = Herald;
+			sourceTree = "<group>";
+		};
 		AA0000100000000000000001 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				AA0000020000000000000032 /* GmailMessage.swift */,
+				AA0000020000000000000031 /* GmailAccountStore.swift */,
+				AA0000020000000000000030 /* GmailAccount.swift */,
+				AA0000020000000000000021 /* SiteProfile.swift */,
+				AA0000020000000000000020 /* Observation.swift */,
 				AA0000020000000000000002 /* Watcher.swift */,
+				AA0000020000000000000042 /* EmailWatcher.swift */,
+				AA0000020000000000000043 /* EmailWatcherStore.swift */,
+				AA0000020000000000000044 /* GoogleOAuthClient.swift */,
+				AA0000020000000000000038 /* WatcherRecipe.swift */,
 				AA0000020000000000000003 /* WatcherStore.swift */,
 				AA0000020000000000000009 /* AppSettings.swift */,
 			);
@@ -99,9 +215,20 @@
 			AA0000110000000000000001 /* Services */ = {
 				isa = PBXGroup;
 				children = (
+				AA0000020000000000000037 /* KeychainService.swift */,
+				AA0000020000000000000056 /* HeraldBridge.swift */,
+				AA0000020000000000000063 /* HeraldManifests.swift */,
+				AA0000020000000000000036 /* OAuthLoopbackListener.swift */,
+				AA0000020000000000000035 /* GmailPollingService.swift */,
+				AA0000020000000000000034 /* GmailOAuthService.swift */,
+				AA0000020000000000000033 /* GmailAPIService.swift */,
+				AA0000020000000000000022 /* ProbeScript.swift */,
 					AA0000020000000000000005 /* NotificationService.swift */,
 					AA0000020000000000000006 /* WatcherService.swift */,
 					AA0000020000000000000014 /* SafariScraper.swift */,
+				AA0000020000000000000048 /* NotificationIconStore.swift */,
+				AA0000020000000000000045 /* GmailAccountConnector.swift */,
+				AA0000020000000000000039 /* ProbeProgram.swift */,
 					AA0000020000000000000015 /* BrowserNavigationService.swift */,
 				);
 				path = Services;
@@ -111,6 +238,10 @@
 			isa = PBXGroup;
 			children = (
 				AA0000020000000000000007 /* MenuBarView.swift */,
+				AA0000020000000000000046 /* AddWatcherView.swift */,
+				AA0000020000000000000047 /* EmailWatcherEditorView.swift */,
+				AA0000020000000000000041 /* ElementPickerSection.swift */,
+				AA0000020000000000000040 /* ElementPickerModel.swift */,
 				AA0000020000000000000008 /* WatcherEditorView.swift */,
 				AA0000020000000000000010 /* SettingsView.swift */,
 			);
@@ -126,6 +257,7 @@
 			buildPhases = (
 				AA0000150000000000000001 /* Sources */,
 				AA0000050000000000000001 /* Frameworks */,
+				AA0000230000000000000001 /* Copy Google OAuth client (optional) */,
 				AA0000220000000000000001 /* Resources */,
 			);
 			buildRules = (
@@ -181,12 +313,77 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		AA0000230000000000000001 /* Copy Google OAuth client (optional) */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Sources/WebWatcher/Resources/google-oauth-client.json",
+			);
+			name = "Copy Google OAuth client (optional)";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/google-oauth-client.json",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SRC=\"$SRCROOT/Sources/WebWatcher/Resources/google-oauth-client.json\"; if [ -f \"$SRC\" ]; then mkdir -p \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"; cp \"$SRC\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/\"; fi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		AA0000150000000000000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				AA0000010000000000000001 /* WebWatcherApp.swift in Sources */,
+				AA0000010000000000000057 /* HeraldTemplate.swift in Sources */,
+				AA0000010000000000000056 /* HeraldBridge.swift in Sources */,
+				AA0000010000000000000058 /* HeraldComponents.swift in Sources */,
+				AA0000010000000000000059 /* HeraldActions.swift in Sources */,
+				AA0000010000000000000060 /* HeraldManifest.swift in Sources */,
+				AA0000010000000000000061 /* ComponentSchema.swift in Sources */,
+				AA0000010000000000000062 /* BuiltinTemplates.swift in Sources */,
+				AA0000010000000000000063 /* HeraldManifests.swift in Sources */,
+				AA0000010000000000000055 /* CallbackServer.swift in Sources */,
+				AA0000010000000000000054 /* Listener.swift in Sources */,
+				AA0000010000000000000053 /* Paths.swift in Sources */,
+				AA0000010000000000000052 /* Client.swift in Sources */,
+				AA0000010000000000000051 /* HTTP.swift in Sources */,
+				AA0000010000000000000050 /* JSON.swift in Sources */,
+				AA0000010000000000000049 /* Models.swift in Sources */,
+				AA0000010000000000000042 /* EmailWatcher.swift in Sources */,
+				AA0000010000000000000043 /* EmailWatcherStore.swift in Sources */,
+				AA0000010000000000000044 /* GoogleOAuthClient.swift in Sources */,
+				AA0000010000000000000045 /* GmailAccountConnector.swift in Sources */,
+				AA0000010000000000000046 /* AddWatcherView.swift in Sources */,
+				AA0000010000000000000047 /* EmailWatcherEditorView.swift in Sources */,
+				AA0000010000000000000037 /* KeychainService.swift in Sources */,
+				AA0000010000000000000067 /* HeraldTemplateBundle.swift in Sources */,
+				AA0000010000000000000066 /* HeraldStacks.swift in Sources */,
+				AA0000010000000000000065 /* HeraldVoice.swift in Sources */,
+				AA0000010000000000000064 /* HeraldQuiet.swift in Sources */,
+				AA0000010000000000000048 /* NotificationIconStore.swift in Sources */,
+				AA0000010000000000000038 /* WatcherRecipe.swift in Sources */,
+				AA0000010000000000000039 /* ProbeProgram.swift in Sources */,
+				AA0000010000000000000040 /* ElementPickerModel.swift in Sources */,
+				AA0000010000000000000041 /* ElementPickerSection.swift in Sources */,
+				AA0000010000000000000036 /* OAuthLoopbackListener.swift in Sources */,
+				AA0000010000000000000035 /* GmailPollingService.swift in Sources */,
+				AA0000010000000000000034 /* GmailOAuthService.swift in Sources */,
+				AA0000010000000000000033 /* GmailAPIService.swift in Sources */,
+				AA0000010000000000000032 /* GmailMessage.swift in Sources */,
+				AA0000010000000000000031 /* GmailAccountStore.swift in Sources */,
+				AA0000010000000000000030 /* GmailAccount.swift in Sources */,
+				AA0000010000000000000022 /* ProbeScript.swift in Sources */,
+				AA0000010000000000000021 /* SiteProfile.swift in Sources */,
+				AA0000010000000000000020 /* Observation.swift in Sources */,
 				AA0000010000000000000002 /* Watcher.swift in Sources */,
 				AA0000010000000000000003 /* WatcherStore.swift in Sources */,
 				AA0000010000000000000005 /* NotificationService.swift in Sources */,
@@ -333,9 +530,9 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/WebWatcher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 30;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 7S422NVLUK;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
@@ -348,7 +545,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.11;
+				MARKETING_VERSION = 1.10.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webwatcher.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -362,11 +559,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Sources/WebWatcher.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 30;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 7S422NVLUK;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
@@ -379,7 +579,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.11;
+				MARKETING_VERSION = 1.10.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webwatcher.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

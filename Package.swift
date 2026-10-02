@@ -1,5 +1,5 @@
 // swift-tools-version: 5.9
-// WebWatcher v1.4.11 (Build 17)
+// WebWatcher v1.10.5 (Build 30)
 // https://github.com/ivg-design/web-watcher
 
 import PackageDescription
@@ -16,6 +16,11 @@ let package = Package(
         .executableTarget(
             name: "WebWatcher",
             path: "Sources/WebWatcher"
+        ),
+        .testTarget(
+            name: "WebWatcherTests",
+            dependencies: ["WebWatcher"],
+            path: "Tests/WebWatcherTests"
         )
     ]
 )

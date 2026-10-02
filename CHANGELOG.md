@@ -5,6 +5,185 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.10.5] (Build 30) - 2026-10-01
+
+### Fixed
+
+- The menu-bar icon is the hourglass-with-eye again (1.10.3/1.10.4 drew a plain hourglass while fixing its size and centring); it is scaled to the standard glyph height and centred, badge included
+- A Herald template that adds `extra` values to a button's callback no longer makes WebWatcher reject its
+  Gmail and Open buttons: the `extra` key is set aside before the payload is compared with what WebWatcher sent
+- The Herald email banner now shows the title and body the email-watcher editor produces (custom text, the
+  "[Preview]" marker, the recent-subjects list, the snippet) instead of only sender, subject and snippet; an
+  install that still has the earlier untouched default template is given the new one
+
+- Herald banner buttons now act before Herald is told they worked: the callback server answers with the
+  outcome of the Gmail action (200 done, 409 failed, 504 still running), so Herald keeps the banner and
+  shows a failure instead of dismissing a banner whose email was not archived, deleted or marked read
+- After WebWatcher relaunches, buttons on banners that were already on screen still work: the callback
+  payloads are re-learned from Herald's history, and the table holds 1024 notifications instead of 256
+- Vendored Herald client files re-synced (request limits, loopback-only callbacks, URL placeholder fix)
+
+## [1.10.4] (Build 29) - 2026-10-01
+
+### Added
+
+- Herald stacking group keys: email notifications carry the sender address (lowercased; an email watcher's accumulated banner uses its first sender pattern) and web watcher notifications carry the site host, so Herald stacks per sender or site. Both manifests declare `family: "webwatcher"`.
+
+### Changed
+
+- The vendored Herald client was re-synced (new HeraldStacks.swift and HeraldTemplateBundle.swift).
+
+## [1.10.3] (Build 28) - 2026-10-01
+
+### Fixed
+
+- Menu bar icon: the badge variant of the hourglass symbol rendered the glyph small and low; the
+  icon is now a plain hourglass drawn centred on a fixed 22 pt template canvas, matching the size
+  and baseline of neighbouring menu bar items
+
+## [1.10.2] (Build 27) - 2026-10-01
+
+### Fixed
+
+- Menu bar icon was small and off-centre: the status item now uses a variable-length slot and a
+  larger, medium-weight glyph
+- WebWatcher registered a redundant legacy "webwatcher" app with Herald next to its two issuers;
+  only "WebWatcher · Web" and "WebWatcher · Email" are registered now, and leftover banners under
+  the old id are dismissed once on launch
+
+## [1.10.1] (Build 26) - 2026-10-01
+
+### Added
+
+- WebWatcher registers Herald manifests for web and email watchers (fields with samples, actions,
+  icon) and ships default grid templates, so banners can be redesigned in Herald's Designer
+
+### Changed
+
+- Herald client re-synced (grid templates, voice and quiet-hours types)
+
+## [1.10.0] (Build 25) - 2026-10-01
+
+### Added
+
+- Notifications can be delivered through Herald, the standalone banner service, when it is
+  running (Settings → Notifications). Banners are persistent, always on top, carry the watcher's
+  image, and keep the Mark as Read / Archive / Delete / Spam actions; macOS notifications remain the
+  fallback when Herald is not running
+
+## [1.9.1] (Build 24) - 2026-09-29
+
+### Changed
+
+- Notification icons are copied into WebWatcher's own folder when chosen, so moving or deleting
+  the original image no longer breaks the notification
+- Notification thumbnails are a centred square crop rendered at 512 px, so non-square images
+  fill the thumbnail instead of being letterboxed inside it
+
+## [1.9.0] (Build 23) - 2026-09-29
+
+### Added
+
+- Email watchers now keep a live unread count: each check asks Gmail for unread inbox mail from
+  the watched senders, so reading a message in Gmail lowers the count without touching WebWatcher
+- One accumulating notification per email watcher ("2 new from Acme Billing", latest subjects,
+  time of the newest) that replaces the previous banner instead of stacking
+- Custom icon, title and body templates for email watchers, with `{count}`, `{sender}`,
+  `{address}`, `{subject}`, `{time}` and `{name}` placeholders, plus a preview button
+- The menu shows the unread count next to each email watcher
+
+### Changed
+
+- Clicking an email notification opens the email itself when there is one unread message, or a
+  Gmail search for the unread mail from those senders when there are several
+- Mark as Read, Archive, Delete and Spam on an email notification act on all counted messages
+
+## [1.8.1] (Build 22) - 2026-09-29
+
+### Fixed
+
+- Google sign-in ended with "Failed to fetch user profile": the app asked Google's generic
+  userinfo endpoint for the account address, which the Gmail-only scope does not allow. It now
+  reads the address from Gmail's own profile endpoint, and any remaining failure names its cause
+
+## [1.8.0] (Build 21) - 2026-09-28
+
+### Added
+
+- Guided assistant for custom watchers: three steps — Page → Element → Confirm — that find the
+  tab, open it if needed, scan automatically, and explain what they see
+- Pick refinement: after picking an element in Safari, use ↑/↓/←/→ to select its parent, child,
+  or siblings before confirming, with a toolbar in Safari or the app's own "Use this" button
+- New watch type "Anything Changes Inside": fingerprints an element's subtree and notifies when
+  it changes, for elements (like a bell icon) with no visible count to track
+- Editor and Settings windows now appear in Cmd+Tab while open
+- Built-in Google sign-in: "Add Gmail Account" / "Sign in with Google" now works without any
+  console or JSON step, using WebWatcher's own embedded OAuth client; importing your own client
+  remains available under Settings → Gmail → Advanced
+
+### Fixed
+
+- Scan page / Pick in Safari results were discarded by the response parser, so both appeared to
+  do nothing
+
+## [1.7.0] (Build 20) - 2026-09-26
+
+### Added
+
+- Gmail sender watchers: notify when new mail arrives from a specific address or `@domain`,
+  with the arrival time shown in the menu bar
+- Google OAuth client import: paste in your own Desktop OAuth client JSON from Settings →
+  Gmail instead of relying on a bundled client
+- Per-account "Notify for every new email" toggle for connected Gmail accounts
+- Reconnect flow for Gmail accounts whose access has expired or been revoked
+
+### Fixed
+
+- Placeholder Google OAuth credentials that made "Add Gmail Account" silently fail
+- An empty refresh token from Google being accepted instead of surfaced as an error
+- A redundant read-only Gmail scope requested alongside the scope that already covers it
+
+## [1.6.0] (Build 19) - 2026-09-26
+
+### Added
+
+- Scan page / Pick in Safari assistant in the watcher editor, so adding a watcher no longer
+  requires DevTools
+- Anchor + any-number (`autoBadge`) strategy for badges that are absent from the page at zero
+- Advanced / Notification disclosure groups in the watcher editor, collapsed by default
+
+### Fixed
+
+- Probing an unloaded ("suspended") Safari tab no longer misreads it as missing and opens a
+  duplicate tab
+- Probes now prefer the visible tab over a hidden duplicate on the same URL
+- At most one reload per check, instead of repeated reloads
+- Built-in Rive profiles now refresh hidden tabs before reading their badge, since Safari
+  pauses background tabs and stops repainting live counts
+
+## [1.5.0] (Build 18) - 2026-07-28
+
+### Added
+
+- Gmail: connect one or more Gmail accounts (OAuth with PKCE over a local loopback redirect, tokens
+  in the Keychain) and get a notification for each new message with Mark as Read, Archive, Delete
+  and Spam actions
+- Built-in site recipes for LinkedIn, Rive Community, Reddit and Contra, plus a generic
+  "tab title (N)" recipe, selectable from the Site menu in the watcher editor
+- Selector Doctor (step-by-step diagnosis) and anchor suggestions in the watcher editor
+- Watchers can open their page in a background tab automatically when no tab is found
+- A watcher that stays broken now sends one notification naming the cause and the remedy
+
+### Changed
+
+- A check that could not observe the page (no tab, signed out, bot check, selector miss) is no
+  longer recorded as "0"; the last confirmed reading is kept and the menu shows the real status
+- Failed checks back off exponentially; failures right after wake from sleep are not counted
+- watchers.json is backed up before each save and an unreadable file is quarantined instead of
+  being overwritten
+
 ## [1.4.11] (Build 17) - 2026-02-13
 
 ### Added

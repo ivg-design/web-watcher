@@ -36,7 +36,9 @@ WebWatcher reads from Safari tabs you already have open. No separate login. No b
 
 ![Add watcher](assets/add-watcher.png)
 
-Configure URL, selector, watch type, and notification preferences.
+Configure the URL and notification preferences, then use **Scan page** or **Pick in Safari**
+to fill in the element to watch — see [Finding the right selector](#finding-the-right-selector)
+below.
 
 ### Settings
 
@@ -53,6 +55,7 @@ Launch at login and other preferences.
 | Text Change | Notify when text content changes |
 | Element Exists | Notify when an element appears |
 | Element Disappears | Notify when an element is removed |
+| Anything Changes Inside | Notify when anything inside the element changes — a badge appears, text updates, items are added |
 
 ## Setup
 
@@ -97,12 +100,38 @@ macOS prompts for notification permission on first run. If you want to change se
 2. Find **WebWatcher**
 3. Enable notifications and choose your preferred alert style (Banners or Alerts)
 
-## Finding the right selector
+## Finding the element
 
-1. Open Safari → Develop → Show Web Inspector (enable Develop menu in Safari preferences if needed)
-2. Click the element inspector tool
-3. Click the element you want to monitor (badge, counter, etc.)
-4. Right-click the highlighted element → Copy → Copy Selector
+The watcher editor walks you through three steps — **Page → Element → Confirm** — so you
+shouldn't need DevTools at all:
+
+1. **Page** — paste or edit the URL. WebWatcher finds the matching Safari tab itself (opening
+   it if it isn't already open) and reports what it found: "Found in Safari: Feed | Rive
+   Community".
+2. **Element** — WebWatcher scans the page automatically and groups what it finds ("Showing a
+   number now", "Could get a badge later", "Other"). Click **Use** on a row, or click
+   **Pick in Safari** and click the element yourself. Once picked, you can refine the
+   selection without leaving Safari: **↑** selects the parent, **↓** the first child, **←**/**→**
+   move between siblings, **Enter** confirms, **Esc** cancels. A toolbar in Safari shows the
+   same shortcuts, or use the app's own **Use this** button, which always works even if the
+   page blocks scripted keys. If an element shows a number, WebWatcher recommends tracking it;
+   if it doesn't show anything yet, it offers "a number appears next to it" or "anything
+   changes inside it".
+3. **Confirm** — a summary of what will be watched, plus the live diagnosis (current reading,
+   confirmed zero, background tab, etc.) and buttons to test again or change the element.
+
+**Anything Changes Inside** is the watch type for elements that show no count at all — a bell
+icon with no badge, a status area, anything where "something happened" is all you need. It
+fingerprints the element's subtree and notifies when that fingerprint changes. Caveat: a busy
+container (lots of descendants, frequently-updating timestamps, live counters unrelated to
+what you care about) can notify more often than you want — WebWatcher warns you in the Confirm
+step when the picked area has a large number of elements, and picking a smaller part (with
+↑/↓ while picking) usually fixes it.
+
+If neither helper finds what you need, the manual fallback is still there under **Advanced**:
+open Safari → Develop → Show Web Inspector, click the element inspector tool, click the
+element you want to monitor, then right-click it → Copy → Copy Selector, and paste the result
+into the Selector field.
 
 ## Example watchers
 
@@ -127,6 +156,9 @@ macOS prompts for notification permission on first run. If you want to change se
 - URL: `https://community.rive.app/`
 - Selector: `.notification-indicator, [class*='notification'] [class*='count']`
 - Watch type: Badge/Number
+- This is a built-in recipe — pick the Rive site profile in the editor and WebWatcher fills
+  these fields for you, including the `anchoredBadge` strategy (the badge node disappears
+  entirely at zero, which the built-in recipe already accounts for).
 
 **GitHub PR reviews:**
 - URL: `https://github.com/notifications`
@@ -138,6 +170,96 @@ macOS prompts for notification permission on first run. If you want to change se
 Safari suspends background tabs to save resources. If your watcher shows stale values, enable "Force refresh before checking" in the watcher settings. This reloads the tab before scraping.
 
 The "Settle delay" option (0.5s - 5.0s) controls how long to wait after reload for dynamic JavaScript content to update.
+
+### Known limitations
+
+- **Private windows** can't be told apart from normal ones — WebWatcher probes the first
+  matching Safari tab regardless of whether it's in a private window.
+- **Cross-origin iframes**: an element embedded inside a frame from a different origin can't
+  be reached by Scan page or Pick in Safari. Pick in Safari tells you when this happens.
+- **Closed shadow roots**: elements inside a closed Shadow DOM aren't visible to the assistant
+  either, for the same cross-boundary reason.
+- **Background tabs go stale.** Safari pauses rendering in hidden tabs, so a badge that
+  updates over a WebSocket may not repaint until the tab is visible again. Badge watchers
+  reload the tab before reading it; if a watcher still looks stale, turn on **Force refresh**
+  under Advanced.
+
+## Gmail
+
+WebWatcher can also watch for new mail from specific senders or domains — arriving in the
+Inbox — and notify you the moment it lands.
+
+### Setup
+
+Click **Add Gmail Account** (or **Sign in with Google** in the Gmail sender editor), sign in,
+allow access — done. WebWatcher uses its own built-in Google OAuth client, so there's no
+console or JSON step for most people.
+
+Then use **Add Watcher → Gmail sender**: pick the connected account, add one or more sender
+addresses or `@domain.com` patterns, and save.
+
+#### Advanced: use your own Google OAuth client
+
+If you'd rather not rely on WebWatcher's built-in client — or you're building from source
+without one bundled — you can import your own:
+
+1. Open **Google Cloud Console → APIs & Services → Credentials**
+   (https://console.cloud.google.com/apis/credentials).
+2. **Create Credentials → OAuth client ID → Application type: Desktop app → Create → Download JSON.**
+3. Enable the **Gmail API** for that project
+   (https://console.cloud.google.com/apis/library/gmail.googleapis.com).
+4. On the **OAuth consent screen**: if your Google Cloud project belongs to a Google Workspace
+   organization, choose **Internal**. Otherwise choose **External** and add yourself under
+   **Test users** — while the app is in Testing, Google revokes access every 7 days and you'll
+   need to reconnect the account in WebWatcher's Settings.
+5. In WebWatcher, go to **Settings → Gmail → Advanced: use your own Google OAuth client** and
+   import the JSON file you downloaded. An imported client always takes priority over the
+   built-in one; remove it from the same panel to go back to the built-in client.
+
+### Notifications
+
+Each email watcher keeps a live **unread count**: every check asks Gmail for unread Inbox mail
+from the watched senders, so reading a message in Gmail lowers the count on the next check.
+The menu shows the count next to the watcher.
+
+New mail produces **one notification per watcher** that is replaced in place rather than
+stacking: "2 new from Acme Billing", the latest subjects, and when the newest one arrived.
+Clicking it opens the email itself when there is one unread message, or a Gmail search for the
+unread mail from those senders when there are several. **Mark as Read**, **Archive**, **Delete**
+and **Spam** act on all counted messages.
+
+The watcher's **Notification** section lets you set a custom icon, title and body. Templates
+can use `{count}`, `{sender}`, `{address}`, `{subject}`, `{time}` and `{name}`; the defaults are
+`{count} new from {sender}` (or `Email from {sender}` for a single message) and the latest
+subjects followed by `received {time}`.
+
+### Notify for every new email
+
+Each connected account also has a **"Notify for every new email"** toggle in Settings. Turn
+it on to get notified about every Inbox message from that account, not just the senders
+you've set up watchers for.
+
+### Limitations
+
+- Only mail that lands in the **Inbox** is seen — archived, spam, and other-label messages
+  aren't watched.
+- Gmail accounts only; other mail providers aren't supported.
+- Domain watchers (`@company.com`) establish their starting point with a search query that
+  can, in rare cases, miss a message that should have matched — new mail from that domain is
+  still caught going forward.
+
+## Herald (optional)
+
+WebWatcher can deliver its notifications through [Herald](https://github.com/ivg-design/herald),
+a standalone menu-bar notification service with persistent, always-on-top banners, per-app history,
+stacking by sender, snooze, and fully customizable banner layouts. When Herald is running, WebWatcher
+registers two issuers (`webwatcher.web` for page watchers, `webwatcher.email` for Gmail watchers) and
+sends banners with the same title, body, icon and buttons it would otherwise hand to macOS. Buttons
+such as Open, Mark as Read, Archive and Delete call back into WebWatcher and report their outcome, so
+a banner is only dismissed once the action succeeded.
+
+Settings → Notifications → **Delivery** chooses between **Herald when available** (default; falls
+back to macOS notifications when Herald is not running) and **macOS notifications**.
 
 ## Requirements
 
@@ -180,6 +302,18 @@ swift build
 ```
 
 Or open `WebWatcher.xcodeproj` in Xcode and build.
+
+The build works out of the box, but without a Google client "Add Gmail Account" falls back to
+the Advanced import (see above). To get built-in Google sign-in in your own build, download a
+Desktop-app OAuth client JSON from Google Cloud Console (see Advanced above) and install it
+with:
+
+```bash
+scripts/install-google-client.sh /path/to/client_secret_*.json
+```
+
+This copies the JSON to `Sources/WebWatcher/Resources/google-oauth-client.json`, a path that's
+gitignored so it never gets committed. Rebuild after installing it.
 
 ## License
 

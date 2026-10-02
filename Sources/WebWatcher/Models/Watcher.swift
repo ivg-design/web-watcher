@@ -27,6 +27,9 @@ enum WatchType: String, Codable, CaseIterable {
     case badgeNumber = "Badge/Number"
     case elementExists = "Element Exists"
     case elementDisappears = "Element Disappears"
+    /// G2: fingerprint of an element's subtree; notifies when it changes. Makes a bell
+    /// with no badge (no number, ever) watchable.
+    case subtreeChange = "Anything Changes Inside"
 
     var description: String {
         switch self {
@@ -40,6 +43,8 @@ enum WatchType: String, Codable, CaseIterable {
             return "Notify when the element appears"
         case .elementDisappears:
             return "Notify when the element disappears"
+        case .subtreeChange:
+            return "Notify when anything inside the element changes — a badge appears, text updates, items are added."
         }
     }
 }
@@ -84,6 +89,21 @@ struct Watcher: Identifiable {
     // Badge extraction
     var badgeAttribute: String? // Custom attribute to read for badge value (e.g., "initial-count", "data-count")
 
+    /// An always-present element near the badge. Its presence is what lets a missing
+    /// badge be reported as a confirmed zero instead of "I could not look".
+    var anchorSelector: String?
+
+    /// Built-in detection recipe backing this watcher, if any.
+    var profileId: String?
+
+    /// Detection strategy set by the Element Picker Assistant. `nil` means manual/legacy
+    /// (the watcher was hand-configured before the assistant existed, or uses a profile
+    /// whose own strategy takes precedence).
+    var strategy: ProbeStrategy?
+
+    /// Open the page automatically when no matching tab exists.
+    var autoOpenEnabled: Bool
+
     // Notification customization
     var customIconPath: String? // Path to custom icon image
     var notificationTitle: String? // Custom title (defaults to watcher name)
@@ -99,6 +119,41 @@ struct Watcher: Identifiable {
     var lastError: String?
     var consecutiveErrors: Int
 
+    /// G2: when the subtree fingerprint (or any conclusive value) last actually changed,
+    /// as opposed to merely being re-checked. Set by `WatcherStore.recordObservation`
+    /// only when the new conclusive value differs from the previous one, so a watcher
+    /// that keeps reading the same value never advances this timestamp.
+    var lastChangeDate: Date?
+
+    /// The last reading we are actually confident in. Survives blocked checks, so a
+    /// transient failure can never wipe the baseline and swallow the next real change.
+    var lastConclusiveValue: String?
+
+    /// True once any check produced a conclusive reading. A watcher that has never
+    /// matched anything is misconfigured, not quiet.
+    var everMatched: Bool
+
+    /// Why the most recent check could not observe, if it couldn't.
+    var lastCannotReason: String?
+    var consecutiveCannotObserve: Int
+
+    /// Suppress checks until this time (exponential backoff after repeated failures).
+    var backoffUntil: Date?
+
+    /// When we last told the user this watcher is broken, so we don't nag.
+    var healthNotifiedAt: Date?
+
+    /// Set when WebWatcher opened the tab itself. Such tabs are never force-refreshed,
+    /// so an auto-opened sign-in page can't be reloaded on a timer forever.
+    var appOpenedTab: Bool
+    var lastAutoOpen: Date?
+    var autoOpensToday: Int
+    var autoOpenDay: Date?
+
+    /// When we last reloaded this tab to recover from `.tabSuspended`. Throttled
+    /// separately from `lastAutoOpen` — a reload is not a new tab.
+    var lastReloadAttempt: Date?
+
     init(
         id: UUID = UUID(),
         name: String = "",
@@ -112,6 +167,10 @@ struct Watcher: Identifiable {
         actionURL: String? = nil,
         apiLookupCommand: String? = nil,
         badgeAttribute: String? = nil,
+        anchorSelector: String? = nil,
+        profileId: String? = nil,
+        strategy: ProbeStrategy? = nil,
+        autoOpenEnabled: Bool = true,
         customIconPath: String? = nil,
         notificationTitle: String? = nil,
         notificationBodyTemplate: String? = nil,
@@ -130,6 +189,10 @@ struct Watcher: Identifiable {
         self.actionURL = actionURL
         self.apiLookupCommand = apiLookupCommand
         self.badgeAttribute = badgeAttribute
+        self.anchorSelector = anchorSelector
+        self.profileId = profileId
+        self.strategy = strategy
+        self.autoOpenEnabled = autoOpenEnabled
         self.customIconPath = customIconPath
         self.notificationTitle = notificationTitle
         self.notificationBodyTemplate = notificationBodyTemplate
@@ -139,41 +202,96 @@ struct Watcher: Identifiable {
         self.lastCheck = nil
         self.lastError = nil
         self.consecutiveErrors = 0
+        self.lastChangeDate = nil
+        self.lastConclusiveValue = nil
+        self.everMatched = false
+        self.lastCannotReason = nil
+        self.consecutiveCannotObserve = 0
+        self.backoffUntil = nil
+        self.healthNotifiedAt = nil
+        self.appOpenedTab = false
+        self.lastAutoOpen = nil
+        self.autoOpensToday = 0
+        self.autoOpenDay = nil
+        self.lastReloadAttempt = nil
     }
 
-    /// Display string for the current status
+    /// Overall health, derived rather than stored so it can never drift from the counters.
+    enum Health {
+        case unknown
+        case ok
+        case blocked(CannotReason)
+        case broken(CannotReason)
+
+        var isHealthy: Bool { if case .ok = self { return true }; return false }
+    }
+
+    var health: Health {
+        if let raw = lastCannotReason, let reason = CannotReason(rawValue: raw) {
+            return consecutiveCannotObserve >= 3 ? .broken(reason) : .blocked(reason)
+        }
+        if lastConclusiveValue == nil { return .unknown }
+        return .ok
+    }
+
+    /// Current badge reading, preserving a "9+" style cap.
+    var badgeValue: BadgeValue? {
+        guard let v = lastConclusiveValue else { return nil }
+        return BadgeValue.parse(v)
+    }
+
+    /// Display string for the current status.
+    ///
+    /// "Nothing new" is reachable only from a conclusive reading. Everything else names
+    /// what actually went wrong, so a signed-out or tab-less watcher can never masquerade
+    /// as a quiet one.
     var statusDisplay: String {
-        if let error = lastError {
+        if let raw = lastCannotReason, let reason = CannotReason(rawValue: raw) {
+            return reason.shortStatus
+        }
+        if let error = lastError, lastConclusiveValue == nil {
             return "Error: \(error)"
         }
-        guard let value = lastValue else {
+        guard let value = lastConclusiveValue ?? lastValue else {
             return "Not checked yet"
         }
         switch watchType {
         case .badgeNumber:
-            if value == "ELEMENT_NOT_FOUND" || value == "NO_BADGE" || value == "0" || value.hasPrefix("NO_NUMBER:") {
-                return "Nothing new"
-            } else {
-                return "\(value) new"
-            }
+            guard let badge = BadgeValue.parse(value) else { return "Nothing new" }
+            return badge.number == 0 ? "Nothing new" : "\(badge.display) new"
         case .elementCount:
-            if value == "0" {
-                return "Nothing new"
-            }
-            return "\(value) items"
+            return value == "0" ? "Nothing new" : "\(value) items"
         case .textChange:
-            return "Last: \(value.prefix(30))..."
+            return value.isEmpty ? "Empty" : "Last: \(value.prefix(30))"
         case .elementExists:
             return value == "true" ? "Present" : "Nothing new"
         case .elementDisappears:
             return value == "true" ? "Still there" : "Gone"
+        case .subtreeChange:
+            if let lastChangeDate {
+                return "Changed \(EmailTimeFormatter.received(lastChangeDate))"
+            }
+            return lastConclusiveValue == nil ? "Not checked yet" : "Watching"
         }
     }
 
-    /// Whether the current value indicates a potential issue with the selector
+    /// Whether the watcher needs the user's attention.
     var mayHaveIssue: Bool {
-        guard let value = lastValue else { return false }
-        return value.hasPrefix("NO_NUMBER:")
+        if case .broken = health { return true }
+        if lastCannotReason != nil { return true }
+        return false
+    }
+
+    /// A watcher with no anchor cannot prove a zero, so its quiet readings are unverified —
+    /// unless the strategy itself makes zero self-evident (ariaCount and autoBadge read the
+    /// anchor directly; documentTitle needs no selector at all).
+    var canConfirmZero: Bool {
+        if profileId != nil { return true }
+        if !(anchorSelector ?? "").isEmpty { return true }
+        switch strategy {
+        case .autoBadge, .ariaCount, .documentTitle: return true
+        default: return false
+        }
     }
 }
 
@@ -183,7 +301,12 @@ extension Watcher: Codable {
         case id, name, url, selector, selectorType, watchType, interval, isEnabled
         case notificationSound, actionURL, apiLookupCommand, badgeAttribute, customIconPath, notificationTitle, notificationBodyTemplate
         case forceRefresh, refreshDelay
-        case lastValue, lastCheck, lastError, consecutiveErrors
+        case lastValue, lastCheck, lastError, consecutiveErrors, lastChangeDate
+        case anchorSelector, profileId, autoOpenEnabled
+        case strategy, lastReloadAttempt
+        case lastConclusiveValue, everMatched, lastCannotReason, consecutiveCannotObserve
+        case backoffUntil, healthNotifiedAt
+        case appOpenedTab, lastAutoOpen, autoOpensToday, autoOpenDay
     }
 
     init(from decoder: Decoder) throws {
@@ -210,14 +333,42 @@ extension Watcher: Codable {
         lastCheck = try container.decodeIfPresent(Date.self, forKey: .lastCheck)
         lastError = try container.decodeIfPresent(String.self, forKey: .lastError)
         consecutiveErrors = try container.decodeIfPresent(Int.self, forKey: .consecutiveErrors) ?? 0
+        // Absent in every JSON written before G2 existed.
+        lastChangeDate = try container.decodeIfPresent(Date.self, forKey: .lastChangeDate)
+
+        anchorSelector = try container.decodeIfPresent(String.self, forKey: .anchorSelector)
+        profileId = try container.decodeIfPresent(String.self, forKey: .profileId)
+        // Absent in every JSON written before this feature; nil correctly means "manual/legacy".
+        strategy = try container.decodeIfPresent(ProbeStrategy.self, forKey: .strategy)
+        autoOpenEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoOpenEnabled) ?? true
+
+        // Seed the baseline from the legacy field so an upgrade doesn't look like a
+        // fresh install, but don't claim a watcher "matched" on the strength of a
+        // legacy "0" — under the old code that value was also what a dead selector wrote.
+        lastConclusiveValue = try container.decodeIfPresent(String.self, forKey: .lastConclusiveValue) ?? lastValue
+        everMatched = try container.decodeIfPresent(Bool.self, forKey: .everMatched)
+            ?? (lastValue != nil && lastValue != "0")
+        lastCannotReason = try container.decodeIfPresent(String.self, forKey: .lastCannotReason)
+        consecutiveCannotObserve = try container.decodeIfPresent(Int.self, forKey: .consecutiveCannotObserve) ?? 0
+        backoffUntil = try container.decodeIfPresent(Date.self, forKey: .backoffUntil)
+        healthNotifiedAt = try container.decodeIfPresent(Date.self, forKey: .healthNotifiedAt)
+        appOpenedTab = try container.decodeIfPresent(Bool.self, forKey: .appOpenedTab) ?? false
+        lastAutoOpen = try container.decodeIfPresent(Date.self, forKey: .lastAutoOpen)
+        autoOpensToday = try container.decodeIfPresent(Int.self, forKey: .autoOpensToday) ?? 0
+        autoOpenDay = try container.decodeIfPresent(Date.self, forKey: .autoOpenDay)
+        lastReloadAttempt = try container.decodeIfPresent(Date.self, forKey: .lastReloadAttempt)
     }
 }
 
-/// Result from checking a watcher
+/// Result from checking a watcher.
+///
+/// There is no `hasChanged` here on purpose: change detection used to be computed from a
+/// stale snapshot in the scraper and then re-derived in the service. It now lives in
+/// exactly one place, `WatcherService`.
 struct WatchResult {
     let watcherId: UUID
-    let value: String?
-    let error: String?
-    let hasChanged: Bool
+    let report: ProbeReport
     let timestamp: Date
+
+    var observation: Observation { report.observation }
 }

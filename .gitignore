@@ -66,3 +66,12 @@ Thumbs.db
 
 # Generated icons script output (keep actual icons)
 generate-icon.swift
+
+# Built-in Google OAuth client (installed-app secret; not confidential per Google, but
+# kept out of source control so every clone doesn't ship the maintainer's client).
+# Copy your own with scripts/install-google-client.sh, or leave the app to fall back
+# to Settings → Gmail → Advanced.
+Sources/WebWatcher/Resources/google-oauth-client.json
+
+# Notarized DMGs built by mac-notarize (published as GitHub release assets, not tracked)
+release/

@@ -1,271 +1,231 @@
 import Foundation
 
-/// Scrapes web content from Safari using AppleScript
-/// This approach uses Safari's authenticated session and doesn't steal focus
-final class SafariScraper: @unchecked Sendable {
+/// Everything the editor's Element Picker Assistant needs from Safari: scanning the
+/// page for candidates, running a "Pick in Safari" session, and the tab-liveness
+/// primitives (activate / reload) that both the assistant and `WatcherService`'s
+/// recovery path rely on. `SafariScraper` conforms; tests use a fake.
+protocol ElementProbing: AnyObject {
+    func scan(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport
+    /// Activates the tab, injects the hover-highlight overlay. Success ⇔
+    /// `report.pickState == .waiting`.
+    func beginPick(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport
+    func pollPick(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport
+    func endPick(_ watcher: Watcher, profile: SiteProfile?) async
+    /// Activates the tab, then asks the page to flash the element. True iff found.
+    func highlight(_ selector: String, watcher: Watcher, profile: SiteProfile?) async -> Bool
+    func reloadTab(for watcher: Watcher, profile: SiteProfile?) async -> Bool
+    func openBackgroundTab(for watcher: Watcher, profile: SiteProfile?) async -> Bool
+    func diagnose(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport
+    /// G1 step 1 ("Page"): is the watcher's page open in Safari and loaded? Never
+    /// activates the tab or disturbs a pick session in progress (§3.6).
+    func locate(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport
+    /// The app-side "Use this element" action (§9.2) — confirms whatever is
+    /// currently selected in an in-progress pick session.
+    func pickConfirm(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport
+}
+
+/// Reads page state out of Safari using AppleScript.
+///
+/// Checks run inside the user's own logged-in session, which is the app's core
+/// advantage: no separate authentication, and reading an already-open tab generates
+/// no network traffic of its own.
+final class SafariScraper: ElementProbing, @unchecked Sendable {
     static let shared = SafariScraper()
+
+    /// Routine checks/diagnosis: probes that can legitimately take up to ~17s
+    /// (a 15s in-script reload wait plus settle delay).
     private let scriptQueue = DispatchQueue(label: "com.webwatcher.safari-scraper", qos: .userInitiated)
 
-    /// Check a watcher by reading from Safari
-    /// Safari must have the URL open in a tab
-    func check(_ watcher: Watcher) async -> WatchResult {
-        // Find the tab with the matching URL and execute JavaScript
-        let script = generateAppleScript(for: watcher)
+    /// Scan / Pick in Safari / highlight / their own activate & reload recoveries.
+    /// A "Pick in Safari" session polls every 0.5s for up to 90s — if that shared
+    /// the queue above, it would stall behind whatever routine watcher check
+    /// happened to be running, and the picker would feel broken. Kept serial (not
+    /// concurrent) because NSAppleScript talking to the same Safari process from two
+    /// threads at once is exactly the kind of thing that produces stale tab references.
+    private let interactiveQueue = DispatchQueue(label: "com.webwatcher.safari-scraper.interactive", qos: .userInitiated)
+
+    // MARK: - Public — routine checks
+
+    /// Run a normal check.
+    func check(_ watcher: Watcher, profile: SiteProfile?) async -> WatchResult {
+        let report = await run(watcher: watcher, profile: profile, mode: .check)
+        return WatchResult(watcherId: watcher.id, report: report, timestamp: Date())
+    }
+
+    /// Run a check and collect a step-by-step diagnosis for the editor.
+    func diagnose(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport {
+        await run(watcher: watcher, profile: profile, mode: .diagnose)
+    }
+
+    /// Ask the page for ranked anchor candidates.
+    func suggestAnchors(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport {
+        await run(watcher: watcher, profile: profile, mode: .suggestAnchors)
+    }
+
+    /// Open the watcher's page as a background tab. Verified not to steal focus.
+    /// Returns true if a tab was opened.
+    func openBackgroundTab(for watcher: Watcher, profile: SiteProfile?) async -> Bool {
+        let target = profile.map { $0.watchURL.isEmpty ? watcher.url : $0.watchURL } ?? watcher.url
+        guard !target.isEmpty else { return false }
+
+        let script = ProbeScript.openBackgroundTabScript(url: target)
+        return await withCheckedContinuation { continuation in
+            scriptQueue.async {
+                let result = self.executeAppleScript(script)
+                continuation.resume(returning: result.value == "WW_OPENED")
+            }
+        }
+    }
+
+    // MARK: - Public — Element Picker Assistant
+
+    /// Inspect the open tab and rank badge/counter candidates (G1 "Scan page").
+    func scan(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport {
+        await run(watcher: watcher, profile: profile, mode: .scan)
+    }
+
+    /// Brings Safari forward and installs the hover-highlight overlay.
+    func beginPick(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport {
+        guard await activateTab(for: watcher, profile: profile) else {
+            return ProbeReport(observation: .cannot(.noTab, detail: nil))
+        }
+        return await run(watcher: watcher, profile: profile, mode: .pickStart)
+    }
+
+    func pollPick(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport {
+        await run(watcher: watcher, profile: profile, mode: .pickPoll)
+    }
+
+    func endPick(_ watcher: Watcher, profile: SiteProfile?) async {
+        _ = await run(watcher: watcher, profile: profile, mode: .pickStop)
+    }
+
+    /// Reads whether the watcher's page is open/loaded (G1 step 1 "Page"). Purely
+    /// a read, exactly like `scan` — never activates the tab, so it is safe to call
+    /// on every keystroke's debounce without stealing the user's focus.
+    func locate(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport {
+        await run(watcher: watcher, profile: profile, mode: .locate)
+    }
+
+    /// The app-side "Use this element" action (§9.2): asks the page to confirm
+    /// whatever is currently selected in an in-progress pick session. Dispatched
+    /// exactly like `pollPick` — no tab activation — because it is the CSP-proof
+    /// fallback for the in-page toolbar's own key listeners, which some sites block.
+    func pickConfirm(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport {
+        await run(watcher: watcher, profile: profile, mode: .pickConfirm)
+    }
+
+    /// Brings Safari forward and asks the page to flash the element at `selector`.
+    func highlight(_ selector: String, watcher: Watcher, profile: SiteProfile?) async -> Bool {
+        guard await activateTab(for: watcher, profile: profile) else { return false }
+        let report = await run(watcher: watcher, profile: profile, mode: .highlight(selector: selector))
+        // Pattern-matched rather than `==` — `Observation` isn't `Equatable`, and a
+        // literal match is exactly what "true iff observation == .value(\"1\")" means.
+        if case .value("1") = report.observation { return true }
+        return false
+    }
+
+    /// Brings the watcher's tab to the front. Used by `beginPick` and `highlight`,
+    /// which need Safari focused for the user to click or to see the flash — never
+    /// by `scan`, which reads the page without disturbing whatever the user is doing.
+    ///
+    /// This is the one script that sends AppleScript's `activate` command, which
+    /// brings another application (Safari) to the foreground. Apple's NSAppleScript
+    /// threading guidance says scripts that touch the UI/foreground layer should run
+    /// on the main thread — off-main worked in this app's own in-session testing on
+    /// `interactiveQueue`, but that is not documented behavior to rely on, so this
+    /// one script (§9.3) is dispatched via `MainActor.run` instead of the background
+    /// queue every other probe/reload script uses. `executeAndReturnError` itself
+    /// still blocks synchronously either way; only the thread it blocks on changes.
+    func activateTab(for watcher: Watcher, profile: SiteProfile?) async -> Bool {
+        let script = ProbeScript.activateTabScript(for: watcher, profile: profile)
+        let result = await MainActor.run {
+            self.executeAppleScript(script)
+        }
+        return result.value == "WW_ACTIVATED"
+    }
+
+    /// Reloads the watcher's tab in place. Used both by the assistant's own
+    /// `.tabSuspended` recovery (scan/pick) and by `WatcherService`'s throttled
+    /// recovery for routine checks (F1).
+    func reloadTab(for watcher: Watcher, profile: SiteProfile?) async -> Bool {
+        let script = ProbeScript.reloadTabScript(for: watcher, profile: profile)
+        return await withCheckedContinuation { continuation in
+            interactiveQueue.async {
+                let result = self.executeAppleScript(script)
+                continuation.resume(returning: result.value == "WW_RELOADED")
+            }
+        }
+    }
+
+    // MARK: - Private
+
+    private func run(watcher: Watcher, profile: SiteProfile?, mode: ProbeMode) async -> ProbeReport {
+        let script = ProbeScript.probeScript(for: watcher, profile: profile, mode: mode)
+        let queue = mode.isInteractive ? interactiveQueue : scriptQueue
 
         return await withCheckedContinuation { continuation in
-            self.scriptQueue.async {
+            queue.async {
                 let result = self.executeAppleScript(script)
 
-                let watchResult: WatchResult
-                if let error = result.error {
-                    watchResult = WatchResult(
-                        watcherId: watcher.id,
-                        value: nil,
-                        error: error,
-                        hasChanged: false,
-                        timestamp: Date()
-                    )
-                } else {
-                    let hasChanged = result.value != nil && watcher.lastValue != nil && watcher.lastValue != result.value
-                    watchResult = WatchResult(
-                        watcherId: watcher.id,
-                        value: result.value,
-                        error: nil,
-                        hasChanged: hasChanged,
-                        timestamp: Date()
-                    )
+                if let failure = result.failure {
+                    continuation.resume(returning: ProbeReport(observation: .cannot(failure.0, detail: failure.1)))
+                    return
                 }
 
-                continuation.resume(returning: watchResult)
+                switch result.value {
+                case "WW_SAFARI_CLOSED":
+                    continuation.resume(returning: ProbeReport(observation: .cannot(.safariClosed, detail: nil)))
+                case "WW_NO_TAB":
+                    continuation.resume(returning: ProbeReport(observation: .cannot(.noTab, detail: nil)))
+                case "WW_NO_WINDOW":
+                    continuation.resume(returning: ProbeReport(observation: .cannot(.noTab, detail: "Safari has no window")))
+                case "WW_TAB_BLANK":
+                    // Safari unloaded the tab; the in-script reload-once already failed (F1).
+                    continuation.resume(returning: ProbeReport(observation: .cannot(.tabSuspended, detail: nil)))
+                case "WW_EMPTY":
+                    continuation.resume(returning: ProbeReport(observation: .cannot(.protocolError, detail: "no result")))
+                default:
+                    continuation.resume(returning: ProbeEnvelopeParser.parse(result.value))
+                }
             }
         }
     }
 
-    private func generateAppleScript(for watcher: Watcher) -> String {
-        let escapedURL = watcher.url.replacingOccurrences(of: "\"", with: "\\\"")
-        let js = generateJavaScript(for: watcher)
-        let escapedJS = js.replacingOccurrences(of: "\"", with: "\\\"")
-
-        // Optional reload block - forces Safari to refresh stale tabs
-        let reloadBlock: String
-        if watcher.forceRefresh {
-            let settleDelay = watcher.refreshDelay
-            reloadBlock = """
-
-            -- Reload the tab to get fresh content (Safari suspends background tabs)
-            tell foundTab
-                set currentURL to URL of foundTab
-                set URL of foundTab to currentURL
-            end tell
-
-            -- Wait for page to finish loading (up to 15 seconds)
-            set maxWait to 15
-            set waitCount to 0
-            repeat while waitCount < maxWait
-                delay 0.5
-                set waitCount to waitCount + 0.5
-                try
-                    tell foundTab
-                        set loadState to do JavaScript "document.readyState"
-                        if loadState is "complete" then exit repeat
-                    end tell
-                end try
-            end repeat
-
-            -- Additional settle time for dynamic content (configurable)
-            delay \(settleDelay)
-"""
-        } else {
-            reloadBlock = ""
-        }
-
-        // AppleScript that finds the tab by URL and executes JavaScript.
-        // Only restores focus if Safari is frontmost at the end of execution.
-        return """
-        -- Save the current frontmost app
-        set frontApp to ""
-        tell application "System Events"
-            try
-                set frontApp to name of first application process whose frontmost is true
-            end try
-        end tell
-
-        set jsResult to ""
-        tell application "Safari"
-            set targetURL to "\(escapedURL)"
-            set foundTab to missing value
-            set foundWindow to missing value
-
-            -- Search all windows and tabs for matching URL
-            repeat with w in windows
-                repeat with t in tabs of w
-                    if URL of t starts with targetURL or targetURL starts with URL of t then
-                        set foundTab to t
-                        set foundWindow to w
-                        exit repeat
-                    end if
-                end repeat
-                if foundTab is not missing value then exit repeat
-            end repeat
-
-            if foundTab is missing value then
-                return "ERROR:Tab not found. Open \(escapedURL) in Safari."
-            end if
-        \(reloadBlock)
-            -- Execute JavaScript in the found tab
-            tell foundTab
-                set jsResult to do JavaScript "\(escapedJS)"
-            end tell
-        end tell
-
-        -- Restore the previous app only if Safari is currently frontmost
-        if frontApp is not "" and frontApp is not "Safari" then
-            set safariIsFrontmost to false
-            tell application "System Events"
-                try
-                    set safariIsFrontmost to frontmost of process "Safari"
-                end try
-            end tell
-
-            if safariIsFrontmost then
-                tell application "System Events"
-                    if exists process frontApp then
-                        set frontmost of process frontApp to true
-                    end if
-                end tell
-            end if
-        end if
-
-        return jsResult
-        """
-    }
-
-    private func generateJavaScript(for watcher: Watcher) -> String {
-        let escapedSelector = watcher.selector
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "'", with: "\\'")
-
-        let getElementJS: String
-        switch watcher.selectorType {
-        case .css:
-            getElementJS = "document.querySelector('\(escapedSelector)')"
-        case .xpath:
-            getElementJS = "(function() { var result = document.evaluate('\(escapedSelector)', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null); return result.singleNodeValue; })()"
-        }
-
-        switch watcher.watchType {
-        case .badgeNumber:
-            // For badge numbers, missing element = no badge = 0 notifications
-            // If a custom attribute is specified, use it exclusively
-            // Otherwise, check common badge attributes first (for web components with shadow DOM)
-            // then fall back to innerText/textContent
-            let customAttr = watcher.badgeAttribute ?? ""
-            let escapedAttr = customAttr
-                .replacingOccurrences(of: "\\", with: "\\\\")
-                .replacingOccurrences(of: "'", with: "\\'")
-
-            let getValueJS: String
-            if !customAttr.isEmpty {
-                // Use the custom attribute exclusively
-                getValueJS = "el.getAttribute('\(escapedAttr)') || ''"
-            } else {
-                // Default: check common attributes then fall back to text content
-                getValueJS = """
-                el.getAttribute('initial-count')
-                                || el.getAttribute('data-count')
-                                || el.getAttribute('count')
-                                || el.innerText
-                                || el.textContent
-                                || ''
-                """
-            }
-
-            return """
-            (function() {
-                var el = \(getElementJS);
-                if (!el) return '0';
-                var text = \(getValueJS);
-                var trimmed = text.trim();
-                if (trimmed === '') return '0';
-                var match = trimmed.match(/\\\\d+/);
-                return match ? match[0] : 'NO_NUMBER:' + trimmed.substring(0, 50);
-            })()
-            """
-
-        case .elementCount:
-            let getElementsJS: String
-            switch watcher.selectorType {
-            case .css:
-                getElementsJS = "document.querySelectorAll('\(escapedSelector)')"
-            case .xpath:
-                getElementsJS = "(function() { var result = document.evaluate('\(escapedSelector)', document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null); return { length: result.snapshotLength }; })()"
-            }
-            return """
-            (function() {
-                var els = \(getElementsJS);
-                return String(els.length || 0);
-            })()
-            """
-
-        case .textChange:
-            return """
-            (function() {
-                var el = \(getElementJS);
-                if (!el) return '';
-                return (el.innerText || el.textContent || '').trim();
-            })()
-            """
-
-        case .elementExists:
-            return """
-            (function() {
-                var el = \(getElementJS);
-                return el !== null ? 'true' : 'false';
-            })()
-            """
-
-        case .elementDisappears:
-            return """
-            (function() {
-                var el = \(getElementJS);
-                return el !== null ? 'true' : 'false';
-            })()
-            """
-        }
-    }
-
-    private func executeAppleScript(_ script: String) -> (value: String?, error: String?) {
+    /// Runs the script and maps AppleScript-level failures onto typed reasons.
+    private func executeAppleScript(_ script: String) -> (value: String?, failure: (CannotReason, String?)?) {
         var error: NSDictionary?
         let appleScript = NSAppleScript(source: script)
         let result = appleScript?.executeAndReturnError(&error)
 
-        if let error = error {
-            let errorMessage = error[NSAppleScript.errorMessage] as? String ?? "Unknown AppleScript error"
-            let errorCode = error[NSAppleScript.errorNumber] as? Int
+        if let error {
+            let message = error[NSAppleScript.errorMessage] as? String ?? "Unknown AppleScript error"
+            let code = error[NSAppleScript.errorNumber] as? Int
 
-            // Check for common errors
-            if errorMessage.contains("Allow JavaScript from Apple Events") {
-                return (nil, "Enable 'Allow JavaScript from Apple Events' in Safari Settings → Developer")
+            if message.contains("Allow JavaScript from Apple Events") {
+                return (nil, (.jsDisabled, nil))
             }
-            if errorCode == -1743 || errorMessage.localizedCaseInsensitiveContains("not authorized to send apple events") {
+            if code == -1743 || message.localizedCaseInsensitiveContains("not authorized to send apple events") {
                 Task { @MainActor in
                     _ = BrowserNavigationService.shared.ensureSafariAutomationPermissionForMonitoring()
                 }
-                return (nil, "Automation permission required. Enable Safari in System Settings -> Privacy & Security -> Automation -> WebWatcher.")
+                return (nil, (.permission, nil))
             }
-
-            return (nil, errorMessage)
+            // A stale tab/window reference between enumeration and use.
+            if code == -1719 || code == -1728 {
+                return (nil, (.noTab, "tab went away mid-check"))
+            }
+            return (nil, (.scriptError, message))
         }
 
-        guard let stringResult = result?.stringValue else {
-            return (nil, "No result from AppleScript")
+        // `do JavaScript` does not only return strings: a bare number arrives as a
+        // double and a thrown exception arrives as empty output with no error at all.
+        guard let descriptor = result else {
+            return (nil, (.protocolError, "no descriptor"))
         }
-
-        // Check for our custom error prefix
-        if stringResult.hasPrefix("ERROR:") {
-            return (nil, String(stringResult.dropFirst(6)))
+        guard let string = descriptor.stringValue else {
+            return (nil, (.protocolError, "non-text result"))
         }
-
-        return (stringResult, nil)
+        return (string, nil)
     }
 }
