@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.9] (Build 34) - 2026-10-02
+
+### Changed
+
+- Vendored Herald client re-synced with Herald 1.5.0 (manifest and model fields for the cloud relay).
+
 ## [1.10.8] (Build 33) - 2026-10-02
 
 ### Changed

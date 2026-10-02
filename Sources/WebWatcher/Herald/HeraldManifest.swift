@@ -170,6 +170,7 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
         var path: String?
         /// kind reply: the field's hint. A `callback` on a reply action also receives the reply.
         var placeholder: String?
+        var voice: Bool?
     }
 
     private static let issuerKinds = ["url", "callback", "command", "openApp", "reply", "dismiss"]
@@ -198,7 +199,7 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
             if w.kind == "callback", callback == nil { callback = HeraldCallback() }   // "call the issuer back" needs no payload
             let open = (w.kind == "openApp" || w.bundleId != nil || w.path != nil) ? HeraldOpenApp(bundleId: w.bundleId, path: w.path) : nil
             var reply: HeraldReply?
-            if w.kind == "reply" { reply = HeraldReply(placeholder: w.placeholder, callback: callback); callback = nil }
+            if w.kind == "reply" { reply = HeraldReply(placeholder: w.placeholder, callback: callback, voice: w.voice); callback = nil }
             buttons.append(HeraldButton(label: w.label, style: w.style, url: w.url, command: w.command, callback: callback, openApp: open,
                                         reply: reply))
             if let id = w.id?.trimmingCharacters(in: .whitespaces), !id.isEmpty {
@@ -250,7 +251,7 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
             let callback = own == HeraldCallback() ? nil : own
             wires.append(ActionWire(id: actionID(at: i), label: b.label, kind: kind, style: b.style,
                                     url: b.url, command: b.command, callback: callback,
-                                    bundleId: b.openApp?.bundleId, path: b.openApp?.path, placeholder: b.reply?.placeholder))
+                                    bundleId: b.openApp?.bundleId, path: b.openApp?.path, placeholder: b.reply?.placeholder, voice: b.reply?.voice))
         }
         try c.encode(wires, forKey: .actions)
         try c.encode(assets, forKey: .assets)

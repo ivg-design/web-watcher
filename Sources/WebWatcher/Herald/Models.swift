@@ -37,8 +37,11 @@ public struct HeraldButton: Codable, Equatable, Sendable {
 public struct HeraldReply: Codable, Equatable, Sendable {
     public var placeholder: String?
     public var callback: HeraldCallback?
-    public init(placeholder: String? = nil, callback: HeraldCallback? = nil) {
-        self.placeholder = placeholder; self.callback = callback
+    /// A voice reply: the button is "Record" and the banner shows the inline record strip instead of a text field. Cloud relay
+    /// notifications use it (docs/CLOUD.md); the recording is transcribed on this Mac and goes back to the sender.
+    public var voice: Bool?
+    public init(placeholder: String? = nil, callback: HeraldCallback? = nil, voice: Bool? = nil) {
+        self.placeholder = placeholder; self.callback = callback; self.voice = voice
     }
 }
 
@@ -176,6 +179,9 @@ public struct HeraldHistoryItem: Codable, Equatable, Sendable, Identifiable {
     /// What the user typed into the banner's inline reply field, and when (a `reply` action).
     public var reply: String?
     public var repliedAt: Date?
+    /// A voice reply (the banner's Record button): the m4a kept in History, and what was transcribed from it on this Mac.
+    public var replyAudioPath: String?
+    public var replyTranscript: String?
     public init(id: String, app: String, notification: HeraldNotification, deliveredAt: Date,
                 dismissedAt: Date? = nil, actionUsed: String? = nil, snoozedUntil: Date? = nil,
                 imagePath: String? = nil, fields: [String: HeraldFieldValue]? = nil) {
