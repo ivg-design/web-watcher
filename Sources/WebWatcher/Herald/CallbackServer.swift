@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/CallbackServer.swift), keep in sync.
-
 import Foundation
 
 /// Listens on an OS-assigned loopback port and delivers button callbacks to a closure.

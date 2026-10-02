@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/JSON.swift), keep in sync.
-
 import Foundation
 
 /// Free-form JSON value used for `metadata` and callback `payload`.

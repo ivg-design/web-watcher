@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HeraldTemplateBundle.swift), keep in sync.
-
 import Foundation
 import CryptoKit
 #if canImport(Compression)

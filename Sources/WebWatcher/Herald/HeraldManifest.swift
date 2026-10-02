@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HeraldManifest.swift), keep in sync.
-
 import Foundation
 
 /// What a field of a notification holds. The designer uses it to pick a palette icon and a sensible

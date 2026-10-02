@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.6] (Build 31) - 2026-10-01
+
+### Changed
+
+- Vendored Herald client re-synced with Herald 1.3.0: SF Symbol styling on buttons, icons and badges (`HeraldSymbol`), the updated component schema, template, bundle, stack and quiet-hours models; WebWatcher's Herald manifests and banners can now carry symbols
+
 ## [1.10.5] (Build 30) - 2026-10-01
 
 ### Fixed

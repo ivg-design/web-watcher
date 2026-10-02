@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HeraldActions.swift), keep in sync.
-
 import Foundation
 
 // Two-way actions (DESIGN section 7.3). The issuer sends buttons (payload `buttons` or manifest
@@ -48,15 +46,17 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
     public var input: String?
     /// kind snooze; nil means `defaultSnoozeMinutes`.
     public var snoozeMinutes: Int?
+    /// An SF Symbol (a name or full styling) drawn on this action's button.
+    public var symbol: HeraldSymbol?
 
     public static let defaultSnoozeMinutes = 15
 
     public init(id: String, label: String, kind: HeraldActionKind, style: String? = nil, url: String? = nil,
                 callback: HeraldCallback? = nil, command: String? = nil, script: String? = nil,
-                shortcut: String? = nil, input: String? = nil, snoozeMinutes: Int? = nil) {
+                shortcut: String? = nil, input: String? = nil, snoozeMinutes: Int? = nil, symbol: HeraldSymbol? = nil) {
         self.id = id; self.label = label; self.kind = kind; self.style = style; self.url = url
         self.callback = callback; self.command = command; self.script = script; self.shortcut = shortcut
-        self.input = input; self.snoozeMinutes = snoozeMinutes
+        self.input = input; self.snoozeMinutes = snoozeMinutes; self.symbol = symbol
     }
 
     /// The v1 button an issuer-style action corresponds to (url, callback, command), so the existing button
@@ -94,7 +94,7 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, label, kind, style, url, callback, command, script, shortcut, input, snoozeMinutes
+        case id, label, kind, style, url, callback, command, script, shortcut, input, snoozeMinutes, symbol
     }
 
     /// Lenient: `kind` is inferred from the fields that are present when it is omitted, `label` falls back to
@@ -133,7 +133,8 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
                   style: try c.decodeIfPresent(String.self, forKey: .style), url: url, callback: callback,
                   command: command, script: script, shortcut: shortcut,
                   input: try c.decodeIfPresent(String.self, forKey: .input),
-                  snoozeMinutes: try c.decodeIfPresent(Int.self, forKey: .snoozeMinutes))
+                  snoozeMinutes: try c.decodeIfPresent(Int.self, forKey: .snoozeMinutes),
+                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol))
     }
 }
 
@@ -165,11 +166,13 @@ public struct HeraldActionRule: Codable, Equatable, Sendable {
     public var style: String?
     public var position: Int?
     public var add: HeraldAction?
+    /// Gives the matched actions this SF Symbol (a name or full styling).
+    public var symbol: HeraldSymbol?
 
     public init(match: String? = nil, hide: Bool? = nil, relabel: String? = nil, style: String? = nil,
-                position: Int? = nil, add: HeraldAction? = nil) {
+                position: Int? = nil, add: HeraldAction? = nil, symbol: HeraldSymbol? = nil) {
         self.match = match; self.hide = hide; self.relabel = relabel; self.style = style
-        self.position = position; self.add = add
+        self.position = position; self.add = add; self.symbol = symbol
     }
 }
 
@@ -287,6 +290,7 @@ public enum ActionResolver {
                     for i in matched {
                         if let r = rule.relabel, !r.isEmpty { list[i].action.label = r }
                         if let s = rule.style { list[i].action.style = s.isEmpty ? nil : s }
+                        if let sym = rule.symbol { list[i].action.symbol = sym.name.isEmpty ? nil : sym }
                     }
                     if let p = rule.position {
                         let moving = matched.map { list[$0] }

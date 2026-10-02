@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HeraldQuiet.swift), keep in sync.
-
 import Foundation
 
 // Quiet hours (DESIGN section 7.9.1). The wire/storage types live here so the app, the CLI and the MCP share them;

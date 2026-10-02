@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/ComponentSchema.swift), keep in sync.
-
 import Foundation
 
 /// A hand-written description of the v2 template format for agents (DESIGN 7.5, 7.6): every component
@@ -174,6 +172,7 @@ public enum ComponentSchema {
                                     "oneOf": a(HeraldComponent.typeNames.map { ref("component." + $0) })]),
                 ]),
             ]),
+            "symbol": symbolDefinition(),
             "action": actionDefinition(),
             "actionRule": o([
                 "type": s("object"),
@@ -185,6 +184,7 @@ public enum ComponentSchema {
                     "style": prop("string", "New style for the matched actions.", values: ["default", "destructive", "cancel"]),
                     "position": prop("integer", "0-based index to move the matched actions to, or where to insert an added action.", min: 0),
                     "add": ref("action"),
+                    "symbol": ref("symbol"),
                 ]),
                 "examples": a([
                     jsonValue(#"{"match":"markRead","hide":true}"#),
@@ -211,6 +211,7 @@ public enum ComponentSchema {
                 "shortcut": prop("string", "kind shortcut: name of an installed Apple Shortcut (see list_shortcuts)."),
                 "input": prop("string", "kind shortcut: text passed as the Shortcut's input, with {tokens} filled. Omit to pass the full merged payload as JSON."),
                 "snoozeMinutes": prop("integer", "kind snooze: minutes (1-10080), default \(HeraldAction.defaultSnoozeMinutes).", min: 1, max: 10080),
+                "symbol": ref("symbol"),
             ]),
         ])
     }
@@ -232,6 +233,35 @@ public enum ComponentSchema {
             "description": s("Resolved actions = the issuer's actions (payload buttons, or the manifest's actions) with the template's actionRules applied. Issuer actions can only be url, callback, command or dismiss; script, shortcut and snooze come from the template (they are yours). Components show them: `actions` lists them all; `button` / `iconButton` show one, by actionRef (an id in the resolved list) or inline."),
             "kinds": .object(Dictionary(uniqueKeysWithValues: actionKindDocs().map { ($0.0, s($0.1)) })),
             "payload": s("Every action receives {app, id, action:{id,label,kind}, fields:{token: value}, extra:{key: value}, notification:{...}} - the merged payload."),
+        ])
+    }
+
+    private static func symbolDefinition() -> JSONValue {
+        o([
+            "description": s("An SF Symbol: a plain name (\"bell.badge\") or an object with the styling below. Effects need macOS 14 and are off under Reduce Motion; static renders (render_preview) show weight, scale, rendering mode and colours only. An unknown name is a warning: the default look is drawn."),
+            "oneOf": a([o(["type": s("string"), "description": s("An SF Symbol name.")]), o(["type": s("object")])]),
+            "required": strs(["name"]),
+            "properties": o([
+                "name": prop("string", "SF Symbol name, e.g. \"bell.badge\", \"checkmark.circle.fill\"."),
+                "weight": prop("string", "Stroke weight.", values: HeraldSymbolWeight.allCases.map(\.rawValue), def: s("regular")),
+                "scale": prop("string", "Size relative to the text.", values: HeraldSymbolScale.allCases.map(\.rawValue), def: s("medium")),
+                "placement": prop("string", "Beside a label: leading, trailing, or only (label dropped). Default leading.", values: HeraldSymbolPlacement.allCases.map(\.rawValue)),
+                "renderingMode": prop("string", "monochrome: one colour; hierarchical: shades of one colour; palette: 2-3 colours; multicolor: the symbol's own colours.", values: HeraldSymbolRenderingMode.allCases.map(\.rawValue), def: s("monochrome")),
+                "colors": prop("array", "1-3 colours for hierarchical / palette: #RGB, #RRGGBB, #RRGGBBAA, accent, primary, secondary, or a {token} whose value is one of those.", items: o(["type": s("string")])),
+                "variableValue": prop("string", "0-1 for symbols that support it (wifi, speaker.wave.3, ...): a number, or a {token} bound to a numeric field such as \"{progress}\".", min: 0, max: 1),
+                "effect": o(["type": s("object"), "description": s("macOS 14+ symbol effect."), "required": strs(["kind"]), "properties": o([
+                    "kind": prop("string", "bounce, pulse, variableColor, scale, appear, disappear, or replace (swaps the symbol when its bound value changes).", values: HeraldSymbolEffectKind.allCases.map(\.rawValue)),
+                    "trigger": prop("string", "When it plays: onAppear (default), onChange (when a bound value changes), onHover, or repeating.", values: HeraldSymbolTrigger.allCases.map(\.rawValue), def: s("onAppear")),
+                    "speed": prop("number", "Playback speed multiplier.", min: 0.25, max: 4, def: n(1)),
+                    "cumulative": prop("boolean", "variableColor only: layers stay on."),
+                    "reversing": prop("boolean", "variableColor only: plays back and forth."),
+                ])]),
+            ]),
+            "examples": a([
+                jsonValue(##""bell.badge""##),
+                jsonValue(#"{"name":"wifi","weight":"semibold","renderingMode":"hierarchical","colors":["accent"],"variableValue":"{signal}"}"#),
+                jsonValue(##"{"name":"bell.badge","renderingMode":"palette","colors":["#FF3B30","primary"],"effect":{"kind":"bounce","trigger":"onChange"}}"##),
+            ]),
         ])
     }
 
@@ -289,6 +319,7 @@ public enum ComponentSchema {
                 "size": prop("number", "Points (8-128).", def: n(22)),
                 "cornerRadius": prop("number", "Points; default 22% of size. Ignored for circle."),
                 "shape": prop("string", "Icon shape.", values: HeraldIconShape.allCases.map(\.rawValue), def: s("rounded")),
+                "symbol": ref("symbol"),
             ], example: #"{"type":"issuerIcon","size":22,"shape":"rounded"}"#),
             comp("timestamp", "A time. Shows the bound date field, or the banner's delivery time when binding is omitted.",
                  emptyWhen: "a binding is set and its token is absent (never empty without a binding)", [
@@ -303,16 +334,18 @@ public enum ComponentSchema {
                 "action": ref("action"),
                 "actionRef": prop("string", "Id of an action in the resolved list (e.g. an issuer action id such as \"markRead\")."),
                 "style": prop("string", "Overrides the action's style.", values: ["default", "destructive", "cancel"]),
-            ], example: #"{"type":"button","actionRef":"markRead"}"#),
+                "symbol": ref("symbol"),
+            ], example: #"{"type":"button","actionRef":"markRead","symbol":{"name":"checkmark.circle","weight":"semibold"}}"#),
             comp("actions", "The action row: all resolved actions from `source`, as buttons.",
                  emptyWhen: "the source yields no actions", [
                 "source": prop("string", "issuer: only the issuer's actions; template: only actions added by actionRules; merged: all.", values: HeraldActionSource.allCases.map(\.rawValue), def: s("merged")),
                 "layout": prop("string", "row: one line; wrap: flows onto more lines; stack: one per line.", values: HeraldActionsLayout.allCases.map(\.rawValue), def: s("wrap")),
                 "maxVisible": prop("integer", "Show at most this many.", min: 1),
+                "symbol": ref("symbol"),
             ], example: #"{"type":"actions","source":"merged","layout":"wrap"}"#),
             comp("iconButton", "A round icon-only button with an SF Symbol, e.g. a close or snooze button.",
                  required: ["symbol"], emptyWhen: "actionRef names an action that is not in the resolved list; an inline action is never empty", [
-                "symbol": prop("string", "SF Symbol name, e.g. \"xmark\", \"alarm\", \"checkmark\"."),
+                "symbol": ref("symbol"),
                 "action": ref("action"),
                 "actionRef": prop("string", "Id of an action in the resolved list."),
                 "size": prop("number", "Diameter in points; default 18."),
@@ -324,6 +357,7 @@ public enum ComponentSchema {
                 "binding": prop("string", "Text with {tokens}, e.g. \"{count}\"."),
                 "color": prop("string", "Pill colour: hex or accent. Default accent."),
                 "textColor": prop("string", "Text colour: hex or primary. Default: legible on the pill."),
+                "symbol": ref("symbol"),
             ], example: ##"{"type":"badge","binding":"{count}","color":"#FF3B30"}"##),
             comp("stackBadge", "The stack counter: a pill showing {stack.count}, the number of notifications folded into this banner's stack (empty while the banner is alone). Click it to expand the stack. A template without one gets the counter at the top right of the stacked card.",
                  emptyWhen: "the banner is not stacked ({stack.count} is absent below 2)", [

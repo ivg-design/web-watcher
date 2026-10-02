@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HeraldComponents.swift), keep in sync.
-
 import Foundation
 
 // The component half of the v2 grid template (DESIGN section 7.2). A `HeraldCell` (HeraldTemplate.swift)
@@ -156,22 +154,26 @@ public struct HeraldIssuerIconComponent: Codable, Equatable, Sendable {
     public var cornerRadius: Double?
     public var shape: HeraldIconShape
     public var emptyBehavior: HeraldEmptyBehavior?
+    /// An SF Symbol drawn instead of the app's icon (the icon is the fallback when the name is unknown).
+    public var symbol: HeraldSymbol?
 
     public static let defaultSize = 22.0
 
     public init(size: Double = HeraldIssuerIconComponent.defaultSize, cornerRadius: Double? = nil,
-                shape: HeraldIconShape = .rounded, emptyBehavior: HeraldEmptyBehavior? = nil) {
+                shape: HeraldIconShape = .rounded, emptyBehavior: HeraldEmptyBehavior? = nil, symbol: HeraldSymbol? = nil) {
         self.size = size; self.cornerRadius = cornerRadius; self.shape = shape; self.emptyBehavior = emptyBehavior
+        self.symbol = symbol
     }
 
-    private enum CodingKeys: String, CodingKey { case size, cornerRadius, shape, emptyBehavior }
+    private enum CodingKeys: String, CodingKey { case size, cornerRadius, shape, emptyBehavior, symbol }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(size: try c.decodeIfPresent(Double.self, forKey: .size) ?? Self.defaultSize,
                   cornerRadius: try c.decodeIfPresent(Double.self, forKey: .cornerRadius),
                   shape: try c.decodeIfPresent(HeraldIconShape.self, forKey: .shape) ?? .rounded,
-                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior))
+                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior),
+                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol))
     }
 }
 
@@ -214,20 +216,24 @@ public struct HeraldButtonComponent: Codable, Equatable, Sendable {
     /// `default`, `destructive` or `cancel`; overrides the action's own style.
     public var style: String?
     public var emptyBehavior: HeraldEmptyBehavior?
+    /// An SF Symbol drawn with the label (a name, or the full styling); an action's own `symbol` wins.
+    public var symbol: HeraldSymbol?
 
     public init(action: HeraldAction? = nil, actionRef: String? = nil, style: String? = nil,
-                emptyBehavior: HeraldEmptyBehavior? = nil) {
+                emptyBehavior: HeraldEmptyBehavior? = nil, symbol: HeraldSymbol? = nil) {
         self.action = action; self.actionRef = actionRef; self.style = style; self.emptyBehavior = emptyBehavior
+        self.symbol = symbol
     }
 
-    private enum CodingKeys: String, CodingKey { case action, actionRef, style, emptyBehavior }
+    private enum CodingKeys: String, CodingKey { case action, actionRef, style, emptyBehavior, symbol }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let slot = try ActionSlot.decode(c, action: .action, ref: .actionRef)
         self.init(action: slot.action, actionRef: slot.ref,
                   style: try c.decodeIfPresent(String.self, forKey: .style),
-                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior))
+                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior),
+                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol))
     }
 }
 
@@ -238,21 +244,24 @@ public struct HeraldActionsComponent: Codable, Equatable, Sendable {
     /// Most buttons shown; nil shows all. The rest are not shown.
     public var maxVisible: Int?
     public var emptyBehavior: HeraldEmptyBehavior?
+    /// A symbol every button of the row gets unless its action has its own `symbol`.
+    public var symbol: HeraldSymbol?
 
     public init(source: HeraldActionSource = .merged, layout: HeraldActionsLayout = .wrap,
-                maxVisible: Int? = nil, emptyBehavior: HeraldEmptyBehavior? = nil) {
+                maxVisible: Int? = nil, emptyBehavior: HeraldEmptyBehavior? = nil, symbol: HeraldSymbol? = nil) {
         self.source = source; self.layout = layout; self.maxVisible = maxVisible
-        self.emptyBehavior = emptyBehavior
+        self.emptyBehavior = emptyBehavior; self.symbol = symbol
     }
 
-    private enum CodingKeys: String, CodingKey { case source, layout, maxVisible, emptyBehavior }
+    private enum CodingKeys: String, CodingKey { case source, layout, maxVisible, emptyBehavior, symbol }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(source: try c.decodeIfPresent(HeraldActionSource.self, forKey: .source) ?? .merged,
                   layout: try c.decodeIfPresent(HeraldActionsLayout.self, forKey: .layout) ?? .wrap,
                   maxVisible: try c.decodeIfPresent(Int.self, forKey: .maxVisible),
-                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior))
+                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior),
+                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol))
     }
 }
 
@@ -267,11 +276,34 @@ public struct HeraldIconButtonComponent: Codable, Equatable, Sendable {
     public var color: String?
     public var tooltip: String?
     public var emptyBehavior: HeraldEmptyBehavior?
+    /// The symbol's styling (weight, rendering mode, colours, effect...). On the wire `symbol` is the name, or an
+    /// object with a `name`; `symbol` above is always the name.
+    public var symbolStyle: HeraldSymbol?
 
     public init(symbol: String, action: HeraldAction? = nil, actionRef: String? = nil, size: Double? = nil,
-                color: String? = nil, tooltip: String? = nil, emptyBehavior: HeraldEmptyBehavior? = nil) {
+                color: String? = nil, tooltip: String? = nil, emptyBehavior: HeraldEmptyBehavior? = nil,
+                symbolStyle: HeraldSymbol? = nil) {
         self.symbol = symbol; self.action = action; self.actionRef = actionRef; self.size = size
         self.color = color; self.tooltip = tooltip; self.emptyBehavior = emptyBehavior
+        self.symbolStyle = symbolStyle
+    }
+
+    /// The name and styling as one value.
+    public var fullSymbol: HeraldSymbol {
+        var s = symbolStyle ?? HeraldSymbol(name: symbol)
+        s.name = symbol
+        return s
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(fullSymbol, forKey: .symbol)
+        try c.encodeIfPresent(action, forKey: .action)
+        try c.encodeIfPresent(actionRef, forKey: .actionRef)
+        try c.encodeIfPresent(size, forKey: .size)
+        try c.encodeIfPresent(color, forKey: .color)
+        try c.encodeIfPresent(tooltip, forKey: .tooltip)
+        try c.encodeIfPresent(emptyBehavior, forKey: .emptyBehavior)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -281,11 +313,13 @@ public struct HeraldIconButtonComponent: Codable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let slot = try ActionSlot.decode(c, action: .action, ref: .actionRef)
-        self.init(symbol: try c.decode(String.self, forKey: .symbol), action: slot.action, actionRef: slot.ref,
+        let sym = try c.decode(HeraldSymbol.self, forKey: .symbol)
+        self.init(symbol: sym.name, action: slot.action, actionRef: slot.ref,
                   size: try c.decodeIfPresent(Double.self, forKey: .size),
                   color: try c.decodeIfPresent(String.self, forKey: .color),
                   tooltip: try c.decodeIfPresent(String.self, forKey: .tooltip),
-                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior))
+                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior),
+                  symbolStyle: sym.styled ? sym : nil)
     }
 }
 
@@ -297,20 +331,24 @@ public struct HeraldBadgeComponent: Codable, Equatable, Sendable {
     /// Text colour: hex or `primary`. nil picks a legible colour for `color`.
     public var textColor: String?
     public var emptyBehavior: HeraldEmptyBehavior?
+    /// An SF Symbol drawn before the value.
+    public var symbol: HeraldSymbol?
 
     public init(binding: String, color: String? = nil, textColor: String? = nil,
-                emptyBehavior: HeraldEmptyBehavior? = nil) {
+                emptyBehavior: HeraldEmptyBehavior? = nil, symbol: HeraldSymbol? = nil) {
         self.binding = binding; self.color = color; self.textColor = textColor; self.emptyBehavior = emptyBehavior
+        self.symbol = symbol
     }
 
-    private enum CodingKeys: String, CodingKey { case binding, color, textColor, emptyBehavior }
+    private enum CodingKeys: String, CodingKey { case binding, color, textColor, emptyBehavior, symbol }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(binding: try c.decode(String.self, forKey: .binding),
                   color: try c.decodeIfPresent(String.self, forKey: .color),
                   textColor: try c.decodeIfPresent(String.self, forKey: .textColor),
-                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior))
+                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior),
+                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol))
     }
 }
 
@@ -585,9 +623,24 @@ public enum HeraldComponent: Codable, Equatable, Sendable {
     public var referencedTokens: [String] {
         var strings = bindingStrings
         for a in inlineActions { strings += [a.label, a.url, a.input].compactMap { $0 } }
+        for sym in symbols + inlineActions.compactMap(\.symbol) { strings += (sym.colors ?? []) + [sym.variableValue].compactMap { $0 } }
         var seen: [String] = []
         for s in strings { for t in TemplateResolver.placeholders(in: s) where !seen.contains(t) { seen.append(t) } }
         return seen
+    }
+
+    /// The symbols the component carries itself (inline actions' symbols are checked with the action).
+    public var symbols: [HeraldSymbol] {
+        var out: [HeraldSymbol] = []
+        switch self {
+        case .button(let p): if let s = p.symbol { out.append(s) }
+        case .actions(let p): if let s = p.symbol { out.append(s) }
+        case .issuerIcon(let p): if let s = p.symbol { out.append(s) }
+        case .badge(let p): if let s = p.symbol { out.append(s) }
+        case .iconButton(let p): out.append(p.fullSymbol)
+        default: break
+        }
+        return out
     }
 
     /// The inline action(s) the component carries (button, iconButton, rive click).

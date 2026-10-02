@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/Client.swift), keep in sync.
-
 import Foundation
 
 public enum HeraldError: Error, LocalizedError, Equatable {

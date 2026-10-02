@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HeraldTemplate.swift), keep in sync.
-
 import Foundation
 
 /// How a v1 banner is arranged. One SwiftUI view renders all four (DESIGN section 6). In v2 each of these is
@@ -468,8 +466,8 @@ public extension HeraldTemplate {
             let p = "actionRules[\(i)]"
             let hasMatch = !(r.match ?? "").trimmingCharacters(in: .whitespaces).isEmpty
             if !hasMatch && r.add == nil { err(p, "a rule needs a 'match' or an 'add'") }
-            if hasMatch && r.hide != true && r.relabel == nil && r.style == nil && r.position == nil && r.add == nil {
-                warn(p, "the rule matches '\(r.match ?? "")' but changes nothing (set hide, relabel, style, position or add)")
+            if hasMatch && r.hide != true && r.relabel == nil && r.style == nil && r.position == nil && r.add == nil && r.symbol == nil {
+                warn(p, "the rule matches '\(r.match ?? "")' but changes nothing (set hide, relabel, style, symbol, position or add)")
             }
             if r.hide == true && (r.relabel != nil || r.style != nil || r.position != nil) {
                 warn(p, "hide: true removes the action, so relabel, style and position have no effect")
@@ -479,6 +477,9 @@ public extension HeraldTemplate {
                 err("\(p).style", "style '\(s)' must be default, destructive or cancel")
             }
             if let a = r.add { Self.validateAction(a, path: "\(p).add", cell: nil, into: &issues) }
+            if let sym = r.symbol {
+                for pr in sym.problems() { issues.append(.init(severity: pr.isError ? .error : .warning, path: "\(p).symbol.\(pr.key)", message: pr.message)) }
+            }
         }
 
         if layoutVersion != 1 && layoutVersion != Self.currentLayoutVersion {
@@ -575,6 +576,9 @@ public extension HeraldTemplate {
         if a.label.trimmingCharacters(in: .whitespaces).isEmpty { err("\(p).label", "an action needs a label") }
         if a.id.trimmingCharacters(in: .whitespaces).isEmpty { err("\(p).id", "an action needs an id") }
         if let s = a.style, !actionStyles.contains(s) { err("\(p).style", "style '\(s)' must be default, destructive or cancel") }
+        if let sym = a.symbol {
+            for pr in sym.problems() { issues.append(.init(severity: pr.isError ? .error : .warning, path: "\(p).symbol.\(pr.key)", cellId: cell, message: pr.message)) }
+        }
         switch a.kind {
         case .url:
             if blank(a.url) { err("\(p).url", "a url action needs a url") }
@@ -672,6 +676,12 @@ public extension HeraldTemplate {
             break
         }
 
+        for (i, sym) in comp.symbols.enumerated() {
+            for pr in sym.problems() {
+                let key = comp.symbols.count > 1 ? "symbol[\(i)].\(pr.key)" : "symbol.\(pr.key)"
+                if pr.isError { err("\(p).\(key)", pr.message) } else { warn("\(p).\(key)", pr.message) }
+            }
+        }
         // An actionRef must point at something that can exist.
         if let ref = comp.actionRef, !ref.isEmpty, let m = manifest {
             let declared = Set((0..<m.actions.count).map { m.actionID(at: $0) })
@@ -1023,6 +1033,10 @@ public extension TemplateResolver {
             break
         }
     }
+
+    /// A stand-in value for a token no manifest sample covers ("receivedAt" -> "Received at"), so the Designer can
+    /// show a bound component drawn instead of an empty box.
+    static func sampleText(forKey key: String) -> String { humanize(key) }
 
     /// "receivedAt" becomes "Received at".
     private static func humanize(_ key: String) -> String {

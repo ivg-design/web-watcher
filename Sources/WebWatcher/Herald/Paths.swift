@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/Paths.swift), keep in sync.
-
 import Foundation
 
 public enum HeraldPaths {

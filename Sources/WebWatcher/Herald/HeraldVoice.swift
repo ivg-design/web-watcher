@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HeraldVoice.swift), keep in sync.
-
 import Foundation
 
 /// How a notification is presented (DESIGN section 7.9): the usual banner, speech only (a history entry and

@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/BuiltinTemplates.swift), keep in sync.
-
 import Foundation
 
 /// The four v1 layouts as grid templates (DESIGN 7.2: "the legacy v1 layouts become four built-in v2 grid

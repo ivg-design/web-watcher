@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/Models.swift), keep in sync.
-
 import Foundation
 
 public enum HeraldCorner: String, Codable, CaseIterable, Sendable {

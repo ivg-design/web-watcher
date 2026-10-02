@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HeraldStacks.swift), keep in sync.
-
 import Foundation
 
 /// One live stack of banners, as `GET /v1/stacks` lists it (DESIGN section 9): the notifications that were folded

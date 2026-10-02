@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/Listener.swift), keep in sync.
-
 import Foundation
 import Network
 

@@ -60,6 +60,7 @@
 		AA0000010000000000000065 /* HeraldVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000065 /* HeraldVoice.swift */; };
 		AA0000010000000000000067 /* HeraldTemplateBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000067 /* HeraldTemplateBundle.swift */; };
 		AA0000010000000000000066 /* HeraldStacks.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000066 /* HeraldStacks.swift */; };
+		AA0000010000000000000068 /* HeraldSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000068 /* HeraldSymbol.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -118,6 +119,7 @@
 		AA0000020000000000000065 /* HeraldVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldVoice.swift; sourceTree = "<group>"; };
 		AA0000020000000000000067 /* HeraldTemplateBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldTemplateBundle.swift; sourceTree = "<group>"; };
 		AA0000020000000000000066 /* HeraldStacks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldStacks.swift; sourceTree = "<group>"; };
+		AA0000020000000000000068 /* HeraldSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldSymbol.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -187,6 +189,7 @@
 				AA0000020000000000000049 /* Models.swift */,
 				AA0000020000000000000067 /* HeraldTemplateBundle.swift */,
 				AA0000020000000000000066 /* HeraldStacks.swift */,
+				AA0000020000000000000068 /* HeraldSymbol.swift */,
 				AA0000020000000000000065 /* HeraldVoice.swift */,
 				AA0000020000000000000064 /* HeraldQuiet.swift */,
 			);
@@ -367,6 +370,7 @@
 				AA0000010000000000000037 /* KeychainService.swift in Sources */,
 				AA0000010000000000000067 /* HeraldTemplateBundle.swift in Sources */,
 				AA0000010000000000000066 /* HeraldStacks.swift in Sources */,
+				AA0000010000000000000068 /* HeraldSymbol.swift in Sources */,
 				AA0000010000000000000065 /* HeraldVoice.swift in Sources */,
 				AA0000010000000000000064 /* HeraldQuiet.swift in Sources */,
 				AA0000010000000000000048 /* NotificationIconStore.swift in Sources */,
@@ -530,7 +534,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/WebWatcher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7S422NVLUK;
 				ENABLE_APP_SANDBOX = NO;
@@ -545,7 +549,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.10.5;
+				MARKETING_VERSION = 1.10.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webwatcher.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -564,7 +568,7 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7S422NVLUK;
 				ENABLE_APP_SANDBOX = NO;
@@ -579,7 +583,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.10.5;
+				MARKETING_VERSION = 1.10.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webwatcher.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

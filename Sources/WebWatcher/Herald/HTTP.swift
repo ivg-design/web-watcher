@@ -1,5 +1,3 @@
-// Vendored from ~/github/herald (Sources/HeraldClient/HTTP.swift), keep in sync.
-
 import Foundation
 
 public struct HTTPRequest: Sendable {
