@@ -94,24 +94,50 @@ public struct HeraldTextComponent: Codable, Equatable, Sendable {
     /// Render inline Markdown (`[text](url)` links). nil means true for style `body`, false otherwise.
     public var markdown: Bool?
     public var emptyBehavior: HeraldEmptyBehavior?
+    /// Structured rich text (rich text, issue #64). When set it takes precedence over `binding`. `binding` itself
+    /// may hold `\n` line breaks and inline markup (see `HeraldRichText`).
+    public var lines: [HeraldTextLine]?
+    /// Extra points between lines. nil is 0.
+    public var lineSpacing: Double?
 
     public var rendersMarkdown: Bool { markdown ?? (style == .body) }
 
+    /// Lines to draw once tokens are filled; nil when the component is empty. `keepEmptyLines` keeps a line
+    /// whose tokens are all absent as a blank line instead of dropping it.
+    public func resolvedLines(fields: [String: HeraldFieldValue], keepEmptyLines: Bool = false) -> [HeraldResolvedLine]? {
+        HeraldRichText.resolve(binding: binding, lines: lines, fields: fields, keepEmptyLines: keepEmptyLines)
+    }
+
     public init(binding: String, style: HeraldTextStyle = .body, maxLines: Int? = nil, color: String? = nil,
                 fontSize: Double? = nil, weight: HeraldFontWeight? = nil, alignment: HeraldTextAlignment? = nil,
-                markdown: Bool? = nil, emptyBehavior: HeraldEmptyBehavior? = nil) {
+                markdown: Bool? = nil, emptyBehavior: HeraldEmptyBehavior? = nil,
+                lines: [HeraldTextLine]? = nil, lineSpacing: Double? = nil) {
         self.binding = binding; self.style = style; self.maxLines = maxLines; self.color = color
         self.fontSize = fontSize; self.weight = weight; self.alignment = alignment
         self.markdown = markdown; self.emptyBehavior = emptyBehavior
+        self.lines = lines; self.lineSpacing = lineSpacing
     }
 
     private enum CodingKeys: String, CodingKey {
-        case binding, style, maxLines, color, fontSize, weight, alignment, markdown, emptyBehavior
+        case binding, style, maxLines, color, fontSize, weight, alignment, markdown, emptyBehavior, lines, lineSpacing
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        if !(binding.isEmpty && lines != nil) { try c.encode(binding, forKey: .binding) }
+        try c.encode(style, forKey: .style)
+        try c.encodeIfPresent(maxLines, forKey: .maxLines); try c.encodeIfPresent(color, forKey: .color)
+        try c.encodeIfPresent(fontSize, forKey: .fontSize); try c.encodeIfPresent(weight, forKey: .weight)
+        try c.encodeIfPresent(alignment, forKey: .alignment); try c.encodeIfPresent(markdown, forKey: .markdown)
+        try c.encodeIfPresent(emptyBehavior, forKey: .emptyBehavior)
+        try c.encodeIfPresent(lines, forKey: .lines); try c.encodeIfPresent(lineSpacing, forKey: .lineSpacing)
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(binding: try c.decode(String.self, forKey: .binding),
+        let lines = try c.decodeIfPresent([HeraldTextLine].self, forKey: .lines)
+        self.init(binding: lines == nil ? try c.decode(String.self, forKey: .binding)
+                                        : try c.decodeIfPresent(String.self, forKey: .binding) ?? "",
                   style: try c.decodeIfPresent(HeraldTextStyle.self, forKey: .style) ?? .body,
                   maxLines: try c.decodeIfPresent(Int.self, forKey: .maxLines),
                   color: try c.decodeIfPresent(String.self, forKey: .color),
@@ -119,7 +145,8 @@ public struct HeraldTextComponent: Codable, Equatable, Sendable {
                   weight: try c.decodeIfPresent(HeraldFontWeight.self, forKey: .weight),
                   alignment: try c.decodeIfPresent(HeraldTextAlignment.self, forKey: .alignment),
                   markdown: try c.decodeIfPresent(Bool.self, forKey: .markdown),
-                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior))
+                  emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior),
+                  lines: lines, lineSpacing: try c.decodeIfPresent(Double.self, forKey: .lineSpacing))
     }
 }
 
@@ -295,6 +322,16 @@ public struct HeraldActionsComponent: Codable, Equatable, Sendable {
     /// True when the row flows onto further lines.
     public var wraps: Bool { layout == .stack ? false : (wrap ?? (layout == .wrap)) }
     public var effectiveAlign: HeraldActionsAlign { align ?? .leading }
+    /// The row's alignment inside its cell: its own `align`, else the horizontal part of the cell's 9-point alignment
+    /// (a trailing cell puts the buttons against the trailing edge).
+    public func effectiveAlign(in cell: HeraldAlign) -> HeraldActionsAlign {
+        if let align { return align }
+        switch cell.horizontal {
+        case .leading: return .leading
+        case .center: return .center
+        case .trailing: return .trailing
+        }
+    }
     public var effectiveSpacing: Double { spacing ?? 6 }
 
     private enum CodingKeys: String, CodingKey {
@@ -656,7 +693,9 @@ public enum HeraldComponent: Codable, Equatable, Sendable {
     /// The strings whose `{token}` placeholders decide whether the component has content.
     public var bindingStrings: [String] {
         switch self {
-        case .text(let p): return [p.binding]
+        case .text(let p):
+            guard p.lines != nil else { return [p.binding] }
+            return HeraldRichText.tokens(binding: p.binding, lines: p.lines).map { "{\($0)}" }
         case .image(let p): return [p.binding]
         case .timestamp(let p): return p.binding.map { [$0] } ?? []
         case .badge(let p): return [p.binding]
@@ -726,7 +765,7 @@ public enum HeraldComponent: Codable, Equatable, Sendable {
     public func hasContent(fields: [String: HeraldFieldValue], actions: [HeraldResolvedAction]) -> Bool {
         func bound(_ s: String) -> Bool { TemplateResolver.bind(s, fields: fields) != nil }
         switch self {
-        case .text(let p): return bound(p.binding)
+        case .text(let p): return p.resolvedLines(fields: fields) != nil
         case .image(let p): return bound(p.binding)
         case .badge(let p): return bound(p.binding)
         case .stackBadge: return bound(HeraldStackBadgeComponent.binding)

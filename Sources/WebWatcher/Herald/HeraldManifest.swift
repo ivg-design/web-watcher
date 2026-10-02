@@ -168,9 +168,11 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
         var callback: HeraldCallback?
         var bundleId: String?
         var path: String?
+        /// kind reply: the field's hint. A `callback` on a reply action also receives the reply.
+        var placeholder: String?
     }
 
-    private static let issuerKinds = ["url", "callback", "command", "openApp", "dismiss"]
+    private static let issuerKinds = ["url", "callback", "command", "openApp", "reply", "dismiss"]
 
     /// Only `app` is required: a bare `{"app":"x"}` is a valid (empty) manifest. `appName` defaults to
     /// the app id, `version` to 1.
@@ -195,7 +197,10 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
             var callback = w.callback
             if w.kind == "callback", callback == nil { callback = HeraldCallback() }   // "call the issuer back" needs no payload
             let open = (w.kind == "openApp" || w.bundleId != nil || w.path != nil) ? HeraldOpenApp(bundleId: w.bundleId, path: w.path) : nil
-            buttons.append(HeraldButton(label: w.label, style: w.style, url: w.url, command: w.command, callback: callback, openApp: open))
+            var reply: HeraldReply?
+            if w.kind == "reply" { reply = HeraldReply(placeholder: w.placeholder, callback: callback); callback = nil }
+            buttons.append(HeraldButton(label: w.label, style: w.style, url: w.url, command: w.command, callback: callback, openApp: open,
+                                        reply: reply))
             if let id = w.id?.trimmingCharacters(in: .whitespaces), !id.isEmpty {
                 guard explicit.insert(id).inserted else {
                     throw DecodingError.dataCorrupted(.init(codingPath: path + [AnyKey("id")],
@@ -238,12 +243,14 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
         try c.encode(fields, forKey: .fields)
         var wires: [ActionWire] = []
         for (i, b) in actions.enumerated() {
-            let kind = b.callback != nil ? "callback" : b.url != nil ? "url" : b.command != nil ? "command" : b.openApp != nil ? "openApp" : "dismiss"
+            let kind = b.reply != nil ? "reply" : b.callback != nil ? "callback" : b.url != nil ? "url" : b.command != nil ? "command"
+                : b.openApp != nil ? "openApp" : "dismiss"
             // A callback that only means "call the issuer back" is written as just its kind.
-            let callback = b.callback == HeraldCallback() ? nil : b.callback
+            let own = b.reply != nil ? b.reply?.callback : b.callback
+            let callback = own == HeraldCallback() ? nil : own
             wires.append(ActionWire(id: actionID(at: i), label: b.label, kind: kind, style: b.style,
                                     url: b.url, command: b.command, callback: callback,
-                                    bundleId: b.openApp?.bundleId, path: b.openApp?.path))
+                                    bundleId: b.openApp?.bundleId, path: b.openApp?.path, placeholder: b.reply?.placeholder))
         }
         try c.encode(wires, forKey: .actions)
         try c.encode(assets, forKey: .assets)

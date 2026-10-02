@@ -79,6 +79,48 @@ public struct HeraldGrid: Codable, Equatable, Sendable {
         self.gap = gap; self.padding = padding; self.width = width
     }
 
+    /// The least a fixed column may be, points: narrower ones are unusable slivers.
+    public static let minColumnPoints = 24.0
+
+    /// The width the columns share: banner width minus both paddings and the gaps between columns.
+    public var innerColumnsWidth: Double {
+        let w = min(max(width.isFinite ? width : 400, HeraldTemplate.widthRange.lowerBound), HeraldTemplate.widthRange.upperBound)
+        return w - 2 * max(padding, 0) - max(gap, 0) * Double(max(cols - 1, 0))
+    }
+
+    /// The columns made to fill the slot the template defines. A fixed column under `minColumnPoints` is raised to
+    /// it. When every column is fixed (no `fill`, no `auto`) the last column takes what is left over, or gives back
+    /// what overflows (the others are never squeezed below the minimum). With a `fill` column the fills absorb the
+    /// remainder already, so nothing changes. `notes` says what was changed, for the validation warnings.
+    public func fittedColumns() -> (grid: HeraldGrid, notes: [String]) {
+        var g = self
+        var notes: [String] = []
+        guard cols >= 1, colSizes.count == cols else { return (g, notes) }
+        let minP = Self.minColumnPoints
+        for (i, s) in g.colSizes.enumerated() {
+            if case .points(let p) = s, p < minP {
+                g.colSizes[i] = .points(minP)
+                notes.append("column \(i + 1) was \(Int(p.rounded())) pt; fixed columns are at least \(Int(minP)) pt, so it was raised")
+            }
+        }
+        var pts: [Double] = []
+        for s in g.colSizes { if case .points(let p) = s { pts.append(p) } else { return (g, notes) } }
+        let inner = innerColumnsWidth
+        let diff = inner - pts.reduce(0, +)
+        if diff > 0.5 {
+            pts[pts.count - 1] += diff
+            notes.append("the columns added up to \(Int((inner - diff).rounded())) pt but the grid is \(Int(inner.rounded())) pt wide inside its padding and gaps; the last column took the leftover \(Int(diff.rounded())) pt")
+        } else if diff < -0.5 {
+            var over = -diff
+            for i in stride(from: pts.count - 1, through: 0, by: -1) where over > 0 {
+                let take = min(over, max(pts[i] - minP, 0)); pts[i] -= take; over -= take
+            }
+            notes.append("the columns added up to \(Int((inner - diff).rounded())) pt but the grid is only \(Int(inner.rounded())) pt wide inside its padding and gaps; the last columns were trimmed")
+        }
+        if !notes.isEmpty || diff != 0 { g.colSizes = pts.map { .points($0) } }
+        return (g, notes)
+    }
+
     /// The size of a row; `.auto` when the list is shorter than the grid, so a short list cannot crash a renderer.
     public func rowSize(at index: Int) -> HeraldSize { rowSizes.indices.contains(index) ? rowSizes[index] : .auto }
     /// The size of a column; `.fill` when the list is shorter than the grid.
@@ -514,6 +556,9 @@ public extension HeraldTemplate {
                 if case .points(let d) = s, d < 0 || d > 4000 { err("grid.\(key)[\(i)]", "a size in points must be 0 to 4000") }
             }
         }
+        if g.colSizes.count == g.cols, g.cols >= 1 {
+            for n in g.fittedColumns().notes { warn("grid.colSizes", n + " (fixed automatically when the template is stored or loaded)") }
+        }
         if g.gap < 0 || g.gap > 64 { err("grid.gap", "gap must be 0 to 64") }
         if g.padding < 0 || g.padding > 64 { err("grid.padding", "padding must be 0 to 64") }
         if !Self.widthRange.contains(g.width) {
@@ -571,6 +616,13 @@ public extension HeraldTemplate {
     }
 
     /// True when `validate` finds no errors.
+    /// The template with its grid columns fitted (`HeraldGrid.fittedColumns`): what a stored or loaded template becomes.
+    func fittingGrid() -> HeraldTemplate {
+        guard var t = Optional(self), let g = t.grid, layoutVersion != 1 else { return self }
+        t.grid = g.fittedColumns().grid
+        return t
+    }
+
     func isValid(manifest: HeraldManifest? = nil) -> Bool { !validate(manifest: manifest).contains { $0.isError } }
 
     private static let actionStyles = HeraldActionStyle.accepted
@@ -617,7 +669,7 @@ public extension HeraldTemplate {
             if let path = a.path, !path.trimmingCharacters(in: .whitespaces).isEmpty, !path.lowercased().hasSuffix(".app") {
                 err("\(p).path", "path must be an application, ending in .app (for example /Applications/Example.app)")
             }
-        case .callback, .dismiss:
+        case .callback, .dismiss, .reply:
             break
         }
     }
@@ -667,7 +719,9 @@ public extension HeraldTemplate {
 
         switch comp {
         case .text(let t):
-            binding("binding", t.binding)
+            if t.lines == nil || t.lines!.isEmpty { binding("binding", t.binding) }
+            for issue in HeraldRichText.issues(binding: t.binding, lines: t.lines) { warn("\(p).\(t.lines == nil ? "binding" : "lines")", "rich text: \(issue)") }
+            if let ls = t.lineSpacing, ls < 0 { err("\(p).lineSpacing", "lineSpacing must be 0 or greater") }
             if let m = t.maxLines, m < 1 { err("\(p).maxLines", "maxLines must be at least 1") }
             if let f = t.fontSize, !(6...72).contains(f) { err("\(p).fontSize", "fontSize must be 6 to 72") }
             color("color", t.color)

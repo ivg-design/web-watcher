@@ -24,6 +24,9 @@ public enum HeraldActionKind: String, Codable, CaseIterable, Sendable {
     case dismiss
     /// Snooze the banner for `snoozeMinutes`.
     case snooze
+    /// Swap the buttons for a one-line text field inside the banner; the text is kept on the notification's
+    /// history record and in the app's reply queue, and POSTed to the callback when there is one.
+    case reply
 }
 
 /// One action. Exactly the fields its `kind` needs are used; the rest stay nil.
@@ -56,14 +59,16 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
     /// kind openApp: the path of the application (`/Applications/Example.app`; `~` is expanded). Used when no
     /// `bundleId` finds an application.
     public var path: String?
+    /// kind reply: the field's placeholder and an optional callback that also receives the reply.
+    public var reply: HeraldReply?
 
     public static let defaultSnoozeMinutes = 15
 
     public init(id: String, label: String, kind: HeraldActionKind, style: String? = nil, url: String? = nil,
                 callback: HeraldCallback? = nil, command: String? = nil, script: String? = nil,
                 shortcut: String? = nil, input: String? = nil, snoozeMinutes: Int? = nil, symbol: HeraldSymbol? = nil,
-                bundleId: String? = nil, path: String? = nil) {
-        self.bundleId = bundleId; self.path = path
+                bundleId: String? = nil, path: String? = nil, reply: HeraldReply? = nil) {
+        self.bundleId = bundleId; self.path = path; self.reply = reply
         self.id = id; self.label = label; self.kind = kind; self.style = style; self.url = url
         self.callback = callback; self.command = command; self.script = script; self.shortcut = shortcut
         self.input = input; self.snoozeMinutes = snoozeMinutes; self.symbol = symbol
@@ -77,16 +82,18 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
         case .command: return HeraldButton(label: label, style: style, command: command)
         case .callback: return HeraldButton(label: label, style: style, callback: callback ?? HeraldCallback())
         case .openApp: return HeraldButton(label: label, style: style, openApp: HeraldOpenApp(bundleId: bundleId, path: path))
+        case .reply: return HeraldButton(label: label, style: style, reply: reply ?? HeraldReply())
         case .script, .shortcut, .dismiss, .snooze: return nil
         }
     }
 
     /// An action for a v1 button: url, callback, command, otherwise dismiss. `id` defaults to a slug of the label.
     public init(button b: HeraldButton, id: String? = nil) {
-        let kind: HeraldActionKind = b.callback != nil ? .callback : b.url != nil ? .url : b.command != nil ? .command
-            : b.openApp != nil ? .openApp : .dismiss
+        let kind: HeraldActionKind = b.reply != nil ? .reply : b.callback != nil ? .callback : b.url != nil ? .url
+            : b.command != nil ? .command : b.openApp != nil ? .openApp : .dismiss
         self.init(id: id ?? Self.slug(b.label), label: b.label, kind: kind, style: b.style, url: b.url,
-                  callback: b.callback, command: b.command, bundleId: b.openApp?.bundleId, path: b.openApp?.path)
+                  callback: b.callback, command: b.command, bundleId: b.openApp?.bundleId, path: b.openApp?.path,
+                  reply: b.reply)
     }
 
     /// "Mark as Read" becomes "mark-as-read"; a label with no letters or digits becomes "action".
@@ -106,7 +113,7 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, label, kind, style, url, callback, command, script, shortcut, input, snoozeMinutes, symbol, bundleId, path
+        case id, label, kind, style, url, callback, command, script, shortcut, input, snoozeMinutes, symbol, bundleId, path, reply
     }
 
     /// Lenient: `kind` is inferred from the fields that are present when it is omitted, `label` falls back to
@@ -120,13 +127,15 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
         let shortcut = try c.decodeIfPresent(String.self, forKey: .shortcut)
         let bundleId = try c.decodeIfPresent(String.self, forKey: .bundleId)
         let path = try c.decodeIfPresent(String.self, forKey: .path)
+        let reply = try c.decodeIfPresent(HeraldReply.self, forKey: .reply)
         let explicitID = try c.decodeIfPresent(String.self, forKey: .id)
         let explicitLabel = try c.decodeIfPresent(String.self, forKey: .label)
 
         let kind: HeraldActionKind
         if let k = try c.decodeIfPresent(HeraldActionKind.self, forKey: .kind) {
             kind = k
-        } else if shortcut != nil { kind = .shortcut }
+        } else if reply != nil { kind = .reply }
+        else if shortcut != nil { kind = .shortcut }
         else if script != nil { kind = .script }
         else if command != nil { kind = .command }
         else if callback != nil { kind = .callback }
@@ -150,7 +159,7 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
                   input: try c.decodeIfPresent(String.self, forKey: .input),
                   snoozeMinutes: try c.decodeIfPresent(Int.self, forKey: .snoozeMinutes),
                   symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol),
-                  bundleId: bundleId, path: path)
+                  bundleId: bundleId, path: path, reply: reply)
     }
 }
 
@@ -248,6 +257,7 @@ public enum ActionResolver {
     public static func issuerSource(for n: HeraldNotification, manifest: HeraldManifest?) -> (buttons: [HeraldButton], ids: [String]) {
         if let b = n.buttons { return (b, issuerIDs(for: b, manifest: manifest)) }
         guard let wanted = n.actionIds, let m = manifest else { return ([], []) }
+        let fields = TemplateResolver.fields(for: n, manifest: manifest)
         var buttons: [HeraldButton] = [], ids: [String] = []
         for want in wanted {
             let w = want.trimmingCharacters(in: .whitespaces)
@@ -255,13 +265,34 @@ public enum ActionResolver {
                   !ids.contains(m.actionID(at: i)) else { continue }
             buttons.append(m.actions[i]); ids.append(m.actionID(at: i))
         }
-        return (buttons, ids)
+        return fillingLinks(buttons, ids: ids, fields: fields)
+    }
+
+    /// A manifest link action: its `url` is one `{token}` (the agent default's "Open link" is `{link}`). It is filled
+    /// from the notification's field, and collapses (is left out) when the notification carries none, so a banner
+    /// never shows a button that has nothing to open. Any other url is used as declared.
+    public static func fillingLinks(_ buttons: [HeraldButton], ids: [String],
+                                    fields: [String: HeraldFieldValue]) -> (buttons: [HeraldButton], ids: [String]) {
+        var outButtons: [HeraldButton] = [], outIDs: [String] = []
+        for (i, b) in buttons.enumerated() {
+            var b = b
+            if let u = b.url?.trimmingCharacters(in: .whitespaces), u.hasPrefix("{"), u.hasSuffix("}"), !u.dropFirst().dropLast().contains("{"),
+               !u.dropFirst().dropLast().contains("}") {
+                let key = String(u.dropFirst().dropLast())
+                let value = fields[key].map { TemplateResolver.string(for: $0).trimmingCharacters(in: .whitespacesAndNewlines) } ?? ""
+                if value.isEmpty { continue }
+                b.url = value
+            }
+            outButtons.append(b); outIDs.append(ids.indices.contains(i) ? ids[i] : "")
+        }
+        return (outButtons, outIDs)
     }
 
     /// What a sample (the manifest's sample data, no real payload) offers: every action the manifest declares.
     public static func sampleSource(manifest: HeraldManifest?) -> (buttons: [HeraldButton], ids: [String]) {
         guard let m = manifest else { return ([], []) }
-        return (m.actions, m.actions.indices.map { m.actionID(at: $0) })
+        return fillingLinks(m.actions, ids: m.actions.indices.map { m.actionID(at: $0) },
+                            fields: TemplateResolver.sampleFields(manifest: m))
     }
 
     /// The notification with `actionIds` turned into `buttons` (when it sent no buttons of its own), so history

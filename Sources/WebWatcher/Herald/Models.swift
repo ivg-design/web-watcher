@@ -19,10 +19,40 @@ public struct HeraldButton: Codable, Equatable, Sendable {
     public var callback: HeraldCallback?
     /// Bring an application to the front: the issuing app when it names neither `bundleId` nor `path`.
     public var openApp: HeraldOpenApp?
+    /// An inline reply: pressing it swaps the buttons for a text field inside the banner. The text is kept on the
+    /// notification's history record and in the app's reply queue (`GET /v1/replies`); with a callback it is
+    /// also POSTed there.
+    public var reply: HeraldReply?
     public init(label: String, style: String? = nil, url: String? = nil,
-                command: String? = nil, callback: HeraldCallback? = nil, openApp: HeraldOpenApp? = nil) {
+                command: String? = nil, callback: HeraldCallback? = nil, openApp: HeraldOpenApp? = nil,
+                reply: HeraldReply? = nil) {
         self.label = label; self.style = style; self.url = url
-        self.command = command; self.callback = callback; self.openApp = openApp
+        self.command = command; self.callback = callback; self.openApp = openApp; self.reply = reply
+    }
+}
+
+/// A `reply` action: a text field inside the banner. `placeholder` is the field's hint; `callback`, when set, is
+/// also POSTed the reply (as `payload.reply`), for issuers that run a callback server. MCP agents have none and
+/// read the reply with `get_replies` / `wait_for_reply` instead.
+public struct HeraldReply: Codable, Equatable, Sendable {
+    public var placeholder: String?
+    public var callback: HeraldCallback?
+    public init(placeholder: String? = nil, callback: HeraldCallback? = nil) {
+        self.placeholder = placeholder; self.callback = callback
+    }
+}
+
+/// One answer a user typed into a banner: the entry of an app's reply queue (`GET /v1/replies`).
+public struct HeraldReplyRecord: Codable, Equatable, Sendable, Identifiable {
+    public var notificationId: String
+    public var app: String
+    public var text: String
+    public var repliedAt: Date
+    /// The title of the notification that was answered, so an agent can tell which question it was.
+    public var title: String?
+    public var id: String { notificationId + "\u{1}" + app }
+    public init(notificationId: String, app: String, text: String, repliedAt: Date, title: String? = nil) {
+        self.notificationId = notificationId; self.app = app; self.text = text; self.repliedAt = repliedAt; self.title = title
     }
 }
 
@@ -143,6 +173,9 @@ public struct HeraldHistoryItem: Codable, Equatable, Sendable, Identifiable {
     public var fields: [String: HeraldFieldValue]?
     /// What was spoken or played for this notification (DESIGN section 7.9). Nil when nothing was.
     public var speech: HeraldSpeech?
+    /// What the user typed into the banner's inline reply field, and when (a `reply` action).
+    public var reply: String?
+    public var repliedAt: Date?
     public init(id: String, app: String, notification: HeraldNotification, deliveredAt: Date,
                 dismissedAt: Date? = nil, actionUsed: String? = nil, snoozedUntil: Date? = nil,
                 imagePath: String? = nil, fields: [String: HeraldFieldValue]? = nil) {

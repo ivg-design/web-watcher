@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.8] (Build 33) - 2026-10-02
+
+### Changed
+
+- Vendored Herald client re-synced with Herald 1.4.1: rich text (`lines`/markup), host-app resolution for Open, reply action kind
+
 ## [1.10.7] (Build 32) - 2026-10-02
 
 ### Changed

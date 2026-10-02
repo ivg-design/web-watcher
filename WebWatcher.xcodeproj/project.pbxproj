@@ -60,6 +60,9 @@
 		AA0000010000000000000065 /* HeraldVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000065 /* HeraldVoice.swift */; };
 		AA0000010000000000000067 /* HeraldTemplateBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000067 /* HeraldTemplateBundle.swift */; };
 		AA0000010000000000000066 /* HeraldStacks.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000066 /* HeraldStacks.swift */; };
+		AA000001000000000000006F /* RichTextEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002000000000000006F /* RichTextEditing.swift */; };
+		AA000001000000000000006E /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002000000000000006E /* RichText.swift */; };
+		AA000001000000000000006D /* HeraldHostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002000000000000006D /* HeraldHostApp.swift */; };
 		AA000001000000000000006C /* OpenApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002000000000000006C /* OpenApp.swift */; };
 		AA000001000000000000006B /* HeraldAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002000000000000006B /* HeraldAgent.swift */; };
 		AA000001000000000000006A /* ClientRoutes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002000000000000006A /* ClientRoutes.swift */; };
@@ -123,6 +126,9 @@
 		AA0000020000000000000065 /* HeraldVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldVoice.swift; sourceTree = "<group>"; };
 		AA0000020000000000000067 /* HeraldTemplateBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldTemplateBundle.swift; sourceTree = "<group>"; };
 		AA0000020000000000000066 /* HeraldStacks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldStacks.swift; sourceTree = "<group>"; };
+		AA000002000000000000006F /* RichTextEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichTextEditing.swift; sourceTree = "<group>"; };
+		AA000002000000000000006E /* RichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
+		AA000002000000000000006D /* HeraldHostApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldHostApp.swift; sourceTree = "<group>"; };
 		AA000002000000000000006C /* OpenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenApp.swift; sourceTree = "<group>"; };
 		AA000002000000000000006B /* HeraldAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeraldAgent.swift; sourceTree = "<group>"; };
 		AA000002000000000000006A /* ClientRoutes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientRoutes.swift; sourceTree = "<group>"; };
@@ -197,6 +203,9 @@
 				AA0000020000000000000049 /* Models.swift */,
 				AA0000020000000000000067 /* HeraldTemplateBundle.swift */,
 				AA0000020000000000000066 /* HeraldStacks.swift */,
+				AA000002000000000000006F /* RichTextEditing.swift */,
+				AA000002000000000000006E /* RichText.swift */,
+				AA000002000000000000006D /* HeraldHostApp.swift */,
 				AA000002000000000000006C /* OpenApp.swift */,
 				AA000002000000000000006B /* HeraldAgent.swift */,
 				AA000002000000000000006A /* ClientRoutes.swift */,
@@ -382,6 +391,9 @@
 				AA0000010000000000000037 /* KeychainService.swift in Sources */,
 				AA0000010000000000000067 /* HeraldTemplateBundle.swift in Sources */,
 				AA0000010000000000000066 /* HeraldStacks.swift in Sources */,
+				AA000001000000000000006F /* RichTextEditing.swift in Sources */,
+				AA000001000000000000006E /* RichText.swift in Sources */,
+				AA000001000000000000006D /* HeraldHostApp.swift in Sources */,
 				AA000001000000000000006C /* OpenApp.swift in Sources */,
 				AA000001000000000000006B /* HeraldAgent.swift in Sources */,
 				AA000001000000000000006A /* ClientRoutes.swift in Sources */,
@@ -550,7 +562,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/WebWatcher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7S422NVLUK;
 				ENABLE_APP_SANDBOX = NO;
@@ -565,7 +577,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.10.7;
+				MARKETING_VERSION = 1.10.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webwatcher.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -584,7 +596,7 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7S422NVLUK;
 				ENABLE_APP_SANDBOX = NO;
@@ -599,7 +611,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.10.7;
+				MARKETING_VERSION = 1.10.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.webwatcher.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
