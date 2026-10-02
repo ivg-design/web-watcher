@@ -17,6 +17,9 @@ public enum HeraldActionKind: String, Codable, CaseIterable, Sendable {
     case script
     /// Run the Apple Shortcut named `shortcut`.
     case shortcut
+    /// Bring an application to the front: `bundleId`, else `path`, else the issuing application (from the
+    /// manifest's `appBundleId` / `appPath`, the bundle id it registered with, or the app named `appName`).
+    case openApp
     /// Dismiss the banner.
     case dismiss
     /// Snooze the banner for `snoozeMinutes`.
@@ -48,12 +51,19 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
     public var snoozeMinutes: Int?
     /// An SF Symbol (a name or full styling) drawn on this action's button.
     public var symbol: HeraldSymbol?
+    /// kind openApp: the bundle identifier of the application to bring to the front (`com.example.App`).
+    public var bundleId: String?
+    /// kind openApp: the path of the application (`/Applications/Example.app`; `~` is expanded). Used when no
+    /// `bundleId` finds an application.
+    public var path: String?
 
     public static let defaultSnoozeMinutes = 15
 
     public init(id: String, label: String, kind: HeraldActionKind, style: String? = nil, url: String? = nil,
                 callback: HeraldCallback? = nil, command: String? = nil, script: String? = nil,
-                shortcut: String? = nil, input: String? = nil, snoozeMinutes: Int? = nil, symbol: HeraldSymbol? = nil) {
+                shortcut: String? = nil, input: String? = nil, snoozeMinutes: Int? = nil, symbol: HeraldSymbol? = nil,
+                bundleId: String? = nil, path: String? = nil) {
+        self.bundleId = bundleId; self.path = path
         self.id = id; self.label = label; self.kind = kind; self.style = style; self.url = url
         self.callback = callback; self.command = command; self.script = script; self.shortcut = shortcut
         self.input = input; self.snoozeMinutes = snoozeMinutes; self.symbol = symbol
@@ -66,15 +76,17 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
         case .url: return HeraldButton(label: label, style: style, url: url)
         case .command: return HeraldButton(label: label, style: style, command: command)
         case .callback: return HeraldButton(label: label, style: style, callback: callback ?? HeraldCallback())
+        case .openApp: return HeraldButton(label: label, style: style, openApp: HeraldOpenApp(bundleId: bundleId, path: path))
         case .script, .shortcut, .dismiss, .snooze: return nil
         }
     }
 
     /// An action for a v1 button: url, callback, command, otherwise dismiss. `id` defaults to a slug of the label.
     public init(button b: HeraldButton, id: String? = nil) {
-        let kind: HeraldActionKind = b.callback != nil ? .callback : b.url != nil ? .url : b.command != nil ? .command : .dismiss
+        let kind: HeraldActionKind = b.callback != nil ? .callback : b.url != nil ? .url : b.command != nil ? .command
+            : b.openApp != nil ? .openApp : .dismiss
         self.init(id: id ?? Self.slug(b.label), label: b.label, kind: kind, style: b.style, url: b.url,
-                  callback: b.callback, command: b.command)
+                  callback: b.callback, command: b.command, bundleId: b.openApp?.bundleId, path: b.openApp?.path)
     }
 
     /// "Mark as Read" becomes "mark-as-read"; a label with no letters or digits becomes "action".
@@ -94,7 +106,7 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, label, kind, style, url, callback, command, script, shortcut, input, snoozeMinutes, symbol
+        case id, label, kind, style, url, callback, command, script, shortcut, input, snoozeMinutes, symbol, bundleId, path
     }
 
     /// Lenient: `kind` is inferred from the fields that are present when it is omitted, `label` falls back to
@@ -106,6 +118,8 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
         let command = try c.decodeIfPresent(String.self, forKey: .command)
         let script = try c.decodeIfPresent(String.self, forKey: .script)
         let shortcut = try c.decodeIfPresent(String.self, forKey: .shortcut)
+        let bundleId = try c.decodeIfPresent(String.self, forKey: .bundleId)
+        let path = try c.decodeIfPresent(String.self, forKey: .path)
         let explicitID = try c.decodeIfPresent(String.self, forKey: .id)
         let explicitLabel = try c.decodeIfPresent(String.self, forKey: .label)
 
@@ -117,6 +131,7 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
         else if command != nil { kind = .command }
         else if callback != nil { kind = .callback }
         else if url != nil { kind = .url }
+        else if bundleId != nil || path != nil { kind = .openApp }
         else {
             throw DecodingError.keyNotFound(
                 CodingKeys.kind,
@@ -134,7 +149,8 @@ public struct HeraldAction: Codable, Equatable, Identifiable, Sendable {
                   command: command, script: script, shortcut: shortcut,
                   input: try c.decodeIfPresent(String.self, forKey: .input),
                   snoozeMinutes: try c.decodeIfPresent(Int.self, forKey: .snoozeMinutes),
-                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol))
+                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol),
+                  bundleId: bundleId, path: path)
     }
 }
 

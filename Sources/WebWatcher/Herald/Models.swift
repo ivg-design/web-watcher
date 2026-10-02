@@ -17,10 +17,12 @@ public struct HeraldButton: Codable, Equatable, Sendable {
     public var url: String?
     public var command: String?
     public var callback: HeraldCallback?
+    /// Bring an application to the front: the issuing app when it names neither `bundleId` nor `path`.
+    public var openApp: HeraldOpenApp?
     public init(label: String, style: String? = nil, url: String? = nil,
-                command: String? = nil, callback: HeraldCallback? = nil) {
+                command: String? = nil, callback: HeraldCallback? = nil, openApp: HeraldOpenApp? = nil) {
         self.label = label; self.style = style; self.url = url
-        self.command = command; self.callback = callback
+        self.command = command; self.callback = callback; self.openApp = openApp
     }
 }
 
@@ -130,6 +132,9 @@ public struct HeraldHistoryItem: Codable, Equatable, Sendable, Identifiable {
     public var dismissedAt: Date?
     /// Label of the button used, "open" for a banner click, "timeout" for auto-dismiss.
     public var actionUsed: String?
+    /// A line about an action that could not do its job (for example "Open app: no installed application found"),
+    /// shown in History. The banner stays up; the note is only a record.
+    public var actionNote: String?
     public var snoozedUntil: Date?
     /// Local cached copy of the preview image.
     public var imagePath: String?

@@ -60,6 +60,13 @@ public enum HeraldActionSource: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// Where the buttons of an `actions` component sit across the width of its cell.
+public enum HeraldActionsAlign: String, Codable, CaseIterable, Sendable {
+    case leading, center, trailing
+    /// The first button at the leading edge, the last at the trailing edge, the rest spread between.
+    case spaceBetween
+}
+
 public enum HeraldActionsLayout: String, Codable, CaseIterable, Sendable {
     /// One line; buttons beyond what fits are cut by `maxVisible`.
     case row
@@ -213,7 +220,8 @@ public struct HeraldTimestampComponent: Codable, Equatable, Sendable {
 public struct HeraldButtonComponent: Codable, Equatable, Sendable {
     public var action: HeraldAction?
     public var actionRef: String?
-    /// `default`, `destructive` or `cancel`; overrides the action's own style.
+    /// `normal`, `prominent` or `destructive` (also `cancel`, the quiet grey; `default` means `normal`); overrides
+    /// the action's own style. Destructive draws the label in red and asks for confirmation before running.
     public var style: String?
     public var emptyBehavior: HeraldEmptyBehavior?
     /// An SF Symbol drawn with the label (a name, or the full styling); an action's own `symbol` wins.
@@ -225,19 +233,34 @@ public struct HeraldButtonComponent: Codable, Equatable, Sendable {
         self.symbol = symbol
     }
 
-    private enum CodingKeys: String, CodingKey { case action, actionRef, style, emptyBehavior, symbol }
+    /// `actionId` is a second spelling of `actionRef` (the id of the issuer action this button runs); it is read
+    /// and written as `actionRef`. The old `destructive: true` is read as `style: "destructive"`.
+    private enum CodingKeys: String, CodingKey { case action, actionRef, actionId, style, destructive, emptyBehavior, symbol }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(action, forKey: .action)
+        try c.encodeIfPresent(actionRef, forKey: .actionRef)
+        try c.encodeIfPresent(style, forKey: .style)
+        try c.encodeIfPresent(emptyBehavior, forKey: .emptyBehavior)
+        try c.encodeIfPresent(symbol, forKey: .symbol)
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        let slot = try ActionSlot.decode(c, action: .action, ref: .actionRef)
+        var slot = try ActionSlot.decode(c, action: .action, ref: .actionRef)
+        if slot.ref == nil, let id = try c.decodeIfPresent(String.self, forKey: .actionId) { slot.ref = id }
+        var style = try c.decodeIfPresent(String.self, forKey: .style)
+        if style == nil, try c.decodeIfPresent(Bool.self, forKey: .destructive) == true { style = HeraldActionStyle.destructive.rawValue }
         self.init(action: slot.action, actionRef: slot.ref,
-                  style: try c.decodeIfPresent(String.self, forKey: .style),
+                  style: style,
                   emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior),
                   symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol))
     }
 }
 
-/// The action row: every resolved action from `source`, laid out as `layout`.
+/// The action row: the resolved actions it lists (`include`, else every one from `source` that no other cell
+/// claims), laid out as `layout`. An action is drawn in at most one cell of a template (`HeraldTemplate.actionAssignment`).
 public struct HeraldActionsComponent: Codable, Equatable, Sendable {
     public var source: HeraldActionSource
     public var layout: HeraldActionsLayout
@@ -246,14 +269,37 @@ public struct HeraldActionsComponent: Codable, Equatable, Sendable {
     public var emptyBehavior: HeraldEmptyBehavior?
     /// A symbol every button of the row gets unless its action has its own `symbol`.
     public var symbol: HeraldSymbol?
+    /// Ordered action ids this cell shows (issuer actions and template-added ones). nil or empty: every action
+    /// of `source` that no other cell claims.
+    public var include: [String]?
+    /// Where the buttons sit across the cell's width; nil is `leading`.
+    public var align: HeraldActionsAlign?
+    /// Buttons flow onto further lines when they do not fit. nil follows `layout` (`wrap` flows).
+    public var wrap: Bool?
+    /// Points between buttons; nil is 6.
+    public var spacing: Double?
 
     public init(source: HeraldActionSource = .merged, layout: HeraldActionsLayout = .wrap,
-                maxVisible: Int? = nil, emptyBehavior: HeraldEmptyBehavior? = nil, symbol: HeraldSymbol? = nil) {
+                maxVisible: Int? = nil, emptyBehavior: HeraldEmptyBehavior? = nil, symbol: HeraldSymbol? = nil,
+                include: [String]? = nil, align: HeraldActionsAlign? = nil, wrap: Bool? = nil, spacing: Double? = nil) {
         self.source = source; self.layout = layout; self.maxVisible = maxVisible
         self.emptyBehavior = emptyBehavior; self.symbol = symbol
+        self.include = include; self.align = align; self.wrap = wrap; self.spacing = spacing
     }
 
-    private enum CodingKeys: String, CodingKey { case source, layout, maxVisible, emptyBehavior, symbol }
+    /// The ids `include` names, trimmed and de-duplicated; empty when the cell takes whatever is left.
+    public var includedIDs: [String] {
+        var seen = Set<String>()
+        return (include ?? []).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+    /// True when the row flows onto further lines.
+    public var wraps: Bool { layout == .stack ? false : (wrap ?? (layout == .wrap)) }
+    public var effectiveAlign: HeraldActionsAlign { align ?? .leading }
+    public var effectiveSpacing: Double { spacing ?? 6 }
+
+    private enum CodingKeys: String, CodingKey {
+        case source, layout, maxVisible, emptyBehavior, symbol, include, align, wrap, spacing
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -261,7 +307,11 @@ public struct HeraldActionsComponent: Codable, Equatable, Sendable {
                   layout: try c.decodeIfPresent(HeraldActionsLayout.self, forKey: .layout) ?? .wrap,
                   maxVisible: try c.decodeIfPresent(Int.self, forKey: .maxVisible),
                   emptyBehavior: try c.decodeIfPresent(HeraldEmptyBehavior.self, forKey: .emptyBehavior),
-                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol))
+                  symbol: try c.decodeIfPresent(HeraldSymbol.self, forKey: .symbol),
+                  include: try c.decodeIfPresent([String].self, forKey: .include),
+                  align: try c.decodeIfPresent(HeraldActionsAlign.self, forKey: .align),
+                  wrap: try c.decodeIfPresent(Bool.self, forKey: .wrap),
+                  spacing: try c.decodeIfPresent(Double.self, forKey: .spacing))
     }
 }
 

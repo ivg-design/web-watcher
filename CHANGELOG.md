@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.7] (Build 32) - 2026-10-02
+
+### Changed
+
+- Vendored Herald client re-synced with Herald 1.4.0: action arrangements (`actions.include/align/wrap/spacing`, `button.actionId`), button styles, the `openApp` action kind, agent apps, and the client routes for the parity API
+
 ## [1.10.6] (Build 31) - 2026-10-01
 
 ### Changed

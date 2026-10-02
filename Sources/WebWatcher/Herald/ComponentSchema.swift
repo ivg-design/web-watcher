@@ -106,6 +106,7 @@ public enum ComponentSchema {
             "cells": prop("array", "The cells, each holding one component. Cells must not overlap and must fit the grid.", items: ref("cell")),
             "collapseEmpty": prop("boolean", "Default for components without their own emptyBehavior. true: an empty component disappears and an all-empty row/column collapses to zero. false: empty components keep their space.", def: b(true)),
             "actionRules": prop("array", "Rules applied in order to the issuer's actions: hide, relabel, restyle, reorder, add.", items: ref("actionRule")),
+            "onClick": prop("string", "What clicking the banner does: url (default: open the notification's link) or openApp (bring the issuing application to the front).", values: HeraldBannerClick.allCases.map(\.rawValue)),
             "extra": prop("object", "Your own key/values (strings). Every action receives them as `extra`; bindings read them as {extra.key}."),
             "accentColor": prop("string", "Hex colour (#RRGGBB) for tint and `accent`-coloured components. Optional."),
             "sound": prop("string", "Default sound: a system sound name, a file path or \"none\". Payload overrides."),
@@ -181,7 +182,7 @@ public enum ComponentSchema {
                     "match": prop("string", "An action id or label (case-insensitive), or \"*\" for every action."),
                     "hide": prop("boolean", "Remove the matched actions."),
                     "relabel": prop("string", "New label for the matched actions."),
-                    "style": prop("string", "New style for the matched actions.", values: ["default", "destructive", "cancel"]),
+                    "style": prop("string", "New style for the matched actions. destructive draws the label in red and asks for confirmation before running.", values: HeraldActionStyle.allCases.map(\.rawValue)),
                     "position": prop("integer", "0-based index to move the matched actions to, or where to insert an added action.", min: 0),
                     "add": ref("action"),
                     "symbol": ref("symbol"),
@@ -203,7 +204,7 @@ public enum ComponentSchema {
                 "id": prop("string", "Stable name rules (`match`) and components (`actionRef`) refer to."),
                 "label": prop("string", "Button text."),
                 "kind": prop("string", "What pressing it does.", values: HeraldActionKind.allCases.map(\.rawValue)),
-                "style": prop("string", "Button look.", values: ["default", "destructive", "cancel"], def: s("default")),
+                "style": prop("string", "Button look: normal (tinted), prominent (filled), destructive (red label; Herald asks before running it), cancel (quiet grey). `default` is read as normal.", values: HeraldActionStyle.allCases.map(\.rawValue), def: s("normal")),
                 "url": prop("string", "kind url: http, https or mailto URL; may contain {tokens}."),
                 "callback": prop("object", "kind callback: {url?, payload?}; POSTed to the issuer's callback URL."),
                 "command": prop("string", "kind command: shell command line run with /bin/zsh -lc (template-authored commands need one confirmation per template)."),
@@ -211,6 +212,8 @@ public enum ComponentSchema {
                 "shortcut": prop("string", "kind shortcut: name of an installed Apple Shortcut (see list_shortcuts)."),
                 "input": prop("string", "kind shortcut: text passed as the Shortcut's input, with {tokens} filled. Omit to pass the full merged payload as JSON."),
                 "snoozeMinutes": prop("integer", "kind snooze: minutes (1-10080), default \(HeraldAction.defaultSnoozeMinutes).", min: 1, max: 10080),
+                "bundleId": prop("string", "kind openApp: bundle identifier of the application to bring to the front (com.example.App). Tried first."),
+                "path": prop("string", "kind openApp: path of the application (/Applications/Example.app; ~ is expanded). Tried after bundleId. With neither, the issuing application is opened: the manifest's appBundleId, appPath, the bundle id it registered with, then the app named appName."),
                 "symbol": ref("symbol"),
             ]),
         ])
@@ -225,12 +228,13 @@ public enum ComponentSchema {
             (HeraldActionKind.shortcut.rawValue, "run the Apple Shortcut named `shortcut`; input is the `input` text, or the full payload JSON."),
             (HeraldActionKind.dismiss.rawValue, "close the banner."),
             (HeraldActionKind.snooze.rawValue, "hide the banner and bring it back after `snoozeMinutes`."),
+            (HeraldActionKind.openApp.rawValue, "bring an application to the front: `bundleId`, else `path`, else the issuing application (manifest appBundleId / appPath, registered bundle id, or the app named appName). The app is activated; Herald stays in the background. An application that cannot be found does nothing but leave a note in History."),
         ]
     }
 
     private static func actions() -> JSONValue {
         o([
-            "description": s("Resolved actions = the issuer's actions (payload buttons, or the manifest's actions) with the template's actionRules applied. Issuer actions can only be url, callback, command or dismiss; script, shortcut and snooze come from the template (they are yours). Components show them: `actions` lists them all; `button` / `iconButton` show one, by actionRef (an id in the resolved list) or inline."),
+            "description": s("Resolved actions = the issuer's actions (payload buttons, or the manifest's actions) with the template's actionRules applied. Issuer actions can only be url, callback, command, openApp or dismiss; script, shortcut and snooze come from the template (they are yours). Components show them: `actions` lists them all; `button` / `iconButton` show one, by actionRef (an id in the resolved list) or inline."),
             "kinds": .object(Dictionary(uniqueKeysWithValues: actionKindDocs().map { ($0.0, s($0.1)) })),
             "payload": s("Every action receives {app, id, action:{id,label,kind}, fields:{token: value}, extra:{key: value}, notification:{...}} - the merged payload."),
         ])
@@ -332,17 +336,21 @@ public enum ComponentSchema {
             comp("button", "One button. Give an inline action, or actionRef to show an issuer / template action by id.",
                  emptyWhen: "actionRef names an action that is not in the resolved list (hidden by a rule, or not sent); an inline action is never empty", [
                 "action": ref("action"),
-                "actionRef": prop("string", "Id of an action in the resolved list (e.g. an issuer action id such as \"markRead\")."),
-                "style": prop("string", "Overrides the action's style.", values: ["default", "destructive", "cancel"]),
+                "actionRef": prop("string", "Id of an action in the resolved list (e.g. an issuer action id such as \"markRead\"). `actionId` is accepted as another spelling. An action is drawn in at most one cell: a bound button claims it, so an `actions` row with no `include` leaves it out."),
+                "style": prop("string", "Overrides the action's style: normal, prominent, destructive or cancel. Destructive draws the label in red and asks for confirmation before running. The old `destructive: true` is read as destructive.", values: HeraldActionStyle.allCases.map(\.rawValue)),
                 "symbol": ref("symbol"),
             ], example: #"{"type":"button","actionRef":"markRead","symbol":{"name":"checkmark.circle","weight":"semibold"}}"#),
-            comp("actions", "The action row: all resolved actions from `source`, as buttons.",
+            comp("actions", "The action row: buttons for the resolved actions it lists (`include`, else all of `source` that no other cell claims). An action is drawn in at most one cell, so you can split the list across cells: a `button` bound by actionRef for one, an `actions` row with include for others.",
                  emptyWhen: "the source yields no actions", [
                 "source": prop("string", "issuer: only the issuer's actions; template: only actions added by actionRules; merged: all.", values: HeraldActionSource.allCases.map(\.rawValue), def: s("merged")),
                 "layout": prop("string", "row: one line; wrap: flows onto more lines; stack: one per line.", values: HeraldActionsLayout.allCases.map(\.rawValue), def: s("wrap")),
                 "maxVisible": prop("integer", "Show at most this many.", min: 1),
+                "include": prop("array", "Ordered action ids this cell shows (issuer actions and template-added ones), e.g. [\"archive\",\"delete\",\"spam\"]. Empty or absent: every action of `source` that no other cell claims.", items: .object(["type": s("string")])),
+                "align": prop("string", "Where the buttons sit across the cell's width. spaceBetween puts the first at the leading edge, the last at the trailing edge and spreads the rest.", values: HeraldActionsAlign.allCases.map(\.rawValue), def: s("leading")),
+                "wrap": prop("boolean", "Flow onto further lines when the buttons do not fit. Absent: follows `layout` (wrap flows, row does not)."),
+                "spacing": prop("number", "Points between buttons (0-64).", min: 0, max: 64, def: n(6)),
                 "symbol": ref("symbol"),
-            ], example: #"{"type":"actions","source":"merged","layout":"wrap"}"#),
+            ], example: #"{"type":"actions","include":["archive","delete","spam"],"align":"trailing","wrap":false}"#),
             comp("iconButton", "A round icon-only button with an SF Symbol, e.g. a close or snooze button.",
                  required: ["symbol"], emptyWhen: "actionRef names an action that is not in the resolved list; an inline action is never empty", [
                 "symbol": ref("symbol"),

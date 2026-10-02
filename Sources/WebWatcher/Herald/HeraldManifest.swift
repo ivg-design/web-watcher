@@ -126,10 +126,16 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
     /// `byApp` stacking (DESIGN section 9) folds every issuer of one family into one stack; without it the issuer
     /// id's prefix before the first dot is the family.
     public var family: String?
+    /// The issuing application's bundle identifier and path, so an `openApp` action (and a template's
+    /// `onClick: openApp`) can bring it to the front. Both optional; see `HeraldOpenAppResolver` for the order.
+    public var appBundleId: String?
+    public var appPath: String?
 
     public init(app: String, appName: String? = nil, icon: String? = nil, version: Int = 1,
                 fields: [HeraldField] = [], actions: [HeraldButton] = [], actionIDs: [String]? = nil,
-                assets: [HeraldAsset] = [], defaultTemplate: String? = nil, family: String? = nil) {
+                assets: [HeraldAsset] = [], defaultTemplate: String? = nil, family: String? = nil,
+                appBundleId: String? = nil, appPath: String? = nil) {
+        self.appBundleId = appBundleId; self.appPath = appPath
         self.app = app; self.appName = appName ?? app; self.icon = icon; self.version = version
         self.fields = fields; self.actions = actions
         self.actionIDs = actionIDs ?? Self.derivedIDs(for: actions)
@@ -148,7 +154,7 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
     // MARK: Coding
 
     private enum CodingKeys: String, CodingKey {
-        case app, appName, icon, version, fields, actions, assets, defaultTemplate, family
+        case app, appName, icon, version, fields, actions, assets, defaultTemplate, family, appBundleId, appPath
     }
 
     /// The wire shape of one action.
@@ -160,9 +166,11 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
         var url: String?
         var command: String?
         var callback: HeraldCallback?
+        var bundleId: String?
+        var path: String?
     }
 
-    private static let issuerKinds = ["url", "callback", "command", "dismiss"]
+    private static let issuerKinds = ["url", "callback", "command", "openApp", "dismiss"]
 
     /// Only `app` is required: a bare `{"app":"x"}` is a valid (empty) manifest. `appName` defaults to
     /// the app id, `version` to 1.
@@ -186,7 +194,8 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
             }
             var callback = w.callback
             if w.kind == "callback", callback == nil { callback = HeraldCallback() }   // "call the issuer back" needs no payload
-            buttons.append(HeraldButton(label: w.label, style: w.style, url: w.url, command: w.command, callback: callback))
+            let open = (w.kind == "openApp" || w.bundleId != nil || w.path != nil) ? HeraldOpenApp(bundleId: w.bundleId, path: w.path) : nil
+            buttons.append(HeraldButton(label: w.label, style: w.style, url: w.url, command: w.command, callback: callback, openApp: open))
             if let id = w.id?.trimmingCharacters(in: .whitespaces), !id.isEmpty {
                 guard explicit.insert(id).inserted else {
                     throw DecodingError.dataCorrupted(.init(codingPath: path + [AnyKey("id")],
@@ -215,7 +224,9 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
                   actions: buttons, actionIDs: ids,
                   assets: try c.decodeIfPresent([HeraldAsset].self, forKey: .assets) ?? [],
                   defaultTemplate: try c.decodeIfPresent(String.self, forKey: .defaultTemplate),
-                  family: try c.decodeIfPresent(String.self, forKey: .family))
+                  family: try c.decodeIfPresent(String.self, forKey: .family),
+                  appBundleId: try c.decodeIfPresent(String.self, forKey: .appBundleId),
+                  appPath: try c.decodeIfPresent(String.self, forKey: .appPath))
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -227,16 +238,19 @@ public struct HeraldManifest: Codable, Equatable, Sendable {
         try c.encode(fields, forKey: .fields)
         var wires: [ActionWire] = []
         for (i, b) in actions.enumerated() {
-            let kind = b.callback != nil ? "callback" : b.url != nil ? "url" : b.command != nil ? "command" : "dismiss"
+            let kind = b.callback != nil ? "callback" : b.url != nil ? "url" : b.command != nil ? "command" : b.openApp != nil ? "openApp" : "dismiss"
             // A callback that only means "call the issuer back" is written as just its kind.
             let callback = b.callback == HeraldCallback() ? nil : b.callback
             wires.append(ActionWire(id: actionID(at: i), label: b.label, kind: kind, style: b.style,
-                                    url: b.url, command: b.command, callback: callback))
+                                    url: b.url, command: b.command, callback: callback,
+                                    bundleId: b.openApp?.bundleId, path: b.openApp?.path))
         }
         try c.encode(wires, forKey: .actions)
         try c.encode(assets, forKey: .assets)
         try c.encodeIfPresent(defaultTemplate, forKey: .defaultTemplate)
         try c.encodeIfPresent(family, forKey: .family)
+        try c.encodeIfPresent(appBundleId, forKey: .appBundleId)
+        try c.encodeIfPresent(appPath, forKey: .appPath)
     }
 
     // MARK: Ids
@@ -341,17 +355,22 @@ public extension HeraldManifest {
             }
         }
 
+        tooBig("appBundleId", appBundleId, Limits.maxSmallFieldBytes)
+        tooBig("appPath", appPath, Limits.maxSmallFieldBytes)
+        if let b = appBundleId, !b.isEmpty, !Self.isBundleId(b) { errors.append("appBundleId '\(b)' is not a bundle identifier (for example com.example.App)") }
+        if let p = appPath, !p.isEmpty, !p.lowercased().hasSuffix(".app") { errors.append("appPath must be an application, ending in .app") }
         if actions.count > Limits.maxActions { errors.append("too many actions (at most \(Limits.maxActions))") }
         var ids = Set<String>()
         for (i, a) in actions.prefix(Limits.maxActions).enumerated() {
             let at = "actions[\(i)]"
             if a.label.isEmpty { errors.append("\(at).label is required") }
             tooBig("\(at).label", a.label, Limits.maxLabelBytes)
-            for (name, value) in [("url", a.url), ("command", a.command), ("style", a.style)] {
+            for (name, value) in [("url", a.url), ("command", a.command), ("style", a.style),
+                                  ("bundleId", a.openApp?.bundleId), ("path", a.openApp?.path)] {
                 tooBig("\(at).\(name)", value, Limits.maxSmallFieldBytes)
             }
-            if let style = a.style, !["default", "destructive", "cancel"].contains(style) {
-                errors.append("\(at).style '\(style)' must be default, destructive or cancel")
+            if let style = a.style, !HeraldActionStyle.isAccepted(style) {
+                errors.append("\(at).style '\(style)' must be normal, prominent, destructive or cancel")
             }
             let id = actionID(at: i)
             if !ids.insert(id).inserted { errors.append("\(at).id '\(id)' is declared twice") }
@@ -368,6 +387,12 @@ public extension HeraldManifest {
             tooBig("\(at).path", a.path, Limits.maxSmallFieldBytes)
         }
         return errors
+    }
+
+    /// `com.example.App`: dot-separated letters, digits, `-` and `_`, at least two parts.
+    static func isBundleId(_ s: String) -> Bool {
+        let parts = s.split(separator: ".", omittingEmptySubsequences: false)
+        return parts.count >= 2 && parts.allSatisfy { !$0.isEmpty && $0.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") } }
     }
 
     /// The `{token}` name syntax bindings use.

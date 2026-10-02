@@ -232,6 +232,9 @@ public struct HeraldTemplate: Codable, Equatable, Identifiable, Sendable {
     /// Key/values the user authored; every action receives them (as `extra`) and bindings read them as
     /// `{extra.key}`.
     public var extra: [String: String]
+    /// What clicking the banner does. nil is `url` (open the notification's link); `openApp` brings the issuing
+    /// application to the front instead.
+    public var onClick: HeraldBannerClick?
 
     /// Line limit the pre-template banner used, so an untemplated look and a bare template match.
     public static let defaultMaxBodyLines = 8
@@ -283,7 +286,7 @@ public struct HeraldTemplate: Codable, Equatable, Identifiable, Sendable {
         case name, app, layout, accentColor, showSubtitle, showBody, showTimestamp, maxBodyLines
         case title, subtitle, body, image, url, buttons, sound, persistent, timeout, snooze
         case priority, reminder
-        case layoutVersion, grid, cells, collapseEmpty, actionRules, extra
+        case layoutVersion, grid, cells, collapseEmpty, actionRules, extra, onClick
     }
 
     public init(from decoder: Decoder) throws {
@@ -314,6 +317,7 @@ public struct HeraldTemplate: Codable, Equatable, Identifiable, Sendable {
         collapseEmpty = try c.decodeIfPresent(Bool.self, forKey: .collapseEmpty) ?? true
         actionRules = try c.decodeIfPresent([HeraldActionRule].self, forKey: .actionRules) ?? []
         extra = try c.decodeIfPresent([String: String].self, forKey: .extra) ?? [:]
+        onClick = try c.decodeIfPresent(HeraldBannerClick.self, forKey: .onClick)
     }
 
     /// Writes only what is set: a v1 template stays as short as it was (plus `layoutVersion`), and a v2 one
@@ -346,6 +350,7 @@ public struct HeraldTemplate: Codable, Equatable, Identifiable, Sendable {
         try c.encode(collapseEmpty, forKey: .collapseEmpty)
         if !actionRules.isEmpty { try c.encode(actionRules, forKey: .actionRules) }
         if !extra.isEmpty { try c.encode(extra, forKey: .extra) }
+        try c.encodeIfPresent(onClick, forKey: .onClick)
     }
 }
 
@@ -374,7 +379,8 @@ public extension HeraldTemplate {
 
     /// Ids of the cells whose component has nothing to show (`HeraldComponent.hasContent`).
     func emptyCellIDs(fields: [String: HeraldFieldValue], actions: [HeraldResolvedAction]) -> Set<String> {
-        Set(cells.filter { !$0.component.hasContent(fields: fields, actions: actions) }.map(\.id))
+        let assignment = actionAssignment(actions: actions)
+        return Set(cells.filter { !cellHasContent($0, fields: fields, actions: actions, assignment: assignment) }.map(\.id))
     }
 
     /// The collapse plan for one notification. `emptyCells` are the ids of cells with nothing to show.
@@ -474,7 +480,7 @@ public extension HeraldTemplate {
             }
             if let pos = r.position, pos < 0 { err("\(p).position", "position must be 0 or greater") }
             if let s = r.style, !s.isEmpty, !Self.actionStyles.contains(s) {
-                err("\(p).style", "style '\(s)' must be default, destructive or cancel")
+                err("\(p).style", "style '\(s)' must be \(HeraldActionStyle.acceptedList)")
             }
             if let a = r.add { Self.validateAction(a, path: "\(p).add", cell: nil, into: &issues) }
             if let sym = r.symbol {
@@ -553,13 +559,21 @@ public extension HeraldTemplate {
                                    knownTokens: knownTokens, extraKeys: Set(extra.keys),
                                    templateActionIDs: templateActionIDs, into: &issues)
         }
+        openAppIssues(manifest: manifest, into: &issues)
+        // An action is drawn in at most one cell; the later cell shows nothing for it.
+        let claims = actionAssignment(actions: []).claimants
+        for (id, cellIDs) in claims.sorted(by: { $0.key < $1.key }) where cellIDs.count > 1 {
+            for later in cellIDs.dropFirst() {
+                warn("cells", "action '\(id)' is asked for by cells '\(cellIDs[0])' and '\(later)': it is drawn once, in '\(cellIDs[0])'", cell: later)
+            }
+        }
         return issues
     }
 
     /// True when `validate` finds no errors.
     func isValid(manifest: HeraldManifest? = nil) -> Bool { !validate(manifest: manifest).contains { $0.isError } }
 
-    private static let actionStyles = ["default", "destructive", "cancel"]
+    private static let actionStyles = HeraldActionStyle.accepted
     private static let colorKeywords = ["accent", "primary", "secondary"]
 
     /// `#RGB`, `#RGBA`, `#RRGGBB`, `#RRGGBBAA`, or (when allowed) `accent` / `primary` / `secondary`.
@@ -575,7 +589,7 @@ public extension HeraldTemplate {
         func blank(_ s: String?) -> Bool { (s ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         if a.label.trimmingCharacters(in: .whitespaces).isEmpty { err("\(p).label", "an action needs a label") }
         if a.id.trimmingCharacters(in: .whitespaces).isEmpty { err("\(p).id", "an action needs an id") }
-        if let s = a.style, !actionStyles.contains(s) { err("\(p).style", "style '\(s)' must be default, destructive or cancel") }
+        if let s = a.style, !actionStyles.contains(s) { err("\(p).style", "style '\(s)' must be \(HeraldActionStyle.acceptedList)") }
         if let sym = a.symbol {
             for pr in sym.problems() { issues.append(.init(severity: pr.isError ? .error : .warning, path: "\(p).symbol.\(pr.key)", cellId: cell, message: pr.message)) }
         }
@@ -596,9 +610,41 @@ public extension HeraldTemplate {
             if blank(a.shortcut) { err("\(p).shortcut", "a shortcut action needs the name of an installed Shortcut (list_shortcuts)") }
         case .snooze:
             if let m = a.snoozeMinutes, !(1...10080).contains(m) { err("\(p).snoozeMinutes", "snoozeMinutes must be 1 to 10080") }
+        case .openApp:
+            if let b = a.bundleId, !b.trimmingCharacters(in: .whitespaces).isEmpty, !HeraldManifest.isBundleId(b.trimmingCharacters(in: .whitespaces)) {
+                err("\(p).bundleId", "'\(b)' is not a bundle identifier (for example com.example.App)")
+            }
+            if let path = a.path, !path.trimmingCharacters(in: .whitespaces).isEmpty, !path.lowercased().hasSuffix(".app") {
+                err("\(p).path", "path must be an application, ending in .app (for example /Applications/Example.app)")
+            }
         case .callback, .dismiss:
             break
         }
+    }
+
+    /// Warnings for `openApp` actions (and `onClick: openApp`) that cannot find an application on this Mac. Nothing
+    /// here is an error: the template is fine, pressing it just does nothing but leave a note in History.
+    private func openAppIssues(manifest: HeraldManifest?, into issues: inout [HeraldTemplateIssue]) {
+        func check(_ a: HeraldAction?, path p: String, cell: String?) {
+            let candidates = HeraldOpenAppResolver.candidates(bundleId: a?.bundleId, path: a?.path, manifest: manifest)
+            let named = [a?.bundleId, a?.path].compactMap { $0 }.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            if candidates.isEmpty {
+                issues.append(.init(severity: .warning, path: p, cellId: cell, message:
+                    "this opens an application but names none (bundleId or path) and there is no manifest to take it from"))
+            } else if HeraldOpenAppResolver.resolve(candidates) == nil {
+                let tried = candidates.map { c -> String in
+                    switch c { case .bundleId(let b): return "bundle id \(b)"; case .path(let x): return "path \(x)"; case .appName(let n): return "the name \(n)" }
+                }.joined(separator: ", ")
+                issues.append(.init(severity: .warning, path: p, cellId: cell, message:
+                    "no installed application found (tried \(tried)): pressing it does nothing but leave a note in History"
+                    + (named.isEmpty ? "; set the manifest's appBundleId or appPath" : "")))
+            }
+        }
+        for (i, r) in actionRules.enumerated() where r.add?.kind == .openApp { check(r.add, path: "actionRules[\(i)].add", cell: nil) }
+        for (i, c) in cells.enumerated() {
+            for a in c.component.inlineActions where a.kind == .openApp { check(a, path: "cells[\(i)].component.action", cell: c.id.isEmpty ? nil : c.id) }
+        }
+        if onClick == .openApp { check(nil, path: "onClick", cell: nil) }
     }
 
     private static func validateComponent(_ comp: HeraldComponent, path p: String, cell: String?, manifest: HeraldManifest?,
@@ -636,11 +682,24 @@ public extension HeraldTemplate {
             color("color", t.color)
             if let f = t.fontSize, !(6...72).contains(f) { err("\(p).fontSize", "fontSize must be 6 to 72") }
         case .button(let b):
-            if b.action == nil && blank(b.actionRef) { err(p, "a button needs an inline 'action' or an 'actionRef'") }
+            if b.action == nil && blank(b.actionRef) { err(p, "a button needs an inline 'action' or an 'actionRef' (also written 'actionId')") }
             if let a = b.action { validateAction(a, path: "\(p).action", cell: cell, into: &issues) }
-            if let s = b.style, !actionStyles.contains(s) { err("\(p).style", "style '\(s)' must be default, destructive or cancel") }
+            if let s = b.style, !actionStyles.contains(s) { err("\(p).style", "style '\(s)' must be \(HeraldActionStyle.acceptedList)") }
         case .actions(let a):
             if let m = a.maxVisible, m < 1 { err("\(p).maxVisible", "maxVisible must be at least 1") }
+            if let sp = a.spacing, !(0...64).contains(sp) { err("\(p).spacing", "spacing must be 0 to 64 points") }
+            if let inc = a.include {
+                if inc.contains(where: { $0.trimmingCharacters(in: .whitespaces).isEmpty }) { err("\(p).include", "include lists action ids; one of them is blank") }
+                if a.includedIDs.count != inc.count, !inc.contains(where: { $0.trimmingCharacters(in: .whitespaces).isEmpty }) {
+                    warn("\(p).include", "include names the same action more than once; it is shown once")
+                }
+                if let m = manifest {
+                    let known = Set(m.actions.indices.map { m.actionID(at: $0) }).union(templateActionIDs)
+                    for id in a.includedIDs where !known.contains(id) {
+                        warn("\(p).include", "'\(id)' is not an action of the manifest or one this template adds, so nothing shows for it")
+                    }
+                }
+            }
         case .iconButton(let b):
             if blank(b.symbol) { err("\(p).symbol", "an iconButton needs an SF Symbol name, for example \"xmark\"") }
             if b.action == nil && blank(b.actionRef) { err(p, "an iconButton needs an inline 'action' or an 'actionRef'") }
