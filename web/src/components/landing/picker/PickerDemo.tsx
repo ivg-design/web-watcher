@@ -209,7 +209,7 @@ export default function PickerDemo() {
                   <span className="rc-badge" data-node="badge">3</span>
                 </div>
               </header>
-              <main className="rc-main">
+              <div className="rc-main">
                 <h5>Latest topics</h5>
                 <ul className="rc-feed" data-node="feed">
                   {TOPICS.map((t) => (
@@ -221,7 +221,7 @@ export default function PickerDemo() {
                   ))}
                   <li className="rc-more">… 45 more</li>
                 </ul>
-              </main>
+              </div>
             </div>
           </div>
 

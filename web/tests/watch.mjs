@@ -139,7 +139,7 @@ for (const w of [1280, 390]) {
   await page.evaluate(() => window.__ww_record({ source: "types", name: "Second", title: "Second change", body: "x", value: "2" }));
   await sleep(700);
   chk(!(await page.$(T("watch-notice"))), "later record() shows NO callout");
-  chk((await page.$eval(T("watch-badge"), (e) => e.textContent.trim())) === "3", "badge still ticks to 3");
+  chk((await page.$eval(T("watch-badge"), (e) => e.textContent.trim())) === (w < 1100 ? "4" : "3"), "badge still ticks (3, or 4 on stacked layouts with the extra demo record)");
   await page.click(T("watch-mark")); await page.waitForSelector(T("watch-popover")); await sleep(500);
   chk(!(await page.$(T("watch-notice"))), "no callout over the open popover");
   const rowsH = await page.$$eval(".ww-pop__item", (r) => r.map((x) => x.getBoundingClientRect().height));

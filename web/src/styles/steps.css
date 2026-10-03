@@ -42,7 +42,7 @@
 .hw-lights i:nth-child(2) { background: #febc2e; }
 .hw-lights i:nth-child(3) { background: #28c840; }
 .hw-tabs { display: flex; gap: 0.3em; flex: 1; min-width: 0; }
-.hw-tab { display: flex; align-items: center; gap: 0.5em; font-size: 0.95em; padding: 0.35em 0.9em; border-radius: 0.5em 0.5em 0 0; color: #6a6d78; background: rgba(0, 0, 0, 0.04); white-space: nowrap; max-width: 14em; flex: 1 1 0; min-width: 0; overflow: hidden; }
+.hw-tab { display: flex; align-items: center; gap: 0.5em; font-size: 0.95em; padding: 0.35em 0.9em; border-radius: 0.5em 0.5em 0 0; color: #565965; background: rgba(0, 0, 0, 0.04); white-space: nowrap; max-width: 14em; flex: 1 1 0; min-width: 0; overflow: hidden; }
 .hw-tab.is-on { background: #fff; color: #1d1f27; font-weight: 500; }
 .hw-tab b { width: 1.2em; height: 1.2em; border-radius: 0.3em; background: #1d1f27; color: #fff; font-size: 0.75em; display: inline-grid; place-items: center; flex: none; }
 .hw-tab b.alt { background: #8b8fa0; }
@@ -68,16 +68,16 @@
 @keyframes hw-roll-out { to { transform: translateY(-110%); } }
 
 .hw-main { padding: 1.5em 1.6em; min-width: 0; }
-.hw-main h4 { font-size: 1.4em; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.9em; }
+.hw-main .hw-h { font-size: 1.4em; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.9em; }
 .hw-thread { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) auto; gap: 0.9em; align-items: center; padding: 0.95em 0; border-top: 1px solid #ececf1; }
 .hw-av { width: 2.6em; height: 2.6em; border-radius: 50%; display: grid; place-items: center; background: #dfe6ff; color: #2849b8; font-style: normal; font-size: 0.85em; font-weight: 700; }
 .hw-av.b { background: #e6e8ee; color: #555a6b; }
 .hw-av.c { background: #fde9d4; color: #9a4a0c; }
 .hw-av.d { background: #dff3e6; color: #1f6b3b; }
 .hw-thread .who { font-size: 1.02em; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hw-thread .who span { color: #8b8fa0; font-weight: 400; margin-left: 0.5em; font-size: 0.92em; }
+.hw-thread .who span { color: #63677a; font-weight: 400; margin-left: 0.5em; font-size: 0.92em; }
 .hw-thread .pv { color: #6d7080; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hw-thread time { color: #8b8fa0; font-size: 0.85em; white-space: nowrap; }
+.hw-thread time { color: #63677a; font-size: 0.85em; white-space: nowrap; }
 .hw-thread.unread .who { font-weight: 700; }
 .hw-thread.unread .pv { color: #1d1f27; font-weight: 600; }
 .hw-thread--new.is-new { background: rgba(31, 94, 255, 0.06); }
@@ -127,7 +127,7 @@
   .hw-side ul { display: flex; gap: 0.2em; }
   .hw-nav.dim { display: none; }
   .hw-main { padding: 1em 1.1em; }
-  .hw-main h4 { margin-bottom: 0.4em; }
+  .hw-main .hw-h { margin-bottom: 0.4em; }
   .hw-tab:not(.is-on) { display: none; }
   .hw-sheet { top: auto; bottom: 10.5em; left: 1em; right: 1em; width: auto; font-size: calc(100cqw / 36); }
   .hw-notif { font-size: calc(100cqw / 36); width: auto; left: 1em; right: 1em; max-width: none; top: 0.6em; padding: 0.7em 0.9em; }

@@ -54,7 +54,7 @@
 .gx__nt { flex: 1; min-width: 0; }
 .gx__nt strong { display: block; font-size: 13.5px; font-weight: 700; }
 .gx__nt span { display: block; font-size: 12.5px; color: #4a5060; line-height: 1.4; }
-.gx__subj em { font-style: normal; color: #7a8090; }
+.gx__subj em { font-style: normal; color: #5f6368; }
 .gx__count { min-width: 24px; height: 24px; border-radius: 12px; background: var(--n-signal); color: #fff; font-size: 12.5px; font-weight: 700; display: inline-grid; place-items: center; padding-inline: 7px; flex: none; overflow: hidden; font-variant-numeric: tabular-nums lining-nums; }
 .gx__count .roll__v.is-out::before { content: attr(data-v); }
 .gx__acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-left: 48px; }

@@ -1,13 +1,19 @@
 # WebWatcher
 
-> WebWatcher is a free, open-source (MIT) macOS menu bar app that watches badges, counters, text and Gmail senders you would otherwise refresh by hand, and sends a native notification when they change. It reads your existing Safari sessions (no re-login), runs locally, and has no account or server.
+> WebWatcher is a free, open-source (MIT) macOS menu bar app that watches badges, counters, text and Gmail senders you would otherwise refresh by hand, and sends a native notification when they change. It reads your existing Safari sessions (no re-login), runs locally, and has no account or server. It needs macOS 13 or later on Apple Silicon only, and ships as a Developer ID signed and notarized DMG of about 3 MB.
 
-- Requires macOS 13+, Apple Silicon. Developer ID signed and notarized DMG, about 3 MB.
-- Watch any element via CSS selector or XPath, with a guided picker in Safari; notifies only on change; check interval 15 seconds to 30 minutes.
-- Gmail sender and domain watchers (OAuth, gmail.modify scope; acts on mail: Mark as Read, Archive, Delete (to Trash), Spam), custom notification icon, title and body, optional Herald delivery.
+WebWatcher checks each watcher every 15 seconds to 30 minutes and notifies only on change. A watcher targets any element by CSS selector or XPath, set up with a guided picker in Safari. Gmail sender and domain watchers use OAuth with the gmail.modify scope and can act on mail (Mark as Read, Archive, Delete to Trash, Spam). Notification icon, title and body are customizable, with optional delivery through Herald.
 
-## Links
-- Home: https://forge.mograph.life/apps/webwatcher/
-- Docs: https://forge.mograph.life/apps/webwatcher/docs
-- Changelog: https://forge.mograph.life/apps/webwatcher/changelog
-- Source and releases: https://github.com/ivg-design/web-watcher
+## Product
+
+- [Home](https://forge.mograph.life/apps/webwatcher/): What WebWatcher watches, the 15 second recording of the real app, the element picker, Gmail senders, Herald delivery and the privacy model.
+- [Download](https://github.com/ivg-design/web-watcher/releases/latest): Latest signed and notarized DMG for macOS 13 or later, Apple Silicon.
+
+## Documentation
+
+- [Docs](https://forge.mograph.life/apps/webwatcher/docs): Guides for setup, the picker, watcher types, Gmail watchers and notifications.
+- [Changelog](https://forge.mograph.life/apps/webwatcher/changelog): Release notes for every version.
+
+## Source
+
+- [GitHub repository](https://github.com/ivg-design/web-watcher): Source code (MIT), issues and releases.

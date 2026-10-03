@@ -69,15 +69,15 @@ export default function WatchTypes() {
             const hint = on ? (r.value === "changed" ? "changed" : `changed: ${r.value}`) : "see it change";
             return (
               <li key={r.slug} className={`wt-panel${on ? " is-changed" : ""}${flash === r.slug ? " is-flash" : ""}${lands ? " has-notif" : ""}`} data-s={r.slug}>
-                <button type="button" className="wt-btn" aria-label={`Watch ${r.name} change`} aria-pressed={on} data-testid={`wt-row-${r.slug}`} onClick={() => play(r)}>
+                <button type="button" className="wt-btn" aria-pressed={on} data-testid={`wt-row-${r.slug}`} onClick={() => play(r)}>
                   <span className="wt-top">
-                    <span className="t-label wt-name">{r.name}</span>
+                    <span id={`wt-n-${r.slug}`} className="t-label wt-name">{r.name}</span>
                     <span className="t-label wt-tick" aria-hidden="true"><Hourglass size={12} strokeWidth={1.75} />30 s</span>
                   </span>
-                  <span className="wt-stage"><r.Ex on={on} /></span>
+                  <span className="wt-stage" aria-hidden="true"><r.Ex on={on} /></span>
                   <span className="wt-foot">
-                    <span className="wt-desc">{r.desc}</span>
-                    <span className="t-label wt-hint" aria-hidden="true">{hint}</span>
+                    <span id={`wt-d-${r.slug}`} className="wt-desc">{r.desc}</span>
+                    <span id={`wt-h-${r.slug}`} className="t-label wt-hint" aria-hidden="true">{hint}</span>
                   </span>
                 </button>
                 {on && (

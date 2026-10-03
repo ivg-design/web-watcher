@@ -162,7 +162,7 @@ for (const [w, h] of want_(5) ? VPS : []) {
 // 6. images + 7. links
 if (want_(6) || want_(7)) {
   const page = await mk(1440, 900);
-  await go(page, "/"); await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 120)); } scrollTo(0, 0); }); await sleep(1500);
+  await go(page, "/"); await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { scrollTo({ top: y, behavior: "instant" }); await new Promise((r) => setTimeout(r, 120)); } scrollTo({ top: 0, behavior: "instant" }); }); await sleep(1500);
   await page.waitForFunction(() => [...document.images].every((i) => i.complete), { timeout: 15000 }).catch(() => {});
   const imgs = await page.evaluate(() => [...document.images].map((i) => ({ s: (i.currentSrc || i.src).replace(location.origin, "").slice(0, 60), alt: i.getAttribute("alt"), hid: i.getAttribute("aria-hidden") === "true" || ["presentation", "none"].includes(i.getAttribute("role")), w: i.getAttribute("width"), h: i.getAttribute("height"), nw: i.naturalWidth, cls: i.className })));
   const d = [];

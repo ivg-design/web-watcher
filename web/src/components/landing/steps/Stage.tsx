@@ -92,8 +92,8 @@ export default function Stage({ beat, sub, pressed }: Props) {
               <li className="hw-nav dim"><div className="hw-navrow"><svg viewBox="0 0 16 16" width="1.2em" height="1.2em" aria-hidden="true"><path d="M2.5 3.5h11v9h-11zM2.5 6.5h11" fill="none" stroke="currentColor" strokeWidth="1.2" /></svg><span>Projects</span></div></li>
             </ul>
           </aside>
-          <main className="hw-main">
-            <h4>Inbox</h4>
+          <div className="hw-main">
+            <p className="hw-h">Inbox</p>
             <div className="hw-thread unread">
               <i className="hw-av a" aria-hidden="true">DW</i>
               <div><p className="who">Dana Whitfield <span>Harbor &amp; Co</span></p><p className="pv">Can you send the revised quote before Friday?</p></div>
@@ -114,7 +114,7 @@ export default function Stage({ beat, sub, pressed }: Props) {
               <div><p className="who">Tomás Ibarra <span>Foxglove</span></p><p className="pv">Thanks, invoice received.</p></div>
               <time>Fri</time>
             </div>
-          </main>
+          </div>
 
           <span
             className={"hw-outline" + (picking ? " is-on" : "") + (locked ? " is-locked" : "") + (picking ? "" : " no-anim")}
