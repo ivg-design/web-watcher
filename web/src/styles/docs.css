@@ -78,7 +78,9 @@
 .prose ul, .prose ol { padding-left: 22px; display: grid; gap: 8px; }
 .prose li::marker { color: var(--muted); }
 .prose strong { font-weight: 600; }
-.prose pre { background: var(--surface); color: var(--p-ink); border: 1px solid var(--line); padding: 16px 18px; border-radius: 8px; overflow-x: auto; font-size: 14px; line-height: 1.6; }
+.prose pre { background: var(--surface); color: var(--p-ink); border: 1px solid var(--line); padding: 16px 18px; border-radius: 8px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.6; }
+.prose pre .ln { display: block; padding-left: 2ch; text-indent: -2ch; }
+.prose img, .prose figure, .prose pre { max-width: 100%; }
 .prose pre code { background: none; border: 0; padding: 0; font-size: inherit; }
 .prose .keys { display: flex; flex-wrap: wrap; gap: 10px; }
 .prose .key { display: inline-flex; align-items: center; height: 38px; padding-inline: 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--p-ink); font-family: var(--font-mono); font-size: 13px; font-weight: 500; }
@@ -89,19 +91,19 @@
 .shot.tall figcaption { text-align: center; }
 .callout { background: transparent; border: 1px solid var(--line); border-left: 3px solid var(--p-ink); border-radius: 4px; padding: 14px 20px; font-size: 15px; line-height: 1.65; }
 .callout > * + * { margin-top: 8px; }
-.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.table-wrap { overflow: visible; border: 1px solid var(--line); border-radius: 8px; }
 .prose table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.55; }
 .prose th { text-align: left; font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--muted); padding: 12px 16px; background: var(--surface); }
 .prose td { padding: 12px 16px; border-top: 1px solid var(--line); vertical-align: top; }
-.prose td:first-child { font-weight: 600; white-space: nowrap; }
-.prose td code { white-space: nowrap; }
+.prose td:first-child { font-weight: 600; }
+.prose td code { overflow-wrap: anywhere; }
+.prose td code.tk { white-space: nowrap; overflow-wrap: normal; }
 @media (max-width: 640px) {
   .table-wrap { border: 0; overflow: visible; }
   .prose table, .prose tbody, .prose tr, .prose td { display: block; width: 100%; }
   .prose thead { display: none; }
   .prose tr { border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; background: var(--surface); }
   .prose td { border: 0; padding: 4px 0; white-space: normal !important; }
-  .prose td code { white-space: normal; }
   .prose td::before { content: attr(data-label); display: block; font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 500; }
 }
 .pager { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); margin-top: 48px; padding-top: 24px; font-weight: 600; font-size: 14.5px; color: var(--p-ink); }

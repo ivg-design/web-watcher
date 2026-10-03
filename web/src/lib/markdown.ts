@@ -40,6 +40,16 @@ const hasFile = (href: string) => existsSync(join(process.cwd(), "public", href)
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+/** Inline code inside a table cell: short tokens stay whole; long ones get <wbr> after separators only. */
+const SEP_BEFORE = /(?<=[/._\-:=?&,])/;
+function cellCode(html: string): string {
+  return html.replace(/<code>([\s\S]*?)<\/code>/g, (_m, inner: string) => {
+    const plain = decodeEntities(inner);
+    if (plain.length <= 16) return `<code class="tk">${inner}</code>`;
+    return `<code>${plain.split(SEP_BEFORE).map(escapeHtml).join("<wbr>")}</code>`;
+  });
+}
+
 /** Renders trusted, repo-owned Markdown. basePath prefixes root-relative links and images. */
 export function renderMarkdown(src: string, basePath = ""): { html: string; headings: Heading[] } {
   const headings: Heading[] = [];
@@ -76,11 +86,16 @@ export function renderMarkdown(src: string, basePath = ""): { html: string; head
       blockquote({ tokens }: Tokens.Blockquote) {
         return `<aside class="callout">${this.parser.parse(tokens)}</aside>\n`;
       },
+      code({ text, lang }: Tokens.Code) {
+        const lines = text.replace(/\n$/, "").split("\n").map((l) => `<span class="ln">${escapeHtml(l) || " "}</span>`).join("");
+        const cls = lang ? ` class="language-${escapeHtml(lang.split(/\s/)[0])}"` : "";
+        return `<pre><code${cls}>${lines}</code></pre>\n`;
+      },
       table(token: Tokens.Table) {
         const head = token.header.map((c) => `<th>${this.parser.parseInline(c.tokens)}</th>`).join("");
         const labels = token.header.map((c) => c.text);
         const rows = token.rows
-          .map((r) => `<tr>${r.map((c, i) => `<td data-label="${escapeHtml(labels[i])}">${this.parser.parseInline(c.tokens)}</td>`).join("")}</tr>`)
+          .map((r) => `<tr>${r.map((c, i) => `<td data-label="${escapeHtml(labels[i])}">${cellCode(this.parser.parseInline(c.tokens))}</td>`).join("")}</tr>`)
           .join("");
         return `<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>\n`;
       },

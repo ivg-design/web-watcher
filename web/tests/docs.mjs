@@ -28,8 +28,14 @@ const dh = await page.evaluate(() => {
   return { hbg: bgOf(".docs-header"), shellBg: rgb(bgOf(".docs-shell")), bodyBg: rgb(getComputedStyle(document.body).backgroundColor), bad, brandHref: document.querySelector(".docs-header .brand").getAttribute("href") };
 });
 await go("/docs/notification-templates", 1440);
-const tk = await page.evaluate(() => { const c = document.querySelector(".prose table code"); return c ? getComputedStyle(c).whiteSpace : null; });
-ok(tk === "nowrap", `table code token white-space nowrap (${tk})`);
+const tk = await page.evaluate(() => {
+  const codes = [...document.querySelectorAll(".prose table code")];
+  const short = codes.filter((c) => c.textContent.length <= 16), long = codes.filter((c) => c.textContent.length > 16);
+  return { n: codes.length, shortBad: short.filter((c) => getComputedStyle(c).whiteSpace !== "nowrap").length,
+    longNoWbr: long.filter((c) => /[\/._\-:=?&,]/.test(c.textContent.slice(0, -1)) && !c.querySelector("wbr")).length,
+    scroll: [...document.querySelectorAll(".table-wrap")].filter((w) => w.scrollWidth > w.clientWidth + 1 || getComputedStyle(w).overflowX !== "visible").length };
+});
+ok(tk.n > 0 && tk.shortBad === 0 && tk.longNoWbr === 0 && tk.scroll === 0, `table code: short tokens unbroken, long tokens break only at separators (<wbr>), no scroller ${JSON.stringify(tk)}`);
 const dbg2 = await page.evaluate(() => { const e = document.querySelector(".docs-header"); const c = getComputedStyle(e); return { bg: c.backgroundColor, bb: c.borderBottomColor }; });
 await go("/", 1440);
 const lh = await page.evaluate(() => { const c = getComputedStyle(document.querySelector(".site-header")); return { bg: c.backgroundColor, bb: c.borderBottomColor }; });
