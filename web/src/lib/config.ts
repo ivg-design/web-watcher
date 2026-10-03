@@ -4,12 +4,12 @@ export const RELEASES_URL = `${REPO_URL}/releases`;
 export const HERALD_URL = "https://github.com/ivg-design/herald";
 export const DEMO_VIDEO_URL =
   "https://github.com/user-attachments/assets/8adbf24e-0b20-4d1a-8bc1-d2593f2a02f7";
-/** The demo recorded from WebWatcher 1.10.9's staged demo mode (scripts/record-demo.sh): H.264 + VP9, 1440 px, 60 fps, 41 s. */
+/** The demo recorded from WebWatcher 1.10.9's staged demo mode (scripts/record-demo.sh): H.264 + VP9, 1440 px, 60 fps; idle holds trimmed to about a second each, 15 s. */
 export const DEMO_VIDEO_SRC = "/video/demo.mp4";
 export const DEMO_VIDEO_WEBM = "/video/demo.webm";
 export const DEMO_POSTER = "/video/poster.jpg";
 export const DEMO_POSTER_2X = "/video/poster@2x.jpg";
-export const DEMO_DURATION = "0:41";
+export const DEMO_DURATION = "0:15";
 
 /** Hardcoded fallback used when the GitHub API is unreachable at build time. Refresh per release. */
 export const FALLBACK_RELEASE = {
