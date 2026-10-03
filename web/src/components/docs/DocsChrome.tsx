@@ -84,6 +84,7 @@ export default function DocsChrome({
   return (
     <>
       <header className="docs-header">
+       <div className="docs-header__in">
         <button
           type="button"
           className="docs-menu-btn"
@@ -94,11 +95,14 @@ export default function DocsChrome({
         >
           {drawer ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
         </button>
-        <Link href={asset("/docs")} className="brand">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={asset("/images/webwatcher-icon.png")} alt="" width={22} height={22} />
-          WebWatcher <span className="slash">/ Docs</span>
-        </Link>
+        <div className="docs-brand">
+          <Link href={asset("/")} className="brand" aria-label="WebWatcher home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={asset("/images/webwatcher-icon.png")} alt="" width={54} height={54} />
+            WebWatcher
+          </Link>
+          <Link href={asset("/docs")} className="docs-crumb">/ Docs</Link>
+        </div>
         <button type="button" className="search-btn" aria-label="Search docs" aria-keyshortcuts="Control+K Meta+K" onClick={() => setSearchOpen(true)}>
           <Search size={16} aria-hidden />
           <span>Search docs…</span>
@@ -109,6 +113,7 @@ export default function DocsChrome({
           <Link href={asset("/changelog")}>Changelog</Link>
           <a href={REPO_URL} target="_blank" rel="noopener noreferrer">GitHub <ArrowUpRight size={13} aria-hidden style={{ verticalAlign: "-2px" }} /></a>
         </nav>
+       </div>
       </header>
 
       {drawer && (
@@ -124,10 +129,12 @@ export default function DocsChrome({
       )}
 
       <div className="docs-shell">
-        <nav className="docs-side" aria-label="Documentation">
-          <Tree sections={sections} current={current} />
-        </nav>
-        {children}
+        <div className="docs-shell__in">
+          <nav className="docs-side" aria-label="Documentation">
+            <Tree sections={sections} current={current} />
+          </nav>
+          {children}
+        </div>
       </div>
 
       {searchOpen && <DocsSearch index={index} onClose={() => setSearchOpen(false)} />}

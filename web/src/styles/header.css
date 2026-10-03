@@ -1,0 +1,4 @@
+/* Landing header: icon fills the 76px row minus 5px top and bottom. */
+.site-header .brand { gap: 12px; }
+.site-header .brand img { width: 66px; height: 66px; border-radius: 15px; flex: none; }
+@media (max-width: 480px) { .site-header .brand { gap: 10px; font-size: 17px; } }

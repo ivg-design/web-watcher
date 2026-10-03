@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { asset, REPO_URL } from "@/lib/config";
+import "@/styles/header.css";
 
 const LINKS = [
   { label: "How it works", href: "/#how-it-works" },
@@ -22,7 +23,7 @@ export default function SiteHeader() {
       <div className="container site-header__row">
         <Link href={asset("/")} className="brand" onClick={() => setOpen(false)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={asset("/images/webwatcher-icon.png")} alt="" width={28} height={28} />
+          <img src={asset("/images/webwatcher-icon.png")} alt="" width={66} height={66} />
           WebWatcher
         </Link>
         <nav className="nav" aria-label="Primary">
