@@ -4,16 +4,16 @@ A watch type says what counts as a change. The picker chooses one for you from w
 
 | Type | What it does |
 |------|--------------|
-| Badge/Number | Extracts a numeric value, such as an unread count or notification badge. Notifies when it rises and shows the count. |
+| Badge/Number | Extracts a numeric value, such as an unread count or notification badge. |
 | Element Count | Counts how many elements match the selector. |
-| Text Change | Notifies when the text content changes and shows old → new. |
+| Text Change | Notifies when the text content changes and shows the new text. |
 | Element Exists | Notifies when an element appears. |
 | Element Disappears | Notifies when an element is removed. |
 | Anything Changes Inside | Notifies when anything inside the element changes: a badge appears, text updates, items are added. |
 
-## Subtree change
+## Anything Changes Inside
 
-Anything Changes Inside is the watch type for elements that show no count at all: a bell icon with no badge, a status area, anything where "something happened" is all you need. It fingerprints the element's subtree and notifies when that fingerprint changes.
+This is the watch type for elements that show no count at all: a bell icon with no badge, a status area, anything where "something happened" is all you need. It fingerprints the element's subtree and notifies when that fingerprint changes.
 
 A busy container (lots of descendants, frequently updating timestamps, live counters unrelated to what you care about) can notify more often than you want. WebWatcher warns you in the Confirm step when the picked area has a large number of elements, and picking a smaller part, with ↑ and ↓ while picking, usually fixes it.
 

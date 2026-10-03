@@ -15,6 +15,6 @@ Open the page you want to watch in Safari and sign in if it needs a login. WebWa
 
 ## What happens next
 
-Checks run on your interval, from 15 seconds to 30 minutes, in a background tab. WebWatcher only notifies when the value changes: a badge that goes from 2 to 3 produces a notification, and a badge that stays at 3 stays quiet.
+Checks run on your interval, from 15 seconds to 30 minutes. WebWatcher only notifies when the value changes: a badge that goes from 2 to 3 produces a notification, and a badge that stays at 3 stays quiet.
 
-> **Tip.** Not sure which element to watch? Pick the bell or counter itself. If it shows no number yet, choose *Subtree change* and WebWatcher tells you when anything appears inside it.
+> **Tip.** Not sure which element to watch? Pick the bell or counter itself. If it shows no number yet, choose *Anything Changes Inside* and WebWatcher tells you when anything appears inside it.

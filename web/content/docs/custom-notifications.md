@@ -6,7 +6,7 @@ Set a different icon for each watcher. A notification with the Rive logo and one
 
 ## Title and body
 
-For page watchers the notification states what changed, for example "Rive Community · 3 new" with "bell badge went 0 → 3 · just now". Click it to land on the page.
+For page watchers the title defaults to the watcher's name and the body says what changed: a badge watcher reads "You have 3 new messages", a text watcher shows the new text, and an Anything Changes Inside watcher says something changed inside the watched area. Set your own title and body to override these. Templates for page watchers can use `{value}` (the new reading), `{previous}` (the one before) and `{name}` (the watcher's name).
 
 For Gmail watchers, the title and body come from templates. See [Notification templates](/docs/notification-templates) for the placeholders.
 

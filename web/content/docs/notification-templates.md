@@ -17,6 +17,6 @@ The default title is `{count} new from {sender}`, or `Email from {sender}` for a
 
 ## An example
 
-A watcher named Rive team with the title template `{count} new from {sender}` shows "3 new from Rive team" and a body such as "Scripting update · Office hours · Release notes, received Today 8:14 PM".
+With the default title template, three unread messages from Acme Billing produce "3 new from Acme Billing". The body lists the latest subjects, followed by "received" and the time the newest one arrived.
 
 > **Tip.** Use the preview in the editor to check your template. Previews carry a "[Preview]" marker so you can tell them from real mail.

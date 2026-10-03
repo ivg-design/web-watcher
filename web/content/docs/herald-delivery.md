@@ -1,4 +1,4 @@
-Herald is a free, standalone menu-bar notification service with persistent, always-on-top banners, per-app history, stacking by sender, snooze, and fully customizable banner layouts. WebWatcher can deliver its notifications through it.
+Herald is a standalone menu-bar notification service with persistent, always-on-top banners, per-app history, stacking by sender, snooze, and fully customizable banner layouts. WebWatcher can deliver its notifications through it.
 
 ## How it works
 
@@ -17,7 +17,7 @@ One switch, no Herald, no change.
 
 ## Stacking
 
-Email banners are grouped by the sender address and web banners by the site host, so Herald stacks them per sender or per site.
+Email banners stack per sender address, so mail from one sender folds into a single stack in Herald.
 
 ## Get Herald
 

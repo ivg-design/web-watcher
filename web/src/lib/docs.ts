@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BASE_PATH } from "./config";
-import { renderMarkdown, type Heading } from "./markdown";
+import { renderInline, renderMarkdown, type Heading } from "./markdown";
 
 export interface DocMeta { slug: string; title: string; summary: string }
 export interface DocSection { title: string; docs: DocMeta[] }
@@ -45,6 +45,7 @@ export const ALL_DOCS: (DocMeta & { section: string })[] = DOC_SECTIONS.flatMap(
 export interface RenderedDoc {
   meta: DocMeta & { section: string };
   html: string;
+  lede: string;
   headings: Heading[];
   prev: DocMeta | null;
   next: DocMeta | null;
@@ -54,8 +55,11 @@ export function getDoc(slug: string, basePath = BASE_PATH): RenderedDoc | null {
   const i = ALL_DOCS.findIndex((d) => d.slug === slug);
   if (i < 0) return null;
   const src = readFileSync(join(process.cwd(), "content", "docs", `${slug}.md`), "utf8");
-  const { html, headings } = renderMarkdown(src, basePath);
-  return { meta: ALL_DOCS[i], html, headings, prev: ALL_DOCS[i - 1] ?? null, next: ALL_DOCS[i + 1] ?? null };
+  // A leading plain paragraph is the page lede; the rest is the body.
+  const m = src.match(/^\s*([^#>\-*|`\d!\s][^\n]*(?:\n[^\n#>\-*|`!][^\n]*)*)\n\n([\s\S]*)$/);
+  const lede = m ? renderInline(m[1]) : "";
+  const { html, headings } = renderMarkdown(m ? m[2] : src, basePath);
+  return { meta: ALL_DOCS[i], html, lede, headings, prev: ALL_DOCS[i - 1] ?? null, next: ALL_DOCS[i + 1] ?? null };
 }
 
 export interface SearchItem { title: string; slug: string; section: string; heading?: string; id?: string }

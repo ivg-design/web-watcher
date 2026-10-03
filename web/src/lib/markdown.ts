@@ -58,3 +58,18 @@ export function renderMarkdown(src: string, basePath = ""): { html: string; head
   });
   return { html: marked.parse(src) as string, headings };
 }
+
+/** Renders a single line of trusted Markdown (code spans, bold, links) without a wrapping paragraph. */
+export function renderInline(src: string): string {
+  const marked = new Marked({ gfm: true });
+  marked.use({
+    renderer: {
+      link({ href, tokens }: Tokens.Link) {
+        const external = /^https?:/.test(href);
+        const rel = external ? ' target="_blank" rel="noopener noreferrer"' : "";
+        return `<a href="${escapeHtml(href)}"${rel}>${this.parser.parseInline(tokens)}</a>`;
+      },
+    },
+  });
+  return marked.parseInline(src) as string;
+}

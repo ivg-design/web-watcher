@@ -8,8 +8,8 @@ Gmail support is deliberately narrow. These are the edges to know about.
 
 ## Testing mode
 
-If you use your own OAuth client in Testing mode, Google revokes access every 7 days and you need to reconnect the account in Settings. The built-in client does not have this limit.
+If you use your own OAuth client in Testing mode, Google revokes access every 7 days and you need to reconnect the account in Settings.
 
 ## Not a mail client
 
-WebWatcher never shows a message body in its own window. It counts, notifies and acts (Mark as Read, Archive, Delete, Spam); reading happens in Gmail.
+WebWatcher counts, notifies and acts (Mark as Read, Archive, Delete, Spam). Clicking a notification opens the message in Gmail, which is where you read it.

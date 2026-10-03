@@ -2,7 +2,7 @@ Download the DMG, drag the app to Applications, and open it. WebWatcher lives in
 
 ## Requirements
 
-- macOS 13.0 or later, on Apple Silicon.
+- macOS 13.0 or later.
 - Safari, with the page you want to watch open in a tab.
 - Safari's *Allow JavaScript from Apple Events* setting turned on, plus Automation permission for Safari and System Events (see [Permissions](/docs/permissions)).
 - Notification permission is optional but recommended.
