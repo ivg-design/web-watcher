@@ -15,7 +15,7 @@ export const DOC_SECTIONS: DocSection[] = [
   { title: "Watching pages", docs: [
     { slug: "finding-the-element", title: "Finding the element", summary: "The assistant walks you Page, Element, Confirm. You never type a selector." },
     { slug: "scan-vs-pick", title: "Scan page vs Pick in Safari", summary: "Two ways to choose what to watch, and when to use each." },
-    { slug: "watch-types", title: "Watch types", summary: "Badge count, text change, subtree change and the rest." },
+    { slug: "watch-types", title: "Watch types", summary: "Badge number, text change, Anything Changes Inside and the rest." },
     { slug: "site-profiles", title: "Site profiles & recipes", summary: "One click fills in the right strategy, selector and refresh behaviour." },
     { slug: "force-refresh", title: "Force refresh & hidden tabs", summary: "Why Safari background tabs go stale and how WebWatcher handles it." },
     { slug: "example-watchers", title: "Example watchers", summary: "Contra, Reddit, LinkedIn, Rive Community and GitHub, with exact fields." },

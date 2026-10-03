@@ -33,7 +33,7 @@
 @media (min-width: 1100px) { .docs-side { display: block; } }
 .docs-side h4 { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 26px 0 6px; }
 .docs-group:first-child h4 { margin-top: 0; }
-.docs-side a { display: block; font-size: 14px; padding: 8px 10px; border-radius: 8px; color: #2a2e3b; transition: background-color 160ms var(--ease-quart); }
+.docs-side a { display: block; font-size: 14px; padding: 6px 10px; border-radius: 8px; color: #2a2e3b; transition: background-color 160ms var(--ease-quart); }
 .docs-side a:hover { background: var(--bg); }
 .docs-side a[aria-current="page"] { background: var(--soft); color: var(--accent); font-weight: 600; }
 .docs-drawer { position: fixed; inset: 64px 0 0 0; z-index: 35; background: var(--surface); padding: 20px var(--gutter) 40px; overflow-y: auto; }
@@ -151,3 +151,7 @@
   .search, .search__box, .docs-drawer { animation: none; }
   .search-btn, .docs-menu-btn, .docs-side a, .toc a { transition: none; }
 }
+.docs-header__links a { white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+.log ul, .prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+@media (min-width: 700px) { .docs-index { display: block; columns: 2; column-gap: 56px; } .docs-index section { break-inside: avoid; margin-bottom: 32px; } }

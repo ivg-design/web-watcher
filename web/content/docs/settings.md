@@ -5,6 +5,18 @@ WebWatcher's settings are few. This page lists what is there and where each opti
 ## General
 
 - **Launch at login.** Starts WebWatcher with your Mac so watchers keep running.
+- **Show badge in menu bar.** Shows the unread count as a badge on the menu bar icon.
+- **Reuse existing browser tab by domain.** When a watcher's page is opened, switches to an existing Safari tab on the same domain instead of creating a new one.
+
+## Defaults
+
+- **Default check interval.** The interval new watchers start with.
+- **Page load delay.** How long to wait after a page loads before reading it. Increase it for pages that rely on heavy JavaScript.
+
+## Data
+
+- **Config location.** `~/Library/Application Support/WebWatcher/`, with a button to open the folder.
+- **Clear Saved Cookies/Sessions.** Removes saved web data.
 
 ## Per watcher
 
@@ -23,3 +35,4 @@ WebWatcher's settings are few. This page lists what is there and where each opti
 ## Notifications
 
 - **Delivery.** Herald when available, or macOS notifications. See [Herald delivery](/docs/herald-delivery).
+- **Open System Notification Settings.** Jumps to macOS to change banners, sounds and grouping.
