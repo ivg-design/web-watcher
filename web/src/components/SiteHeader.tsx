@@ -46,7 +46,23 @@ export default function SiteHeader() {
   return (
     <header className="site-header">
       <div className="container site-header__row">
-        <Link href={asset("/")} className="brand" onClick={() => setOpen(false)}>
+        <Link
+          href={asset("/")}
+          className="brand"
+          data-testid="brand-home"
+          onClick={(e) => {
+            setOpen(false);
+            // Already on the landing page: the router treats "/" as a no-op (or scrolls only until the page segment is in view),
+            // so go to the very top ourselves and drop any #section from the address.
+            const here = window.location.pathname.replace(/\/$/, "");
+            const home = asset("/").replace(/\/$/, "");
+            if (here === home && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+              e.preventDefault();
+              window.history.replaceState(null, "", window.location.pathname + window.location.search);
+              window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+            }
+          }}
+        >
           { }
           <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={54} height={54} />
           <span>WebWatcher</span>
