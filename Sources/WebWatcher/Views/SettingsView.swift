@@ -18,7 +18,7 @@ struct SettingsView: View {
     @State private var showingManualEntry = false
     @State private var manualClientId = ""
     @State private var manualClientSecret = ""
-    @State private var downloadsCandidate: URL? = GoogleOAuthClientParser.candidateFilesInDownloads().first
+    @State private var downloadsCandidate: URL? = ScreenshotMode.isActive ? nil : GoogleOAuthClientParser.candidateFilesInDownloads().first
     @State private var notificationsGranted = false
     @State private var safariAutomationReport: BrowserNavigationService.PermissionReport = .undetermined
     @State private var defaultBrowserAutomationReport: BrowserNavigationService.PermissionReport = .undetermined
@@ -42,6 +42,7 @@ struct SettingsView: View {
 
             Divider()
 
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // General Section
@@ -108,6 +109,7 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    .id("permissions")
 
                     // Default Settings Section
                     GroupBox(label: Label("Defaults", systemImage: "slider.horizontal.3")) {
@@ -178,6 +180,7 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    .id("notifications")
 
                     // Gmail Section
                     GroupBox(label: Label("Gmail", systemImage: "envelope")) {
@@ -203,6 +206,7 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    .id("gmail")
 
                     // Data Section
                     GroupBox(label: Label("Data", systemImage: "folder")) {
@@ -248,6 +252,14 @@ struct SettingsView: View {
                 }
                 .padding()
             }
+            #if DEBUG
+            .onReceive(NotificationCenter.default.publisher(for: ScreenshotMode.scrollNotification)) { note in
+                if let id = note.object as? String {
+                    proxy.scrollTo(id, anchor: .top)
+                }
+            }
+            #endif
+            }
         }
         .frame(width: 450, height: 650)
         .onAppear {
@@ -255,6 +267,10 @@ struct SettingsView: View {
         }
         .task {
             // Keep the Herald status line current while Settings is open.
+            if ScreenshotMode.isActive {
+                heraldStatus = HeraldStatus(isRunning: true, port: 47321)
+                return
+            }
             while !Task.isCancelled {
                 let status = await Task.detached { HeraldBridge.shared.currentStatus() }.value
                 heraldStatus = status
@@ -692,6 +708,15 @@ struct SettingsView: View {
 
     /// Refresh all permission indicators shown in the Settings dashboard.
     private func refreshPermissionStatus() {
+        if ScreenshotMode.isActive {
+            // Debug-only `--screenshots` mode: canned dashboard, no real permission probes.
+            notificationsGranted = true
+            safariAutomationReport = .granted
+            defaultBrowserBundleID = "com.apple.Safari"
+            defaultBrowserName = "Safari"
+            defaultBrowserAutomationReport = .granted
+            return
+        }
         isRefreshingPermissions = true
 
         Task {

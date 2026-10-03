@@ -79,7 +79,7 @@ struct WatcherEditorView: View {
         self.store = store
         self.watcherService = watcherService
         self.existingWatcher = existingWatcher
-        _pickerModel = StateObject(wrappedValue: ElementPickerModel(probe: SafariScraper.shared))
+        _pickerModel = StateObject(wrappedValue: ElementPickerModel(probe: ScreenshotMode.probe ?? SafariScraper.shared))
     }
 
     var body: some View {
@@ -618,7 +618,17 @@ struct WatcherEditorView: View {
 
     // MARK: - Setup
 
+    /// The probe used for the post-choice diagnosis. Always `SafariScraper.shared` outside the
+    /// Debug-only `--screenshots` mode, where a canned probe stands in so no Safari is touched.
+    private var diagnoseProbe: any ElementProbing { ScreenshotMode.probe ?? SafariScraper.shared }
+
     private func setUp() {
+        #if DEBUG
+        if ScreenshotMode.isActive, existingWatcher == nil {
+            ScreenshotMode.prefillNewWatcher(name: &name, url: &url, markProgrammatic: { isProgrammaticURLChange = true })
+            ScreenshotMode.pickerModel = pickerModel
+        }
+        #endif
         if let watcher = existingWatcher {
             // §9.4: this is the "programmatic initial URL assignment" `locate()` must NOT
             // fire for — set before `url` actually changes so the `.onChange` it triggers
@@ -806,7 +816,7 @@ struct WatcherEditorView: View {
             if delayNanos > 0 {
                 try? await Task.sleep(nanoseconds: delayNanos)
             }
-            let report = await SafariScraper.shared.diagnose(draft, profile: profile)
+            let report = await diagnoseProbe.diagnose(draft, profile: profile)
             await MainActor.run {
                 isTesting = false
                 applyDoctor(report, cameFromPick: viaPick)

@@ -30,7 +30,7 @@ enum NotificationDelivery: String, Codable, CaseIterable, Identifiable {
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    private let defaults = UserDefaults.standard
+    private let defaults = ScreenshotMode.defaults
 
     // Keys
     private let launchAtLoginKey = "launchAtLogin"

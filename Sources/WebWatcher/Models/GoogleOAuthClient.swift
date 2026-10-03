@@ -123,7 +123,7 @@ enum GoogleOAuthClientParser {
 /// app's built-in client (§9.6). Only one override is supported at a time (the app isn't
 /// multi-tenant), so there's no per-account keying.
 final class GoogleOAuthClientStore {
-    static let shared = GoogleOAuthClientStore()
+    static let shared = ScreenshotMode.isActive ? GoogleOAuthClientStore(keychain: nil) : GoogleOAuthClientStore()
 
     private static let service = "com.webwatcher.app.google-oauth-client"
     private static let account = "default"
