@@ -85,7 +85,7 @@ export default function StepsDemo() {
   useEffect(() => {
     if (beat === 2 && sub >= 2 && !recorded.current && (active || clicked.current)) {
       recorded.current = true;
-      record({ source: "steps", name: "Contra · Inbox badge", title: "Contra — 3 new", body: "Inbox badge went 2 → 3", value: "3" });
+      record({ source: "steps", name: "Contra", title: "Contra", body: "You have 3 new messages", value: "3" });
     }
   }, [beat, sub, active, record]);
 
@@ -117,6 +117,7 @@ export default function StepsDemo() {
               >
                 <span className="hw-step__n">0{i + 1}</span>
                 <span className="hw-step__t">{s.title}</span>
+                <span className="hw-step__s">{s.short}</span>
                 <span className="hw-step__c">{s.copy}</span>
                 <span className="hw-bar" aria-hidden="true">
                   {on && (

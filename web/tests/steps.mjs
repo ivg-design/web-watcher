@@ -31,7 +31,10 @@ ok(await page.$eval(T("hw-outline"), (e) => getComputedStyle(e).outlineColor) ==
 // step 3
 await click(page, "hw-step-3");
 await sleep(1800);
-ok((await txt(page, "hw-notif")).includes("Contra — 3 new") && (await txt(page, "hw-notif")).includes("Inbox badge went 2 → 3"), "notification text");
+const nt = await txt(page, "hw-notif");
+ok(nt.includes("Contra") && nt.includes("You have 3 new messages") && !nt.includes("went"), "notification: title Contra, real body");
+ok(await page.$eval(T("hw-newmail"), (e) => e.classList.contains("unread")), "beat 3: the new mail row turns bold");
+ok((await page.$$eval(".hw-thread", (e) => e.length)) === 4, "four mails in the inbox");
 ok((await txt(page, "hw-badge")) === "3", "badge 3");
 ok((await txt(page, "hw-sheet")).includes("Contra · Inbox badge"), "popover row");
 
@@ -46,6 +49,9 @@ for (const w of [1440, 390]) {
     const [sx, sy] = [await rect("hw-stage"), await rect("hw-step-1")];
     ok(sx[1] < sy[1], "mobile: stage above steps");
     ok(sx[2] <= 390, "mobile: stage fits");
+    const strip = await page.$$eval(".hw-steps li", (els) => els.map((e) => Math.round(e.getBoundingClientRect().y)));
+    ok(new Set(strip).size === 1, "mobile: steps form one horizontal strip");
+    ok((await rect("hw-step-1"))[3] >= 44, "mobile: step targets >= 44px");
   }
   await page.screenshot({ path: `/private/tmp/claude-501/-Users-ivg-github-web-watcher/1b5c3420-5ad4-4c49-88f4-04aad1e374ed/scratchpad/steps-${w}.png` });
 }

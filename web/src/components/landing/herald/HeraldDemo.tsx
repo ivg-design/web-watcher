@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Volume2, X } from "lucide-react";
 import { asset } from "@/lib/config";
 import "@/styles/herald.css";
 
 type Phase = "idle" | "shown" | "leaving" | "snoozed" | "done";
 type Id = 1 | 2;
-const SPOKEN3 = "3 new from Rive team. Scripting update, office hours, release notes.";
-const SPOKEN4 = "4 new from Rive team. Beta invite, scripting update, office hours, release notes.";
-const SPOKEN_WEB = "Contra, 1 new. Inbox badge went 0 to 1.";
+const AUDIO_EMAIL3 = "/audio/herald-email-3.mp3";
+const AUDIO_EMAIL4 = "/audio/herald-email-4.mp3";
+const AUDIO_CONTRA = "/audio/herald-contra.mp3";
+const BARS = [0, 1, 2, 3, 4];
+// deterministic pseudo level for bar i at playback time t (0.25..1)
+const barLevel = (t: number, i: number) => 0.25 + 0.75 * Math.abs(Math.sin(t * 7.3 + i * 1.7) * Math.cos(t * 3.1 + i * 0.9));
 const SLIDE_MS = 240;
-const GROW_MS = 300;
+const GROW_MS = 220;
 
 type BannerProps = {
   id: Id;
@@ -25,8 +28,8 @@ type BannerProps = {
   pills: { testid: string; label: string; snooze?: boolean }[];
   closeId: string;
   speakId: string;
-  canSpeak: boolean;
   speaking: boolean;
+  level: number;
   onLeave: (next: "done" | "snoozed") => void;
   onSpeak: () => void;
   icon: string;
@@ -40,16 +43,36 @@ function Banner(p: BannerProps) {
       role="group"
       aria-label={p.id === 1 ? "Herald banner" : "Herald banner, WebWatcher Contra"}
     >
-      <img className="hx__icon" src={p.icon} alt="" width={56} height={56} />
+      <img className="hx__icon" src={p.icon} alt="" aria-hidden="true" width={56} height={56} />
       <div className="hx__main">
         <div className="hx__top">
           <span className="hx__app">{p.app}</span>
           <span className="hx__time">{p.time}</span>
+          <button
+            type="button"
+            className={`hx__speak${p.speaking ? " is-on" : ""}`}
+            data-testid={p.speakId}
+            data-speaking={p.speaking ? "1" : "0"}
+            aria-pressed={p.speaking}
+            aria-label="Read aloud"
+            onClick={p.onSpeak}
+          >
+            {p.speaking ? (
+              <span className="hx__meter" aria-hidden="true">
+                {BARS.map((i) => (
+                  <i key={i} style={{ "--l": barLevel(p.level, i).toFixed(2) } as CSSProperties} />
+                ))}
+              </span>
+            ) : (
+              <Volume2 size={14} aria-hidden="true" />
+            )}
+            {p.speaking ? <span className="hx__reading">reading</span> : null}
+          </button>
           <button type="button" className="hx__x" data-testid={p.closeId} aria-label="Dismiss" onClick={() => p.onLeave("done")}>
             <X size={13} strokeWidth={2.6} />
           </button>
         </div>
-        {p.title}
+        <div className={p.speaking ? "hx__tw is-reading" : "hx__tw"}>{p.title}</div>
         {p.body}
         <div className="hx__btns">
           {p.pills.map((b) =>
@@ -64,20 +87,6 @@ function Banner(p: BannerProps) {
           )}
         </div>
       </div>
-      {p.canSpeak ? (
-        <button
-          type="button"
-          className={`hx__speak${p.speaking ? " is-on" : ""}`}
-          data-testid={p.speakId}
-          data-speaking={p.speaking ? "1" : "0"}
-          aria-pressed={p.speaking}
-          aria-label={p.speaking ? "Stop reading aloud" : "Read aloud"}
-          onClick={p.onSpeak}
-        >
-          <Volume2 size={15} />
-          {p.speaking ? <span className="hx__reading">reading aloud</span> : null}
-        </button>
-      ) : null}
     </div>
   );
 }
@@ -90,11 +99,8 @@ export default function HeraldDemo() {
   const [speaking, setSpeaking] = useState<0 | Id>(0);
   const [count, setCount] = useState(3);
   const [prev, setPrev] = useState<number | null>(null);
-  const canSpeak = useSyncExternalStore(
-    () => () => {},
-    () => "speechSynthesis" in window && !!window.speechSynthesis,
-    () => false,
-  );
+  const [level, setLevel] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const slots = useRef<Record<Id, HTMLDivElement | null>>({ 1: null, 2: null });
   const started = useRef(false);
@@ -125,14 +131,10 @@ export default function HeraldDemo() {
   useEffect(() => {
     ([1, 2] as Id[]).forEach((id) => {
       const el = slots.current[id];
-      if (!el || el.style.height !== "0px" || phRef.current[id] !== "shown") return;
-      el.classList.add("is-collapsing");
+      if (!el || !el.classList.contains("is-collapsed") || phRef.current[id] !== "shown") return;
       void el.offsetHeight;
-      el.style.height = el.scrollHeight + "px";
-      later(() => {
-        el.style.height = "";
-        el.classList.remove("is-collapsing");
-      }, GROW_MS);
+      el.classList.remove("is-collapsed");
+      later(() => el.classList.remove("is-collapsing"), GROW_MS);
     });
   }, [enter]);
 
@@ -171,26 +173,21 @@ export default function HeraldDemo() {
       io.disconnect();
       hio?.disconnect();
       t.forEach(window.clearTimeout);
-      try {
-        window.speechSynthesis?.cancel();
-      } catch {}
+      audioRef.current?.pause();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stopSpeech = () => {
-    try {
-      window.speechSynthesis?.cancel();
-    } catch {}
+    audioRef.current?.pause();
     setSpeaking(0);
   };
   const collapse = (id: Id) => {
     const el = slots.current[id];
     if (!el) return;
-    el.style.height = el.offsetHeight + "px";
     el.classList.add("is-collapsing");
     void el.offsetHeight;
-    el.style.height = "0px";
+    el.classList.add("is-collapsed");
   };
   const leave = (id: Id, next: "done" | "snoozed") => {
     if (phRef.current[id] !== "shown") return;
@@ -198,22 +195,34 @@ export default function HeraldDemo() {
     setP(id, "leaving");
     later(
       () => {
+        // the banner stays mounted (invisible) while its slot folds, so the grid-rows transition has content to fold
         collapse(id);
-        setP(id, next);
-        if (next === "snoozed") snoozeT.current[id] = later(() => showOne(id), 3000);
+        later(() => {
+          setP(id, next);
+          if (next === "snoozed") snoozeT.current[id] = later(() => showOne(id), 3000);
+        }, reduced() ? 0 : GROW_MS);
       },
       reduced() ? 0 : SLIDE_MS,
     );
   };
   const speak = (id: Id) => {
     if (speaking === id) return stopSpeech();
+    let a = audioRef.current;
+    if (!a) {
+      a = new Audio();
+      a.preload = "none";
+      a.addEventListener("timeupdate", () => setLevel(a!.currentTime));
+      a.addEventListener("ended", () => setSpeaking(0));
+      a.addEventListener("error", () => setSpeaking(0));
+      audioRef.current = a;
+    }
+    a.pause();
+    a.src = asset(id === 2 ? AUDIO_CONTRA : count > 3 ? AUDIO_EMAIL4 : AUDIO_EMAIL3);
+    a.currentTime = 0;
+    setLevel(0);
+    setSpeaking(id);
     try {
-      window.speechSynthesis?.cancel();
-      const u = new SpeechSynthesisUtterance(id === 2 ? SPOKEN_WEB : count > 3 ? SPOKEN4 : SPOKEN3);
-      u.onend = () => setSpeaking(0);
-      u.onerror = () => setSpeaking(0);
-      setSpeaking(id);
-      window.speechSynthesis.speak(u);
+      void Promise.resolve(a.play()).catch(() => setSpeaking(0));
     } catch {
       setSpeaking(0);
     }
@@ -239,9 +248,10 @@ export default function HeraldDemo() {
           <span>Finder</span>
           <span className="hx__clock">Thu 8:14 PM</span>
         </div>
-        <div className="hx__stack">
+        <div className="hx__stack" aria-live="off">
           {ph[1] !== "idle" ? (
             <div className="hx__slot" ref={(el) => { slots.current[1] = el; }}>
+              <div className="hx__slotin">
               {ph[1] === "shown" || ph[1] === "leaving" ? (
                 <Banner
                   key={enter[1]}
@@ -263,23 +273,26 @@ export default function HeraldDemo() {
                   }
                   body={<div className={`hx__body${rolling ? " is-fresh" : ""}`}>{emailBody}</div>}
                   pills={[
-                    { testid: "hb-open", label: "Open" },
                     { testid: "hb-read", label: "Mark as Read" },
                     { testid: "hb-archive", label: "Archive" },
+                    { testid: "hb-delete", label: "Delete" },
+                    { testid: "hb-spam", label: "Spam" },
                     { testid: "hb-snooze", label: "Snooze", snooze: true },
                   ]}
                   closeId="hb-close"
                   speakId="hb-speak"
-                  canSpeak={canSpeak}
                   speaking={speaking === 1}
+                  level={level}
                   onLeave={(n) => leave(1, n)}
                   onSpeak={() => speak(1)}
                 />
               ) : null}
+              </div>
             </div>
           ) : null}
           {ph[2] !== "idle" ? (
             <div className="hx__slot" ref={(el) => { slots.current[2] = el; }}>
+              <div className="hx__slotin">
               {ph[2] === "shown" || ph[2] === "leaving" ? (
                 <Banner
                   key={enter[2]}
@@ -290,21 +303,21 @@ export default function HeraldDemo() {
                   icon={icon}
                   app="WebWatcher · Contra"
                   time="2 min ago"
-                  title={<div className="hx__title">Contra — 1 new</div>}
-                  body={<div className="hx__body">Inbox badge went 0 → 1</div>}
+                  title={<div className="hx__title">Contra</div>}
+                  body={<div className="hx__body">You have 1 new message</div>}
                   pills={[
                     { testid: "hb2-open", label: "Open" },
-                    { testid: "hb2-dismiss", label: "Dismiss" },
                     { testid: "hb2-snooze", label: "Snooze", snooze: true },
                   ]}
                   closeId="hb2-close"
                   speakId="hb2-speak"
-                  canSpeak={canSpeak}
                   speaking={speaking === 2}
+                  level={level}
                   onLeave={(n) => leave(2, n)}
                   onSpeak={() => speak(2)}
                 />
               ) : null}
+              </div>
             </div>
           ) : null}
         </div>
@@ -323,6 +336,7 @@ export default function HeraldDemo() {
           {count >= 4 ? "Delivered from Rive team" : "Deliver another from Rive team"}
         </button>
         <p className="hx__caption">Banners stay until you act on them, stacked per sender or site.</p>
+        <p className="hx__caption">Herald can read a banner aloud — this is how it sounds.</p>
       </div>
     </div>
   );

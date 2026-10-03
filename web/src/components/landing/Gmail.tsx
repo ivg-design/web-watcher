@@ -24,8 +24,9 @@ export default function Gmail() {
           <h2 className="display">Watch a sender, not an inbox.</h2>
           <p className="gmail__p">
             Sign in with Google once. Then watch one address, several, or a whole domain. New mail from them becomes a
-            single notification that counts up — and counts back down as you read in Gmail. Click it to open the message;
-            Archive, Mark as Read, Delete and Spam work on every message it counted.
+            single notification that counts up as mail arrives; the menu count follows as you read, and the notification clears
+            once nothing is unread. Click it to open the message; Archive, Mark as Read, Delete and Spam work on every
+            message it counted.
           </p>
           <a className="glink" href={asset("/docs/sign-in-with-google")}>
             <GoogleG />
@@ -40,11 +41,11 @@ export default function Gmail() {
               src={asset("/shots/gmail-sender-editor.png")}
               srcSet={`${asset("/shots/gmail-sender-editor.png")} 1x, ${asset("/shots/gmail-sender-editor@2x.png")} 2x`}
               alt="The Gmail sender watcher editor in WebWatcher"
-              width={220}
-              height={288}
+              width={560}
+              height={732}
               loading="lazy"
             />
-            <figcaption>The sender watcher editor</figcaption>
+            <figcaption>The sender watcher editor in <span className="nw">WebWatcher</span></figcaption>
           </figure>
         </Reveal>
         <GmailDemo />

@@ -14,7 +14,7 @@ For Gmail watchers, the title and body come from templates. See [Notification te
 
 ## Smart filtering
 
-WebWatcher only notifies when the value changes. A badge that went 2 → 3 produces a notification; a badge that is still 3 stays silent. The notification reaches Notification Center with a sound, or Herald if it is running.
+Badge and count watchers notify when the number goes up; text watchers notify on any change. A badge that went 2 → 3 produces a notification; a badge that is still 3 stays silent. The notification reaches Notification Center with a sound, or Herald if it is running.
 
 ## Where to change them
 

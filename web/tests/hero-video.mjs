@@ -15,7 +15,9 @@ ok(s.paused && s.t === 0, "before the click the video is paused at 0 (no autopla
 ok(await page.$eval(".hv__poster", (e) => getComputedStyle(e).opacity === "1" && e.complete && e.naturalWidth > 0), "poster image is visible");
 const f0 = await frame();
 const cw = await page.evaluate(() => document.documentElement.getBoundingClientRect().width);
-ok(f0.right >= cw - 2, "frame bleeds to the right edge (right=" + Math.round(f0.right) + " of " + cw + ")");
+ok(f0.right >= cw - 2 && f0.right <= cw + 0.5, "frame bleeds to the right edge, not past it (right=" + Math.round(f0.right) + " of " + cw + ")");
+const wrap = await page.$eval(".hero__media", (e) => e.getBoundingClientRect().right);
+ok(wrap <= cw + 0.5, "media column does not extend past the viewport (" + Math.round(wrap) + ")");
 const geo = async (label) => {
   const f = await frame();
   const c = await page.$eval(T("hv-play"), (e) => e.getBoundingClientRect().toJSON());
@@ -58,11 +60,15 @@ ok(!(await v()).paused, "click on the video resumes");
 await page.$eval(T("hv-video"), (e) => { e.currentTime = e.duration - 0.3; });
 await sleep(1500);
 ok(await page.$eval(".hv__poster", (e) => getComputedStyle(e).opacity === "1") && !!(await page.$(T("hv-play"))), "at the end the poster and play control return");
-// text link
+// text link: hidden at >=1100 (the on-frame control carries the label), visible and working below
+ok(await page.$eval(T("hv-link"), (e) => e.offsetParent === null), "1440: the duplicate text link is hidden (on-frame play control is visible)");
+await page.setViewport({ width: 1024, height: 800 });
+await sleep(400);
+ok(await page.$eval(T("hv-link"), (e) => e.offsetParent !== null), "1024: text link is visible");
 await page.click(T("hv-link"));
 await sleep(1200);
 s = await v();
-ok(!s.paused && !s.muted && s.t < 4, "text link starts playback from the top with sound");
+ok(!s.paused && !s.muted && s.t < 4, "1024: text link starts playback from the top with sound");
 // leaving the viewport pauses
 await page.evaluate(() => window.scrollTo(0, 3000));
 await sleep(800);
@@ -79,5 +85,6 @@ await page.screenshot({ path: process.env.HERO_SHOT_DIR ? process.env.HERO_SHOT_
 await page.click(T("hv-link"));
 await sleep(1500);
 ok(!(await v()).paused, "390: text link scrolls to the frame and plays");
+ok(!!(await page.$eval(T("hv-video"), (e) => e.getAttribute("src"))), "390: src assigned once play was pressed");
 await browser.close();
 process.exit(0);

@@ -4,7 +4,6 @@ const BASE = process.env.BASE || "http://localhost:3101";
 const T = (id) => `[data-testid="${id}"]`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const defects = [];
-const _res = {};
 const report = (name, pass, detail = []) => {
   console.log((pass ? "PASS " : "FAIL ") + name);
   for (const d of detail) console.log("   - " + d);
@@ -92,7 +91,10 @@ for (const [w, h] of want_(3) ? VPS : []) {
   const page = await mk(w, h);
   await go(page, "/");
   await sleep(2000);
-  await page.evaluate(() => { window.scrollTo(0, 0); document.activeElement?.blur(); });
+  // The Gmail notification (and its buttons) is inert until the arrivals have run: show the stage and wait for it, then tab from the top.
+  await page.$eval("#gmail .gx", (e) => e.scrollIntoView({ block: "center", behavior: "instant" }));
+  await page.waitForFunction(() => document.querySelector("#gmail .gx__nw") && !document.querySelector("#gmail .gx__nw").classList.contains("is-gone"), { timeout: 8000 });
+  await page.evaluate(() => { window.scrollTo(0, 0); document.activeElement?.blur(); const s = document.createElement("span"); s.tabIndex = -1; document.body.prepend(s); s.focus(); s.remove(); });
   const seq = [];
   for (let i = 0; i < 400; i++) {
     await page.keyboard.press("Tab"); await sleep(250);
@@ -108,7 +110,7 @@ for (const [w, h] of want_(3) ? VPS : []) {
     if (seq.length > 1 && info.id === "dl-btn") break;
   }
   const d = [];
-  const want = ["watch-mark", "hv-play", "hw-step-1", "hw-step-2", "hw-step-3", "pd-scan", ...["badge", "text", "count", "appears", "title", "subtree"].map((s) => "wt-row-" + s), "gm-open", "gm-markread", "gm-archive", "gm-delete", "gm-spam", "hb-open", "hb-read", "hb-archive", "hb-snooze", "pv-switch-1", "pv-switch-2", "pv-switch-3", "dl-btn"];
+  const want = ["watch-mark", "hv-play", "hw-step-1", "hw-step-2", "hw-step-3", "pd-scan", ...["badge", "count", "text", "exists", "disappears", "subtree"].map((s) => "wt-row-" + s), "gm-open", "gm-markread", "gm-archive", "gm-delete", "gm-spam", "hb-read", "hb-archive", "hb-delete", "hb-spam", "hb-snooze", "pv-switch-1", "pv-switch-2", "pv-switch-3", "dl-btn"];
   let last = -1;
   for (const id of want) {
     const idx = seq.findIndex((s) => s.id === id);
@@ -168,6 +170,10 @@ if (want_(6) || want_(7)) {
     if (!(i.nw > 0)) p.push("naturalWidth 0");
     if (p.length) d.push(`img ${i.s} (.${i.cls}): ${p.join(", ")}`);
   }
+  // The Gmail sender-editor screenshot must be a readable figure (>= 420 px wide at 1440, 2x srcset).
+  const ed = await page.evaluate(() => { const i = document.querySelector('img[src*="gmail-sender-editor"]'); return i ? { w: i.getBoundingClientRect().width, set: !!i.getAttribute("srcset") } : null; });
+  if (!ed) d.push("gmail-sender-editor figure missing at 1440");
+  else { if (ed.w < 420) d.push(`gmail-sender-editor renders ${Math.round(ed.w)} px wide (< 420)`); if (!ed.set) d.push("gmail-sender-editor has no 2x srcset"); }
   report(`6 images (${imgs.length})`, d.length === 0, d);
   const linkd = [];
   for (const path of ["/", "/docs"]) {

@@ -19,7 +19,7 @@ One switch, no Herald, no change.
 
 ## Stacking
 
-Email banners stack per sender address, so mail from one sender folds into a single stack in Herald.
+Page-watcher banners group by site, and email banners group by sender address, so mail from one sender folds into a single stack in Herald.
 
 ## Get Herald
 

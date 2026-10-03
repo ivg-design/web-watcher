@@ -1,12 +1,17 @@
 /** Rive renderer for the mark. Contract: view model `Mark` (lookX, lookY, badge, hover, reduced, tick), state machine `Mark`. */
 import { useEffect, useRef } from "react";
 import {
+  RuntimeLoader,
   useRive,
   useViewModelInstanceBoolean,
   useViewModelInstanceNumber,
   useViewModelInstanceTrigger,
-} from "@rive-app/react-canvas";
+} from "@rive-app/react-canvas-lite";
 import { asset } from "@/lib/config";
+
+// Self-hosted runtime: no request ever leaves for unpkg/jsdelivr (this module loads before the first Rive instance).
+RuntimeLoader.setWasmUrl(asset("/rive/rive.wasm"));
+RuntimeLoader.setWasmFallbackUrl(asset("/rive/rive_fallback.wasm"));
 
 export interface RiveProps {
   sinkRef: React.MutableRefObject<((x: number, y: number) => void) | null>;

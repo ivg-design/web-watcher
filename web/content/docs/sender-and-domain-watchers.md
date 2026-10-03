@@ -14,7 +14,7 @@ Each email watcher keeps a live unread count. Every check asks Gmail for unread 
 
 New mail produces one notification per watcher, and it is replaced in place rather than stacking: "2 new from Acme Billing", the latest subjects, and when the newest one arrived.
 
-Clicking it opens the email itself when there is one unread message, or a Gmail search for the unread mail from those senders when there are several. Mark as Read, Archive, Delete and Spam act on all counted messages.
+Clicking it opens the email itself when there is one unread message, or a Gmail search for the unread mail from those senders when there are several. Mark as Read, Archive, Delete and Spam act on all counted messages. Delete moves the messages to Trash once; nothing is removed permanently.
 
 ## Notify for every new email
 

@@ -4,7 +4,7 @@ import { asset, FORGE_LINKS, REPO_URL } from "@/lib/config";
 
 const col = (title: string, items: { label: string; href: string; ext?: boolean }[]) => (
   <div>
-    <h4>{title}</h4>
+    <p className="footer__t">{title}</p>
     <ul>
       {items.map((i) => (
         <li key={i.label}>
@@ -24,7 +24,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="container footer__grid">
         <div className="footer__brand">
-          <img src={asset("/images/webwatcher-icon.png")} alt="" width={28} height={28} />
+          <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={28} height={28} />
           <strong className="nw">WebWatcher</strong>
           <p>A menu-bar page watcher for macOS by <span className="nw">IVG Design</span>.</p>
           <p className="footer__facts"><span className="nw">macOS 13+</span> · <span className="nw">Apple Silicon</span> · MIT</p>

@@ -24,7 +24,7 @@ export default function SiteHeader() {
       <div className="container site-header__row">
         <Link href={asset("/")} className="brand" onClick={() => setOpen(false)}>
           { }
-          <img src={asset("/images/webwatcher-icon.png")} alt="" width={66} height={66} />
+          <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={66} height={66} />
           WebWatcher
         </Link>
         <nav className="nav" aria-label="Primary">
@@ -45,7 +45,7 @@ export default function SiteHeader() {
             aria-controls="mobile-nav"
             onClick={() => setOpen((v) => !v)}
           >
-            {open ? <X size={20} /> : <Menu size={20} />}
+            {open ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
           </button>
         </div>
       </div>

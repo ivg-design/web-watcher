@@ -15,7 +15,7 @@ type Mail = {
   unread: boolean;
   fx?: "in" | "out" | "struck";
 };
-type Notif = "shown" | "collapsed" | "dismissed";
+type Notif = "shown" | "dismissed";
 type Undo = { kind: "archived" | "trashed" | "spam"; rows: Mail[] };
 
 const SEED: Mail[] = [
@@ -54,6 +54,7 @@ export default function GmailDemo() {
   const [notif, setNotif] = useState<Notif>("dismissed");
   const [undo, setUndo] = useState<Undo | null>(null);
   const [opened, setOpened] = useState<number | null>(null);
+  const [cleared, setCleared] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
   const started = useRef(false);
   const seq = useRef(0);
@@ -76,6 +77,7 @@ export default function GmailDemo() {
     setNotif("shown");
     setUndo(null);
     setOpened(null);
+    setCleared(false);
     const count = counted(mailsRef.current).length;
     recordRef.current({
       source: "gmail",
@@ -118,9 +120,23 @@ export default function GmailDemo() {
   const subjects = list.slice(0, 3).map((m) => m.subject).join(" · ");
   const more = list.length - 3;
 
+  // Real behaviour: the notification is removed once the unread count reaches 0, and says nothing else.
+  const clearNotif = () => {
+    setNotif("dismissed");
+    setCleared(true);
+    later(() => setCleared(false), 3200);
+  };
   const markRead = () => {
-    upd((m) => m.map((x) => (x.rive ? { ...x, unread: false } : x)));
-    setNotif("collapsed");
+    const ids = mailsRef.current.filter((x) => x.rive && x.unread).map((x) => x.id);
+    if (!ids.length) return;
+    if (reduced()) {
+      upd((m) => m.map((x) => (x.rive ? { ...x, unread: false } : x)));
+      clearNotif();
+      return;
+    }
+    // 60 ms stagger: rows un-bold one by one, the count rolls down to 0, then the card folds away.
+    ids.forEach((id, i) => later(() => upd((m) => m.map((x) => (x.id === id ? { ...x, unread: false } : x))), i * 60));
+    later(clearNotif, ids.length * 60 + 220);
   };
   const remove = (kind: Undo["kind"]) => {
     const rows = mailsRef.current.filter((x) => x.rive && x.unread);
@@ -129,7 +145,7 @@ export default function GmailDemo() {
     const quick = reduced();
     upd((m) => m.map((x) => (ids.has(x.id) ? { ...x, fx: kind === "trashed" ? "struck" : "out" } : x)));
     setUndo({ kind, rows: rows.map((r) => ({ ...r, fx: undefined })) });
-    setNotif("dismissed");
+    clearNotif();
     setOpened(null);
     const finish = () => upd((m) => m.filter((x) => !ids.has(x.id)));
     if (quick) finish();
@@ -150,6 +166,7 @@ export default function GmailDemo() {
     const back = undo.rows;
     upd((m) => [...m.filter((x) => !back.some((b) => b.id === x.id)), ...back].sort((a, b) => b.id - a.id));
     setUndo(null);
+    setCleared(false);
     setNotif("shown");
   };
 
@@ -157,17 +174,19 @@ export default function GmailDemo() {
   const rows = mails.slice(0, MAX_ROWS);
 
   return (
-    <div className="gx" ref={stage}>
+    <div className="gx" ref={stage} aria-live="off">
       <div className="gx__mail">
         <div className="gx__bar">
           <span className="gx__label">Inbox</span>
-          <span className="gx__watch">Watching @rive.app</span>
+          <span className={`gx__watch${cleared ? " is-cleared" : ""}`} role="status" data-testid="gm-status">
+            {cleared ? "Nothing unread from @rive.app — notification cleared" : "Watching @rive.app"}
+          </span>
         </div>
         {undo ? (
-          <p className="gx__undo" role="status">
+          <p className="gx__undo">
             {undoText} ·{" "}
             <button type="button" className="gx__link" data-testid="gm-restore" onClick={restore}>
-              Undo
+              Put it back (demo)
             </button>
           </p>
         ) : null}
@@ -192,16 +211,14 @@ export default function GmailDemo() {
         </div>
       </div>
 
-      <div className={`gx__nw${notif === "dismissed" ? " is-gone" : ""}`} aria-hidden={notif === "dismissed"}>
+      <div className={`gx__nw${notif === "dismissed" ? " is-gone" : ""}`} aria-hidden={notif === "dismissed"} inert={notif === "dismissed"}>
         <div className="gx__nwin">
           <div className="gx__notif" data-testid="gm-notif" role="group" aria-label="Grouped notification from WebWatcher">
-            <div className="gx__nhead">
-              <img src={asset("/images/webwatcher-icon.png")} alt="" width={36} height={36} />
-              <div className="gx__nt">
-                <strong aria-live="polite">{notif === "collapsed" || count === 0 ? "All read" : `${count} new from Rive team`}</strong>
-                {notif === "collapsed" || count === 0 ? (
-                  <span>Nothing left to read from @rive.app</span>
-                ) : (
+            <button type="button" className="gx__nhead" data-testid="gm-open" aria-label="Open the newest message" onClick={open}>
+              <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={36} height={36} />
+              <span className="gx__nt">
+                <strong>{`${count} new from Rive team`}</strong>
+                {count > 0 ? (
                   <>
                     <span className="gx__subj" data-testid="gm-subjects">
                       {subjects}
@@ -209,21 +226,18 @@ export default function GmailDemo() {
                     </span>
                     <span>received Today 8:14 PM</span>
                   </>
-                )}
-              </div>
-              <span className="gx__count" data-testid="gm-count" hidden={count === 0}>
+                ) : null}
+              </span>
+              <span className="gx__count" data-testid="gm-count">
                 <span key={count} className="gx__roll">{count}</span>
               </span>
+            </button>
+            <div className="gx__acts">
+              <button type="button" data-testid="gm-markread" onClick={markRead}>Mark as Read</button>
+              <button type="button" data-testid="gm-archive" onClick={() => remove("archived")}>Archive</button>
+              <button type="button" data-testid="gm-delete" onClick={() => remove("trashed")}>Delete</button>
+              <button type="button" data-testid="gm-spam" onClick={() => remove("spam")}>Spam</button>
             </div>
-            {notif === "shown" ? (
-              <div className="gx__acts">
-                <button type="button" data-testid="gm-open" onClick={open}>Open</button>
-                <button type="button" data-testid="gm-markread" onClick={markRead}>Mark as Read</button>
-                <button type="button" data-testid="gm-archive" onClick={() => remove("archived")}>Archive</button>
-                <button type="button" data-testid="gm-delete" onClick={() => remove("trashed")}>Delete</button>
-                <button type="button" data-testid="gm-spam" onClick={() => remove("spam")}>Spam</button>
-              </div>
-            ) : null}
           </div>
         </div>
       </div>

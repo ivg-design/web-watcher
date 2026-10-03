@@ -22,15 +22,38 @@ interface Props {
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-function Row({ c, now }: { c: WatchChange; now: number }) {
+interface Watcher { key: string; name: string; c: WatchChange }
+
+/** One row per watcher: the latest change wins, most recent first. Gmail collapses to a single sender row. */
+function coalesce(changes: WatchChange[]): Watcher[] {
+  const seen = new Set<string>();
+  const out: Watcher[] = [];
+  for (const c of changes) {
+    const gmail = c.source === "gmail";
+    const key = gmail ? "gmail" : c.name;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ key, name: gmail ? "Gmail · @rive.app" : c.name, c });
+  }
+  return out;
+}
+
+function Row({ w, now }: { w: Watcher; now: number }) {
+  const { c } = w;
   const gmail = c.source === "gmail";
-  const line = c.value ? `Last: ${c.value}` : c.title;
+  const val = c.value ? `Last: ${c.value}` : c.title;
+  // Roll the value when it changes while the popover is open (derived-state pattern, no effect).
+  const [prev, setPrev] = useState(val);
+  const [rolls, setRolls] = useState(0);
+  if (prev !== val) { setPrev(val); setRolls(rolls + 1); }
   return (
     <li className="ww-pop__row" data-testid="watch-row">
       <span className="ww-pop__toggle" aria-hidden><i /></span>
       <span className="ww-pop__txt">
-        <b>{c.name}</b>
-        <small>{line} · {relTime(c.at, now)}</small>
+        <b>{w.name}</b>
+        <small>
+          <span key={rolls} className={rolls ? "ww-pop__val is-roll" : "ww-pop__val"}>{val}</span> · {relTime(c.at, now)}
+        </small>
       </span>
       {gmail && <span className="ww-pop__count">{c.value && /^\d+$/.test(c.value) ? c.value : 1}</span>}
     </li>
@@ -60,9 +83,9 @@ export default function WatchPopover({ anchor, changes, lastCheck, onClose, trig
   }, [open, onClose, triggerRef]);
 
   if (typeof document === "undefined") return null;
-  const rows = changes.slice(0, 6);
-  const plain = rows.filter((c) => c.source !== "gmail");
-  const mail = rows.filter((c) => c.source === "gmail");
+  const rows = coalesce(changes).slice(0, 6);
+  const plain = rows.filter((w) => w.c.source !== "gmail");
+  const mail = rows.filter((w) => w.c.source === "gmail");
   const sheet = anchor?.sheet ?? false;
   
   const ago = Math.max(1, Math.round((now - lastCheck) / 1000));
@@ -93,12 +116,12 @@ export default function WatchPopover({ anchor, changes, lastCheck, onClose, trig
             <p className="ww-pop__empty" data-testid="watch-empty">Nothing watched yet — try the demos below</p>
           ) : (
             <>
-              <ul>{plain.map((c) => <Row key={c.id} c={c} now={now} />)}</ul>
+              <ul>{plain.map((w) => <Row key={w.key} w={w} now={now} />)}</ul>
               {mail.length > 0 && (
                 <>
                   {plain.length > 0 && <hr />}
                   <p className="ww-pop__sect"><Mail size={14} aria-hidden /> Email</p>
-                  <ul>{mail.map((c) => <Row key={c.id} c={c} now={now} />)}</ul>
+                  <ul>{mail.map((w) => <Row key={w.key} w={w} now={now} />)}</ul>
                 </>
               )}
             </>

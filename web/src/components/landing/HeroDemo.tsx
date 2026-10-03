@@ -33,8 +33,11 @@ export default function HeroDemo() {
 
   useEffect(() => {
     const el = frameRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") { setNear(true); return; }
-    const nearObs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setNear(true); nearObs.disconnect(); } }, { rootMargin: "400px" });
+    // Touch screens and Save-Data: the mp4 is not requested until the visitor presses play (start() assigns src).
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    const lean = window.matchMedia("(pointer: coarse)").matches || !!conn?.saveData;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const nearObs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { if (!lean) setNear(true); nearObs.disconnect(); } }, { rootMargin: "400px" });
     // never keep sound running off screen
     const seenObs = new IntersectionObserver(([e]) => {
       const v = videoRef.current;

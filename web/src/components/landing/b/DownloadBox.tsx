@@ -41,14 +41,15 @@ export default function DownloadBox({ release }: { release: LatestRelease }) {
 
   return (
     <div className="dlx__box">
-      <img src={asset("/images/webwatcher-icon.png")} alt="" width={44} height={44} />
+      <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={44} height={44} />
       <div className="dlx__ver">
         <span className="nw">WebWatcher</span> <span className="nw">{release.version}</span> · <span className="nw">Build {release.build}</span> · {release.monthYear}
       </div>
       <a className="dlx__btn" href={release.dmgUrl} data-forge-action="download_intent" data-testid="dl-btn" onClick={onStart}>
         <Download size={18} aria-hidden="true" />
-        <span aria-live="polite">{starting ? "Starting download…" : `Download for Mac · DMG · ${release.sizeMb}`}</span>
+        <span>{starting ? "Starting download…" : `Download for Mac · DMG · ${release.sizeMb}`}</span>
       </a>
+      <span className="sr-only" role="status" data-testid="dl-status">{starting ? "Starting download…" : copied ? "Copied" : ""}</span>
       <p className="dlx__fine"><span className="nw">Apple Silicon</span> (arm64) only · <span className="nw">macOS 13</span> or later</p>
       <div className="dlx__links">
         {release.sha ? (

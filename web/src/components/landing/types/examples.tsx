@@ -35,7 +35,7 @@ export function CountEx({ on }: P) {
   );
 }
 
-export function AppearsEx({ on }: P) {
+export function ExistsEx({ on }: P) {
   return (
     <span className="wt-prod" data-testid="wt-ex-appears">
       <span className="wt-prod__img" aria-hidden="true" />
@@ -45,14 +45,12 @@ export function AppearsEx({ on }: P) {
   );
 }
 
-export function TitleEx({ on }: P) {
+export function DisappearsEx({ on }: P) {
   return (
-    <span className="wt-tab" data-testid="wt-ex-title">
-      <span className="wt-tab__dots" aria-hidden="true"><i /><i /><i /></span>
-      <span className="wt-tab__pill">
-        <i aria-hidden="true" />
-        <Flip text={on ? "(3) Inbox" : "(0) Inbox"} testid="wt-val-title" />
-      </span>
+    <span className="wt-prod wt-prod--join" data-testid="wt-ex-disappears">
+      <span className="wt-prod__img" aria-hidden="true" />
+      <span className="wt-prod__t">Studio headphones</span>
+      <span className={`wt-join${on ? " is-gone" : ""}`} data-testid="wt-joinbtn" data-on={on ? "0" : "1"} aria-hidden={on}>Join waitlist</span>
     </span>
   );
 }

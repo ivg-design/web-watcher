@@ -1,7 +1,7 @@
 export const STEPS = [
-  { title: "Open the page in Safari", copy: "Keep the tab you already use. WebWatcher talks to Safari through Apple Events. No extension, no proxy, no password handed to anyone." },
-  { title: "Point at the element", copy: "Scan page groups what it finds: badges, counters, titles. Or Pick in Safari: click, then nudge with the arrow keys until the outline sits on the right thing." },
-  { title: "Get told when it changes", copy: "Checks run on your interval in a background tab. A change posts one notification with the count; click it to land on the page, or the email." },
+  { title: "Open the page in Safari", short: "Open page", copy: "Keep the tab you already use. WebWatcher talks to Safari through Apple Events. No extension, no proxy, no password handed to anyone." },
+  { title: "Point at the element", short: "Point", copy: "Scan page groups what it finds: badges, counters, titles. Or Pick in Safari: click, then nudge with the arrow keys until the outline sits on the right thing." },
+  { title: "Get told when it changes", short: "Get told", copy: "Checks run on your interval in a background tab. A change posts one notification with the count; click it to land on the page, or the email." },
 ] as const;
 
 /** Beat durations in ms. */

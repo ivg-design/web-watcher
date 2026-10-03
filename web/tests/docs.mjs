@@ -83,6 +83,25 @@ for (const p of slugs) {
 }
 ok(shots >= 14, `docs embed ${shots} /shots images`);
 
+// heading outline: sidebar/TOC titles are <p>, nothing heading-level before the h1; accuracy copy
+for (const p of ["/docs/first-watcher", "/docs/install"]) {
+  await go(p, 1440);
+  const h = await page.evaluate(() => {
+    const hs = [...document.querySelectorAll("h1,h2,h3,h4,h5,h6")];
+    return { first: hs[0]?.tagName, sideH: document.querySelectorAll(".docs-side h4, .toc h4, .footer h4").length, titles: [...document.querySelectorAll(".docs-group__t, .toc__t")].length, aria: [...document.querySelectorAll(".docs-header img, .footer img")].every((i) => i.getAttribute("aria-hidden") === "true") };
+  });
+  ok(h.first === "H1" && h.sideH === 0 && h.titles > 0 && h.aria, `${p}: outline starts at h1, titles are <p>, header/footer icons aria-hidden ${JSON.stringify(h)}`);
+}
+const txt = async (p) => (await (await fetch(BASE + p)).text()).replace(/<[^>]+>/g, " ").replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, " ");
+const fw = await txt("/docs/first-watcher");
+ok(/Badge and count watchers notify when the number goes up/.test(fw) && !/only notifies when the value changes/.test(fw), "first-watcher: rises-only copy");
+const cn = await txt("/docs/custom-notifications");
+ok(/text watchers notify on any change/.test(cn) && !/only notifies when the value changes/.test(cn), "custom-notifications: rises-only copy");
+ok(/Delete moves the messages to Trash/.test(await txt("/docs/sender-and-domain-watchers")), "sender watchers: Delete moves to Trash");
+ok(/group by site/.test(await txt("/docs/herald-delivery")) && /group by sender address/.test(await txt("/docs/herald-delivery")), "herald-delivery: stacking by site and by sender");
+const llms = await (await fetch(BASE + "/llms.txt")).text();
+ok(/gmail\.modify/.test(llms) && !/read-only/i.test(llms), "llms.txt: gmail.modify, not read-only");
+
 // rail highlight while scrolling
 await go("/docs/finding-the-element", 1440, 700);
 const ids = await page.$$eval(".toc a", (as) => as.map((a) => a.getAttribute("href").slice(1)));

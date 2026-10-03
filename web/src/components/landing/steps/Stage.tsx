@@ -99,10 +99,20 @@ export default function Stage({ beat, sub, pressed }: Props) {
               <div><p className="who">Dana Whitfield <span>Harbor &amp; Co</span></p><p className="pv">Can you send the revised quote before Friday?</p></div>
               <time>2 days ago</time>
             </div>
-            <div className="hw-thread">
+            <div className="hw-thread unread">
               <i className="hw-av b" aria-hidden="true">PR</i>
-              <div><p className="who">Priya Raman <span>Kite Labs</span></p><p className="pv">Thanks, invoice received.</p></div>
+              <div><p className="who">Priya Raman <span>Kite Labs</span></p><p className="pv">Scope for the May sprint, ok to start?</p></div>
               <time>Mon</time>
+            </div>
+            <div className={"hw-thread hw-thread--new" + (ticked ? " unread is-new" : "")} data-testid="hw-newmail">
+              <i className="hw-av c" aria-hidden="true">ML</i>
+              <div><p className="who">Marcus Lee <span>Northwind</span></p><p className="pv">Contract draft v3 attached</p></div>
+              <time>{ticked ? "now" : "Sun"}</time>
+            </div>
+            <div className="hw-thread">
+              <i className="hw-av d" aria-hidden="true">TI</i>
+              <div><p className="who">Tomás Ibarra <span>Foxglove</span></p><p className="pv">Thanks, invoice received.</p></div>
+              <time>Fri</time>
             </div>
           </main>
 
@@ -128,7 +138,7 @@ export default function Stage({ beat, sub, pressed }: Props) {
       <div className={"hw-sheet" + (beat === 2 ? " is-pop" : "")} data-testid="hw-sheet">
         <div className="hw-sheet__in" key={`${beat}-${beat === 1 && sub >= 3 ? "l" : "p"}-${beat === 2 && sub >= 2 ? "n" : "m"}`}>
           {beat !== 2 && (
-            <p className="hw-sheet__h"><img src={asset("/images/webwatcher-icon.png")} alt="" width={16} height={16} />Add Watcher</p>
+            <p className="hw-sheet__h"><img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={16} height={16} />Add Watcher</p>
           )}
           {beat === 0 && (
             <>
@@ -154,10 +164,10 @@ export default function Stage({ beat, sub, pressed }: Props) {
       </div>
 
       <div className={"hw-notif" + (notif ? " is-on" : "")} data-testid="hw-notif" aria-hidden={!notif}>
-        <img src={asset("/images/webwatcher-icon.png")} alt="" width={36} height={36} />
+        <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={36} height={36} />
         <div>
-          <p className="t">Contra — 3 new</p>
-          <p className="b">Inbox badge went 2 → 3</p>
+          <p className="t">Contra</p>
+          <p className="b">You have 3 new messages</p>
         </div>
         <time>now</time>
       </div>

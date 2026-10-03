@@ -4,7 +4,7 @@
 
 - Requires macOS 13+, Apple Silicon. Developer ID signed and notarized DMG, about 3 MB.
 - Watch any element via CSS selector or XPath, with a guided picker in Safari; notifies only on change; check interval 15 seconds to 30 minutes.
-- Gmail sender and domain watchers (OAuth, read-only), custom notification icon, title and body, optional Herald delivery.
+- Gmail sender and domain watchers (OAuth, gmail.modify scope; acts on mail: Mark as Read, Archive, Delete (to Trash), Spam), custom notification icon, title and body, optional Herald delivery.
 
 ## Links
 - Home: https://forge.mograph.life/apps/webwatcher/

@@ -411,7 +411,7 @@ function PopoverMock({ done, reading, added }: { done: (typeof NODES)[NodeId] | 
       <div className="pm__row"><i className="pm__tog is-on" /><span><strong>Acme invoices</strong><small>3 unread · latest Today 22:45</small></span><b className="pm__pill">3</b></div>
       <div className="pm__act">
         { }
-        <img src={asset("/images/webwatcher-icon.png")} alt="" width={16} height={16} /> Add Watcher
+        <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={16} height={16} /> Add Watcher
       </div>
       <div className="pm__act">Check All Now</div>
       <div className="pm__last">Last check: 45 seconds ago</div>

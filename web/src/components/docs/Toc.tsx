@@ -28,7 +28,7 @@ export default function Toc({ headings }: { headings: Heading[] }) {
   if (!headings.length) return null;
   return (
     <aside className="toc" aria-label="On this page">
-      <h4>On this page</h4>
+      <p className="toc__t">On this page</p>
       {headings.map((h) => (
         <a
           key={h.id}

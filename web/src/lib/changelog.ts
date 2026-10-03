@@ -54,7 +54,11 @@ const cut = (t: string) => {
   const plain = t.replace(/`/g, "").replace(/\*\*/g, "");
   const m = plain.search(/;|: | \(|\. /);
   const out = (m > 20 ? plain.slice(0, m) : plain).replace(/\.$/, "");
-  return out.length > 110 ? `${out.slice(0, 107).trimEnd()}…` : out;
+  if (out.length <= 110) return out;
+  const head = out.slice(0, 108);
+  const sp = head.lastIndexOf(" ");
+  // Cut at a word boundary, never mid-word.
+  return `${(sp > 40 ? head.slice(0, sp) : head).replace(/[\s,;:.\-–—(]+$/, "")}…`;
 };
 
 /** Short one-line summary of an entry for the landing page list. */

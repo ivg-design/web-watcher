@@ -49,7 +49,7 @@ export default function WatchMark() {
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const [lastCheck, setLastCheck] = useState(() => Date.now());
 
-  // Rive is deferred: after idle (fallback 1200 ms), only while the mark is in the viewport.
+  // Rive is deferred: gated (see below), then after idle (fallback 1200 ms), only while the mark is in the viewport.
   // Probe the file, then import the runtime chunk.
   const [RiveComp, setRiveComp] = useState<RiveComp | null>(null);
   useEffect(() => {
@@ -79,12 +79,28 @@ export default function WatchMark() {
       else timer = window.setTimeout(whenVisible, 1200);
     };
     // Never compete with the page load: start only once `load` has fired.
-    const afterLoad = document.readyState === "complete";
-    if (afterLoad) schedule();
-    else window.addEventListener("load", schedule, { once: true });
+    // Skip entirely: reduced motion, Save-Data / 2g, or touch-sized screens (eye-follow is a no-op there).
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      conn?.saveData ||
+      /2g$/.test(conn?.effectiveType ?? "") ||
+      (window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 640)
+    ) return;
+    // Then wait for page load AND a first pointermove/scroll/keydown, so a bounce visit never pays for it.
+    let loaded = document.readyState === "complete";
+    let touched = false;
+    let kicked = false;
+    const maybe = () => { if (loaded && touched && !kicked) { kicked = true; schedule(); } };
+    const onLoad = () => { loaded = true; maybe(); };
+    const onTouch = () => { touched = true; maybe(); };
+    const EVTS = ["pointermove", "scroll", "keydown"] as const;
+    for (const e of EVTS) window.addEventListener(e, onTouch, { once: true, passive: true });
+    if (!loaded) window.addEventListener("load", onLoad, { once: true });
     return () => {
       live = false;
-      window.removeEventListener("load", schedule);
+      window.removeEventListener("load", onLoad);
+      for (const e of EVTS) window.removeEventListener(e, onTouch);
       io?.disconnect();
       if (idleId) w.cancelIdleCallback?.(idleId);
       window.clearTimeout(timer);
@@ -160,11 +176,15 @@ export default function WatchMark() {
     );
   }, []);
   useEffect(() => {
-    if (!hover) return;
+    if (!hover || reduced) return;
     let iv = 0;
-    const t = window.setTimeout(() => { blink(); iv = window.setInterval(blink, 4000); }, 3000);
-    return () => { window.clearTimeout(t); window.clearInterval(iv); };
-  }, [hover, blink]);
+    const stop = () => { window.clearInterval(iv); iv = 0; };
+    const start = () => { if (!iv && !document.hidden) iv = window.setInterval(blink, 4000); };
+    const onVis = () => (document.hidden ? stop() : start());
+    const t = window.setTimeout(() => { if (!document.hidden) blink(); start(); }, 3000);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { window.clearTimeout(t); stop(); document.removeEventListener("visibilitychange", onVis); };
+  }, [hover, reduced, blink]);
 
   // New change -> tick.
   const prevCount = useRef(count);
@@ -278,8 +298,8 @@ export default function WatchMark() {
           />
         )}
         {unseen > 0 && (
-          <span className="ww-badge" data-testid="watch-badge" aria-hidden>
-            <span key={unseen} className="ww-badge__n">{unseen > 99 ? "99+" : unseen}</span>
+          <span key={unseen} className="ww-badge" data-testid="watch-badge" aria-hidden>
+            <span className="ww-badge__n">{unseen > 99 ? "99+" : unseen}</span>
           </span>
         )}
       </button>

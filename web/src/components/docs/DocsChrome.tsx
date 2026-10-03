@@ -15,7 +15,7 @@ function Tree({ sections, current, onNavigate }: { sections: NavSection[]; curre
     <>
       {sections.map((s) => (
         <div key={s.title} className="docs-group">
-          <h4>{s.title}</h4>
+          <p className="docs-group__t">{s.title}</p>
           {s.docs.map((d) => (
             <Link
               key={d.slug}
@@ -99,7 +99,7 @@ export default function DocsChrome({
         <div className="docs-brand">
           <Link href={asset("/")} className="brand" aria-label="WebWatcher home">
             { }
-            <img src={asset("/images/webwatcher-icon.png")} alt="" width={54} height={54} />
+            <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={54} height={54} />
             WebWatcher
           </Link>
           <Link href={asset("/docs")} className="docs-crumb">/ Docs</Link>
@@ -121,7 +121,7 @@ export default function DocsChrome({
         <nav id="docs-drawer" className="docs-drawer" aria-label="Documentation">
           <Tree sections={sections} current={current} onNavigate={() => setDrawer(false)} />
           <div className="docs-group docs-drawer__site">
-            <h4>WebWatcher</h4>
+            <p className="docs-group__t">WebWatcher</p>
             <Link href={asset("/")}>Home</Link>
             <Link href={asset("/changelog")}>Changelog</Link>
             <a href={REPO_URL} target="_blank" rel="noopener noreferrer">GitHub</a>

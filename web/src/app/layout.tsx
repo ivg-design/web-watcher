@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   publisher: "IVG Design",
   metadataBase: new URL(CANONICAL_HOST),
   alternates: { canonical: toCanonicalUrl("/") },
-  icons: { icon: asset("/images/webwatcher-icon.png"), apple: asset("/images/webwatcher-icon.png") },
+  icons: { icon: asset("/images/webwatcher-icon.png"), apple: asset("/images/apple-touch-icon.png") },
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,

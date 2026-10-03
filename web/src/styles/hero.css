@@ -8,7 +8,10 @@
 @media (min-width: 1100px) {
   .hero__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 56px; }
   .hero .hero__title { font-size: clamp(60px, 5.4vw, 82px); }
-  .hero__media { --bleed: calc(max(0px, (100vw - var(--maxw)) / 2) + var(--gutter)); margin-right: calc(-1 * var(--bleed)); }
+  /* cqw (the hero's own width) instead of vw: 100vw includes the scrollbar gutter and pushed the frame past the edge. */
+  .hero { container-type: inline-size; }
+  .hero .hero__watch { display: none; } /* the on-frame play control carries the label here */
+  .hero__media { --bleed: calc(max(0px, (100cqw - var(--maxw)) / 2) + var(--gutter)); margin-right: calc(-1 * var(--bleed)); }
   .hero .hv__frame { border-radius: 20px 0 0 20px; }
   .hero .hv__cap { padding-right: var(--bleed); }
 }
