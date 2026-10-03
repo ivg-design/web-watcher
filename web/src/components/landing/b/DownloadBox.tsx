@@ -6,17 +6,10 @@ import { RELEASES_URL, asset } from "@/lib/config";
 import type { LatestRelease } from "@/lib/release";
 
 export default function DownloadBox({ release }: { release: LatestRelease }) {
-  const [starting, setStarting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const t1 = useRef<number>(0);
-  const t2 = useRef<number>(0);
-  useEffect(() => () => { window.clearTimeout(t1.current); window.clearTimeout(t2.current); }, []);
+  const t = useRef<number>(0);
+  useEffect(() => () => window.clearTimeout(t.current), []);
 
-  const onDownload = () => {
-    setStarting(true);
-    window.clearTimeout(t1.current);
-    t1.current = window.setTimeout(() => setStarting(false), 1200);
-  };
   const onCopy = async () => {
     if (!release.sha) return;
     try {
@@ -25,8 +18,8 @@ export default function DownloadBox({ release }: { release: LatestRelease }) {
       return;
     }
     setCopied(true);
-    window.clearTimeout(t2.current);
-    t2.current = window.setTimeout(() => setCopied(false), 1600);
+    window.clearTimeout(t.current);
+    t.current = window.setTimeout(() => setCopied(false), 1600);
   };
 
   return (
@@ -35,26 +28,17 @@ export default function DownloadBox({ release }: { release: LatestRelease }) {
       <div className="dl__ver">
         WebWatcher {release.version} · Build {release.build} · {release.monthYear}
       </div>
-      <a
-        className="btn btn--dark btn--block"
-        href={release.dmgUrl}
-        data-forge-action="download_intent"
-        onClick={onDownload}
-      >
+      <a className="btn btn--dark btn--block" href={release.dmgUrl} data-forge-action="download_intent">
         <Download size={18} aria-hidden="true" />
-        <span aria-live="polite">
-          {starting ? "Starting download…" : `Download for Mac · DMG · ${release.sizeMb}`}
-        </span>
+        {`Download for Mac · DMG · ${release.sizeMb}`}
       </a>
+      <p className="dl__fine">Apple Silicon (arm64) only · macOS 13 or later</p>
       <div className="dl__small">
         {release.sha ? (
-          <button type="button" className="sha" onClick={onCopy} title={release.sha}>
-            SHA-256 checksum
-            <span className={`flip${copied ? " is-done" : ""}`} aria-hidden="true">
-              <Copy className="off" size={16} />
-              <Check className="on" size={16} />
-            </span>
-            <span className="sr-only" aria-live="polite">{copied ? "Copied" : ""}</span>
+          <button type="button" className="sha" data-testid="dl-sha" onClick={onCopy} title={release.sha}>
+            {copied ? <Check size={16} aria-hidden="true" className="sha__ok" /> : <Copy size={16} aria-hidden="true" />}
+            {copied ? "Copied" : "Copy SHA-256 checksum"}
+            <span className="sr-only" aria-live="polite">{copied ? "Checksum copied" : ""}</span>
           </button>
         ) : (
           <a href={release.shaUrl} target="_blank" rel="noopener noreferrer">SHA-256 checksum</a>

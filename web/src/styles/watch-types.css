@@ -1,0 +1,26 @@
+/* Watch types: interactive per-row demo. Uses wt-* classes only. */
+.type { row-gap: 0; }
+.type > .type__desc { margin-top: 6px; }
+.wt-ctl { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.type__eg { margin-top: 10px; }
+@media (min-width: 900px) { .type__eg { margin-top: 0; } }
+.wt-val { display: inline-flex; align-items: center; font-family: var(--font-mono); font-weight: 700; font-size: clamp(14px, 3.6vw, 20px); background: var(--soft); border-radius: 8px; padding: 6px 12px; white-space: nowrap; line-height: 1.3; min-width: 4.5em; justify-content: center; overflow: hidden; }
+.wt-val__v { display: inline-block; }
+.wt-val__v.is-changed { animation: wt-swap 360ms var(--ease-quint) both; color: var(--accent-ink); }
+@keyframes wt-swap { from { opacity: 0; transform: translateY(60%); } to { opacity: 1; transform: none; } }
+.wt-btn { height: 36px; min-width: 76px; padding-inline: 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.wt-btn:active { transform: translateY(1px); }
+.wt-btn[disabled] { opacity: 0.55; cursor: default; }
+@media (max-width: 700px) { .wt-btn { height: 44px; } }
+.wt-live { grid-column: 1 / -1; }
+.wt-notif { display: flex; align-items: flex-start; gap: 10px; max-width: 360px; margin-top: 14px; padding: 10px 12px; background: rgb(252 252 254 / 0.92); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 10px 28px -10px rgb(20 22 28 / 0.28); animation: wt-notif-in 320ms var(--ease-quint) both; }
+@media (min-width: 900px) { .wt-live { justify-self: end; } }
+.wt-notif img { width: 34px; height: 34px; border-radius: 8px; flex: none; }
+.wt-notif__t { min-width: 0; flex: 1; font-size: 13px; line-height: 1.35; }
+.wt-notif__t strong { display: block; font-weight: 600; }
+.wt-notif__t span { display: block; color: var(--muted); }
+.wt-notif__now { font-size: 11px; color: var(--muted); flex: none; }
+@keyframes wt-notif-in { from { opacity: 0; transform: translateY(-8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .wt-val__v.is-changed, .wt-notif { animation: none; }
+}

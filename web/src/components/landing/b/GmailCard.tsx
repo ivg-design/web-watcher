@@ -1,75 +1,121 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useInView, useReducedMotion } from "framer-motion";
 import { asset } from "@/lib/config";
 
-const SUBJECTS = ["Scripting update", "Office hours", "Release notes"];
-// [delay ms, shown count, read index]
-const STEPS: [number, number, number][] = [
-  [250, 1, -1],
-  [1000, 2, -1],
-  [1750, 3, -1],
-  [2800, 2, 1],
+type Item = { id: number; text: string; read: boolean };
+const INITIAL = ["Scripting update", "Office hours", "Release notes"]; // newest first
+const FRESH = [
+  "Beta invite: Rive 0.9",
+  "Community call tomorrow",
+  "New tutorial: state machines",
+  "Changelog: data binding",
+  "Reminder: office hours",
 ];
+const MAX_VISIBLE = 4;
+const seed = (): Item[] => INITIAL.map((text, id) => ({ id, text, read: false }));
 
-/** Accumulating notification: counts 1 -> 2 -> 3, then one is read and it drops to 2. Runs once. */
+type Gone = null | "archived" | "trashed";
+
+/** Grouped notification whose buttons do what the app does, inside the mock. */
 export default function GmailCard() {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
-  const [shown, setShown] = useState(3);
-  const [read, setRead] = useState(-1);
-  const [started, setStarted] = useState(false);
+  const [items, setItems] = useState<Item[]>(seed);
+  const [gone, setGone] = useState<Gone>(null);
+  const [leaving, setLeaving] = useState<Gone>(null);
+  const [toast, setToast] = useState(false);
+  const [fresh, setFresh] = useState(0);
+  const timers = useRef<number[]>([]);
+  const nextId = useRef(100);
+  useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
+  const later = (fn: () => void, ms: number) => {
+    const id = window.setTimeout(fn, ms);
+    timers.current.push(id);
+    return id;
+  };
 
-  useEffect(() => {
-    if (reduce || !inView) return;
-    setStarted(true);
-    setShown(0);
-    const timers = STEPS.map(([d, n, r]) =>
-      window.setTimeout(() => {
-        setShown(n);
-        setRead(r);
-      }, d),
-    );
-    return () => timers.forEach(window.clearTimeout);
-  }, [inView, reduce]);
+  const unread = items.filter((i) => !i.read).length;
+  const label = unread === 0 ? "All read — Rive team" : `${unread} new from Rive team`;
+  const shown = items.slice(0, MAX_VISIBLE);
+  const more = items.length - shown.length;
 
-  const count = read >= 0 ? shown : shown;
-  const visible = reduce || !started ? SUBJECTS : SUBJECTS.slice(0, Math.max(shown, read >= 0 ? 3 : 0));
-  const label = shown === 0 && started ? "Watching Rive team" : `${count} new from Rive team`;
+  const markRead = () =>
+    setItems((cur) => {
+      const idx = cur.findIndex((i) => !i.read);
+      return idx < 0 ? cur : cur.map((it, k) => (k === idx ? { ...it, read: true } : it));
+    });
+  const dismiss = (kind: "archived" | "trashed") => {
+    setLeaving(kind);
+    later(() => {
+      setGone(kind);
+      setLeaving(null);
+    }, 280);
+  };
+  const restore = () => {
+    setItems(seed());
+    setGone(null);
+    setLeaving(null);
+    setFresh(0);
+  };
+  const open = () => {
+    setToast(true);
+    later(() => setToast(false), 2500);
+  };
+  const newMail = () => {
+    const text = FRESH[fresh % FRESH.length];
+    setFresh((n) => n + 1);
+    setGone(null);
+    setLeaving(null);
+    setItems((cur) => [{ id: nextId.current++, text, read: false }, ...cur]);
+  };
 
   return (
-    <div ref={ref}>
-      <div className="gnotif" role="group" aria-label="Example grouped notification">
-        <img src={asset("/images/webwatcher-icon.png")} alt="" width={36} height={36} />
-        <div className="gnotif__t" aria-live="off">
-          <strong>{label}</strong>
-          <span className="subjects">
-            {visible.map((s, i) => (
-              <span key={s} className={started && !reduce ? "subj--in" : undefined}>
-                {i > 0 ? <span aria-hidden="true">{"· "}</span> : null}
-                <span className={`subj${read === i ? " is-read" : ""}`}>{s}</span>
-                {i < visible.length - 1 ? " " : ""}
-              </span>
-            ))}
-          </span>
-          <span>received Today 8:14 PM</span>
-        </div>
-        <span className="count roll" aria-label={`${count} unread`}>
-          {count > 0 && (
-            <span key={count} className={started && !reduce ? "roll__d" : undefined}>
-              {count}
-            </span>
-          )}
-        </span>
+    <div className="gm">
+      {gone ? (
+        <p className="gm__undo" role="status">
+          {gone === "archived" ? "Notification archived" : "Moved to Trash"} ·{" "}
+          <button type="button" className="gm__link" data-testid="gm-restore" onClick={restore}>Restore</button>
+        </p>
+      ) : (
+        <>
+          <div className={`gwrap${leaving ? " is-leaving" : ""}`}>
+            <div className="gwrap__in">
+              <div className="gnotif" data-testid="gm-notif" role="group" aria-label="Example grouped notification">
+                <img src={asset("/images/webwatcher-icon.png")} alt="" width={36} height={36} />
+                <div className="gnotif__t">
+                  <strong aria-live="polite">{label}</strong>
+                  <span className="subjects" data-testid="gm-subjects">
+                    {shown.map((s, i) => (
+                      <span key={s.id}>
+                        {i > 0 ? <span aria-hidden="true">{"· "}</span> : null}
+                        <span className={`subj${s.read ? " is-read" : ""}`}>{s.text}</span>
+                        {i < shown.length - 1 ? " " : ""}
+                      </span>
+                    ))}
+                    {more > 0 ? <span className="subj__more"> +{more} more</span> : null}
+                  </span>
+                  <span>received Today 8:14 PM</span>
+                </div>
+                <span className="count roll" data-testid="gm-count" aria-label={`${unread} unread`} hidden={unread === 0}>
+                  <span key={unread} className="roll__d">{unread}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="pillrow">
+            <button type="button" className="pill" data-testid="gm-open" onClick={open}>Open</button>
+            <button type="button" className="pill" data-testid="gm-markread" disabled={unread === 0} onClick={markRead}>Mark as Read</button>
+            <button type="button" className="pill" data-testid="gm-archive" onClick={() => dismiss("archived")}>Archive</button>
+            <button type="button" className="pill" data-testid="gm-delete" onClick={() => dismiss("trashed")}>Delete</button>
+          </div>
+        </>
+      )}
+      <div className="gm__toast" role="status">
+        {toast ? <span data-testid="gm-toast">Opens the email in Gmail</span> : null}
       </div>
       <div className="pillrow">
-        {["Open", "Mark as Read", "Archive", "Delete"].map((b) => (
-          <button key={b} type="button" className="pill" tabIndex={-1}>
-            {b}
-          </button>
-        ))}
+        <button type="button" className="pill pill--sim" data-testid="gm-newmail" onClick={newMail}>
+          Simulate new mail from Rive team
+        </button>
       </div>
     </div>
   );

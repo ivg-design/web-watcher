@@ -1,5 +1,6 @@
 import "@/styles/sections-b.css";
 import Reveal from "@/components/motion/Reveal";
+import { asset } from "@/lib/config";
 import GmailCard from "./b/GmailCard";
 
 const FIELDS: [string, string][] = [
@@ -32,10 +33,10 @@ export default function Gmail() {
             single notification that counts up — and counts back down as you read in Gmail. Click it to open the message;
             Archive, Mark as Read, Delete and Spam work on every message it counted.
           </p>
-          <span className="gbtn" aria-hidden="true">
+          <a className="glink" href={asset("/docs/sign-in-with-google")}>
             <GoogleG />
             Sign in with Google
-          </span>
+          </a>
           <p className="gmail__fine">
             Scope: gmail.modify only · tokens stay in your Keychain · the app ships its own OAuth client, nothing to
             configure

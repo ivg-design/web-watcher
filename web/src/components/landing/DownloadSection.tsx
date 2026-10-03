@@ -5,7 +5,7 @@ import type { LatestRelease } from "@/lib/release";
 import DownloadBox from "./b/DownloadBox";
 
 const REQS = [
-  "macOS 13 Ventura or later · Apple Silicon (M1 or later)",
+  "macOS 13 Ventura or later · Apple Silicon only (arm64) — the released build does not include an Intel slice",
   "Safari (the page you watch stays open in a tab)",
   "Optional: a Google account for Gmail watchers · Herald for persistent banners",
 ];
