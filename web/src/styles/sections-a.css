@@ -30,7 +30,22 @@
 .demo__sk { height: calc(var(--u) * 10); border-radius: calc(var(--u) * 3); background: #cfd4e4; margin-top: calc(var(--u) * 10); }
 .demo__sk--hot { background: #aebcea; }
 .demo__bell { position: absolute; left: calc(var(--u) * 12); top: calc(var(--u) * 190); display: inline-flex; align-items: center; gap: calc(var(--u) * 6); padding: calc(var(--u) * 6) calc(var(--u) * 10); border: calc(var(--u) * 2) solid var(--accent); border-radius: calc(var(--u) * 7); background: #f4f5fa; color: #14161c; }
-.demo__bell b { display: inline-grid; place-items: center; min-width: calc(var(--u) * 20); height: calc(var(--u) * 16); border-radius: calc(var(--u) * 8); background: #d6403a; color: #fff; font-size: calc(var(--u) * 11); overflow: hidden; position: relative; }
+.demo__bell b { display: inline-grid; place-items: center; min-width: calc(var(--u) * 20); height: calc(var(--u) * 16); border-radius: calc(var(--u) * 8); background: #d6403a; color: #fff; font-size: calc(var(--u) * 11); overflow: hidden; position: relative; place-items: start center; line-height: calc(var(--u) * 16); font-weight: 700; }
+.demo__roll { display: block; will-change: transform; text-align: center; }
+.demo__roll > span { display: block; height: calc(var(--u) * 16); line-height: calc(var(--u) * 16); }
+.demo__cap-in { display: block; height: calc(var(--u) * 18); overflow: hidden; }
+.demo__cap-in .demo__roll > span { height: calc(var(--u) * 18); line-height: calc(var(--u) * 18); }
+.demo__row--on { background: #cdd9fb; }
+.demo__body { display: flex; gap: calc(var(--u) * 10); margin-top: calc(var(--u) * 10); }
+.demo__col { flex: 1; min-width: 0; }
+.demo__col--r { flex: 1.1; }
+.demo__col .demo__sk:first-child { margin-top: 0; }
+.demo__blk { height: calc(var(--u) * 58); border-radius: calc(var(--u) * 5); background: #d6dae8; margin-top: calc(var(--u) * 10); }
+.demo__blk:first-child { margin-top: 0; }
+.demo__blk--tall { height: calc(var(--u) * 90); }
+.demo.is-playing .demo__play > * { opacity: 0; transition: opacity 300ms var(--ease-quart); }
+.demo.is-playing .demo__play:hover > *, .demo.is-playing .demo__play:focus-visible > * { opacity: 1; }
+.demo__play:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
 .demo__pop { position: absolute; left: calc(var(--u) * 277); top: calc(var(--u) * 50); width: calc(var(--u) * 460); background: #f4f5fa; border-radius: calc(var(--u) * 12); padding: calc(var(--u) * 12); box-shadow: 0 calc(var(--u) * 20) calc(var(--u) * 40) -10px rgb(20 22 28 / 0.35); color: #14161c; }
 .demo__pop h4 { font-size: calc(var(--u) * 12); font-weight: 600; color: #4a5060; margin-bottom: calc(var(--u) * 8); }
 .demo__row { position: relative; display: flex; align-items: center; gap: calc(var(--u) * 12); padding: calc(var(--u) * 10) calc(var(--u) * 12); border-radius: calc(var(--u) * 8); margin-bottom: calc(var(--u) * 8); background: #e9ecf5; }
@@ -106,7 +121,7 @@
 .sketch i.is-hot { background: transparent; box-shadow: 0 0 0 2px var(--accent); }
 .sketch i.is-hot::after { content: ""; position: absolute; inset: 0; background: rgb(31 94 255 / 0.4); border-radius: 2px; }
 .picker__copy .eyebrow { color: var(--accent); }
-.picker__h { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.04em; line-height: 1.04; font-size: clamp(38px, 6.4vw, 60px); margin-top: 16px; text-wrap: balance; }
+.picker__h { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.04em; line-height: 1.04; font-size: clamp(38px, 6.4vw, 60px); margin-top: 16px; text-wrap: pretty; }
 .picker__p { color: var(--on-dark-muted); font-size: 17px; line-height: 1.7; margin-top: 24px; max-width: 34em; }
 .ticks { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 16px; }
 .ticks li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 1.5; }
@@ -137,3 +152,49 @@
 .profiles { display: flex; gap: 14px; align-items: center; margin-top: 40px; background: var(--soft); border-radius: 12px; padding: 16px 20px; font-size: 14.5px; line-height: 1.5; }
 .profiles svg { color: var(--accent); flex: none; }
 
+
+/* Hero entrance: one staggered reveal on load (CSS only, SSR-safe) */
+.hero-in { animation: hero-in 800ms var(--ease-expo) both; animation-delay: calc(var(--i, 0) * 70ms); }
+@keyframes hero-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.hero__copy { min-width: 0; }
+.hero__title span { padding-bottom: 0.02em; }
+.hero__lede, .hero__facts { overflow-wrap: break-word; }
+@media (max-width: 420px) { .hero__cta .btn { width: 100%; } }
+
+/* Step 2 motion */
+.kbd { transition: transform 120ms var(--ease-quart), background-color 120ms var(--ease-quart); }
+.kbd.is-pressed { transform: scale(0.94); background: #353b4d; }
+.picker-outline.is-hopping { animation: outline-hop 1100ms var(--ease-quint) 1 both; }
+@keyframes outline-hop {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(34px, -4px); }
+  45% { transform: translate(34px, -4px); }
+  70% { transform: translate(14px, 6px); }
+  100% { transform: translate(0, 0); }
+}
+.step__card { max-width: 100%; }
+.step__card .skel:nth-child(2) { max-width: 60%; }
+.step__card .keybar, .step__card .picker-outline, .step__card .step__sel { max-width: 100%; }
+.keybar { flex-wrap: nowrap; }
+.pcard__steps .pstep--chev { color: var(--on-dark-muted); }
+.prow:focus-visible { outline: 2px solid #8fb0ff; outline-offset: 2px; }
+.prow .chip--best { margin-left: -6px; }
+.pcard__foot { align-items: center; }
+@media (max-width: 520px) {
+  .prow { flex-wrap: wrap; row-gap: 8px; }
+  .prow__t { flex-basis: calc(100% - 40px); }
+  .prow .chip:first-of-type { margin-left: 30px; }
+  .keybar { gap: 6px; padding: 8px; }
+  .kbd { padding-inline: 5px; }
+}
+.type { min-width: 0; }
+.type__eg { max-width: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-in { animation: none; }
+  .picker-outline.is-hopping, .chip--best.is-pulsing::after { animation: none; }
+}
+.hero__title { line-height: 1.08; }
+.hero__lede { max-width: 680px; }
+.hero__facts { font-size: 13px; }
+.eg__arrow { font-family: var(--font-body); font-weight: 600; }
+#watch-types .lede { max-width: 46em; }
