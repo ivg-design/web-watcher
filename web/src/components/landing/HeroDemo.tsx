@@ -102,7 +102,8 @@ export default function HeroDemo() {
           alt="A Safari window on a community feed with a bell badge of 3, and beside it the WebWatcher Add Watcher window listing the number it found"
           width={1440}
           height={896}
-          fetchPriority="high"
+          loading="lazy"
+          decoding="async"
         />
         <div className={`hv__win${rolling ? " is-on" : ""}`} onClick={engaged ? togglePause : undefined}>
           <video

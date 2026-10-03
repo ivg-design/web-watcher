@@ -92,3 +92,48 @@ popover. Screenshots: scratchpad `r2/before/` (names quoted below). Suites befor
 Moment timing 2.46–2.57 s after navigation, first load and reload; reduced motion renders the end state;
 no proper noun wraps at 390; no horizontal overflow at any width; Kokoro samples are click-only and
 there is no `speechSynthesis`; icons are transparent PNGs; "41 s" appears nowhere.
+
+## After
+
+Measured on the final production build (:3284) after the last change: 15 suites, all green (docs and
+layout exit 0; download 18, gmail-mock 83, herald 193, hero-moment 35, hero-video 31, interval 36,
+picker 48, privacy 37, qa 11, steps 22, time 24, watch-types 180, watch 105 assertions); `tsc` and lint
+clean; Lighthouse desktop 100 / 100 / 100 / 100 (LCP 0.7 s, CLS 0, TBT 0); mobile 88 / 100 / 100 / 100
+(LCP 3.8 s simulated, CLS 0, TBT 10 ms). Screenshots: scratchpad `r2/after/`.
+
+| # | Before | After |
+|---|---|---|
+| B1 | Recording bled off the right edge, square right corners, 837 px tall, window in the left two thirds | Frame is the content width, centred, four 16 px corners and a hairline, at 1280, 1440, 1600 and 1920. The poster is now the frame at 4.6 s of the same recording (Safari left, the Add Watcher window right), so the still is balanced. Play control centred on the frame. Label and caption share one line under it. The video files are untouched. |
+| B2 | Mute button on a silent recording | Removed, with its state; the video is `muted`; the test asserts there is no sound control and no audio track. |
+| B3 | Docs light blue-grey with a blue accent and a light header | Graphite menu-bar header (icon 54 links home), bone paper body, ink links with underlines, ink active states, mono labels, hairline code blocks, tables and callouts; the search overlay follows. Layout, gutter and entity tests unchanged and passing; new assertions for header colour, no old blue, brand href, nowrap code in tables. |
+| M1 | Time was a 13 px clock | The menu bar's bottom edge is the countdown to the next check: one step a second, cuts to zero on a check (timed, a recorded change, or "Check All Now"), follows the chosen interval; absent under reduced motion. The interval band draws the current hour, one tick per check, lit up to the real clock, re-ruled when the interval changes (ten minutes on phones), with a live line: "Since 1:00 PM a watcher on this interval has looked 37 times. 83 to go before 2:00 PM." Checks now re-arm after every check so the line never lies. |
+| M2 | Privacy: boxes and one dot | Three `(0)` numerals (servers, analytics, data collected, the words of docs/data-and-privacy.md) that count down to zero once, the diagram under them, the switches as three full-width columns. |
+| M3 | Changelog rows cut and glued | First item only, whole sentences, one ellipsis at most and nothing after it; asserted. |
+| M4 | `(O)` | The numeral is set at 88 % width; the zero is an oval and reads as a number, in the hero, in Privacy and on the 404. |
+| M5 | Numeral 520 px down at 834 | From 700 to 1099 the numeral sits to the right of the headline; the tab strip and caption follow the CTAs. |
+| M6 | Rive sand loop 6 s at every interval | Not fixed in the file: animation speed is not bindable in the Rive format without moving the glass into a nested artboard, and a rebuilt file with a `period` property rendered identically at every value, so it was reverted. Instead the Rive renderer mounts only above 60 s, where both renderers use the idle loop; at 60 s or less (the default 30 s included) the SVG mark, whose sand follows the interval, is the one on screen. |
+| m1 | Empty fourth row in Element Count | Three rows before the click, the fourth cuts in, panel height constant; asserted. |
+| m2 | Dead half column beside the switches | Gone (see M2). Menu path segments no longer break mid-name. |
+| m7 | No test for the brand link | time.mjs: from `/#privacy`, the brand returns to scrollY 0 and clears the hash, at 1440 and 390. |
+
+Also changed: the hero poster no longer loads at high priority (it is below the fold on phones; mobile
+performance 85 to 88).
+
+### Still weak or unverified
+
+- **The Rive mark is off screen at the default interval.** It is the honest state, but the Rive piece
+  only shows at intervals above a minute. A nested-artboard rebuild with a bindable speed would bring
+  it back everywhere.
+- **Mobile Lighthouse performance is 88** (simulated LCP 3.8 s on the hero paragraph; fonts and the
+  render-blocking stylesheet). Not chased further.
+- **Sections three to seven keep the same rhythm** (title left, lede, demo). The header line and the
+  ruler carry the idea through the page; How it works, Picker, Gmail and Herald were not recomposed.
+- **Element Count** keeps its "3 items" label under the reserved slot, about 50 px below the list
+  before the click.
+- **The first-change chip** still covers the top of the hero numeral's bracket for its 8 s at 1440, and
+  under 1100 it still waits for the first demo.
+- **The recording is 1440 px wide**, so the frame is under 2x on retina at desktop widths.
+- The hour ruler's ticks are arithmetic on the wall clock, not a log of this page's own checks; the
+  sentence says "a watcher on this interval", which is what it shows.
+- Not verified: real Safari and real touch devices (headless Chrome only), the Rive renderer's colours
+  at 2x (file unchanged this round), the forge deploy path.
