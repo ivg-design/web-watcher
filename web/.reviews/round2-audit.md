@@ -109,3 +109,34 @@ Global `:focus-visible`, reduced-motion in every animated file, no bounce/`trans
 self-hosted via `next/font`, 2× screenshots with srcset, scrollbar-gutter stable, nowrap nouns
 hold at 390, console clean, CLS 0, docs header/icon at the specified height, real captures framed
 consistently, every demo has a puppeteer test.
+
+---
+
+## After the fixes (commit f066344, verified on a fresh `next build` at :3213, 1440 and 390)
+
+| # | Finding | State |
+|---|---|---|
+| 1 | speechSynthesis | **Gone** (`grep -rn speechSynthesis src` → 0). Speaker plays `public/audio/herald-*.mp3` (Kokoro af_heart, rendered once locally), lazily on first click, click again stops; visible "reading" meter + title underline; never on load/hover/tests (tests stub `Audio`). |
+| 2 | Invented behaviour | Notification text = watcher name + real default body everywhere (steps, watch types, Herald web banner). Six real types (Document title removed, Element Exists / Element Disappears split). Gmail: no Open button (card click opens), no Undo ("Put it back (demo)"), notification folds at 0 with "Nothing unread… — notification cleared". Herald mail banner: Mark as Read · Archive · Delete · Spam · Snooze; web: Open · Snooze. llms.txt, first-watcher, custom-notifications, sender-and-domain-watchers, herald-delivery corrected. |
+| 3 | unpkg WASM | Self-hosted `public/rive/rive.wasm` (+ fallback), `RuntimeLoader.setWasmUrl`; verified: the only wasm request is `localhost/rive/rive.wasm`, no unpkg/jsdelivr. Switched to `@rive-app/react-canvas-lite` (WASM 901 KB instead of 1.99 MB; the mark is vector-only). |
+| 4 | Double notification | Stages keep their own banner. The site reacts with the badge tick + one-time **in-header chip** left of the mark ("Contra · Logged in your menu bar — click it. →"; "Logged here →" under 600 px). It lives inside the header so it can never sit on a stage banner (the first under-the-mark callout did overlap beat 3's banner; replaced). |
+| 5 | Popover rows | Coalesced per watcher; one Gmail row with the live count; value rolls on change; toggles drawn in the on-state. |
+| 6 | Rive gating | No load under reduced motion, Save-Data/2g, coarse pointer < 640; otherwise after load + first pointer/scroll/key + idle + visible. Blink interval pauses on `document.hidden`. |
+| 7 | Touch targets | 44 px hit areas on coarse pointers for Gmail actions, Herald pills/×/speaker/link, picker pills, the mark. |
+| 8 | Headings | Footer/docs sidebar/TOC titles are `<p>`; outline is h1 → h2 → h3. |
+| 9 | Live regions | Demo stages `aria-live="off"`; only user-initiated outcomes (Snooze/Done, "Nothing unread…", download, privacy Ready) and the site chip are live. |
+| 10 | Editor screenshot | Full-width framed figure (≤ 560 px, 2× srcset) with caption, shown ≥ 1100 px. |
+| 11 | Image weight | herald-icon 1.2 MB → 46 KB, herald-logo 386 KB → 15 KB, webwatcher-icon 136 KB → 12 KB; separate 180 px apple-touch icon. |
+| 12 | Recent updates | 1.10.9 "Latest" row prepended; word-boundary truncation. |
+| 13 | Contrast | Site-UI blues/reds on tokens (`--danger: #d92d20`); mock-fidelity colours kept. |
+| 14 | Snooze tooltip | Below the pill. |
+| 15 | Layout animations | Herald slot and Gmail card fold with grid-template-rows (banner stays mounted while folding; measured 0 → −97 → −168 → −177 px over 300 ms). |
+| 16 | Blink interval | Pauses when hidden, off under reduced motion. |
+| 17 | alt="" + aria-hidden | All decorative images. |
+| 18 | Empty How-it-works stage | Four mails; the new one turns bold in beat 3. |
+| 19 | Video on mobile | `src` assigned on play for coarse pointers / Save-Data. |
+| 20–21 | Hero duplicates/bleed | Text link hidden ≥ 1100; stage width from `100cqw`. |
+| 23 | Lint | Clean. |
+
+Suite: 461 pass / 0 fail (the lead's 11 files, updated to the new behaviour; every check runs at 1440/1280 and 390).
+Console clean on /, /docs, two doc pages, /changelog at both widths; CLS 0; scrollWidth 1425/375.

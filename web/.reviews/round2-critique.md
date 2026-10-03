@@ -48,3 +48,13 @@ outcomes (watch-type examples the size of a favicon at 1440, the editor screensh
   callout that teaches the mark; the badge and popover carry the rest.)
 - Could the Watch-types notification slot be the *only* banner for that section, with the row's
   example and the banner animating together? (Yes — implemented as the shared slot, now with real text.)
+
+---
+
+## After the fixes
+Issues 1–6 are addressed (see the audit's after-table). Residual weak points, in order:
+1. The Watch-types section is good now but its post-change notification sits under the table, far from the row that caused it at 1440; a future pass could float it beside the row.
+2. The picker's "Add watcher" drops the popover mock over the Safari sketch; faithful to the product's popover but compositionally heavy.
+3. The hero recording has ~8 s of static hold (script-level; see audit) and no voice-over.
+4. The Herald banner's "reading" chip truncates the app line on 390 ("WebWatche…").
+5. The mobile popover opens as a bottom sheet while the chip points at the mark in the header — two different anchors for one object.
