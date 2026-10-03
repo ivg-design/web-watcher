@@ -21,7 +21,8 @@ export default function Hero({ release }: { release: LatestRelease }) {
             <Moment />
           </div>
           <div className="hero__copy">
-            <p className="hero__lede cut" style={cut(4)}>
+            {/* Not part of the staged cut: on phones this paragraph is the largest paint, so it is there in the first frame. */}
+            <p className="hero__lede">
               <span className="nw">WebWatcher</span> sits in your menu bar and watches the badges, counters and inboxes you keep
               checking by hand, the Rive community bell, a Gmail sender, a forum thread, and tells
               you the moment they change.

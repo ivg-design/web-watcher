@@ -109,18 +109,24 @@
                 <StraightVertex x="-8" y="-11" radius="1"/>
             </PointsPath>
             </Shape>
-            <Shape name="Stream">
-                <Rectangle y="-1.5" width="1.4" height="17.5" originY="0" name="Path" id="0:28"/>
+            <Shape name="Stream" id="0:29">
+                <Rectangle y="-1.5" width="1.4" height="17.5" originY="0" name="Path" id="0:28">
+                    <DataBindContext sourcePathIds="0:100-0:107" propertyKey="21" converterId="0:126"/>
+                </Rectangle>
                 <Fill name="Fill"><SolidColor colorValue="FFF3F1EC" name="C"/></Fill>
                 <ClippingShape sourceId="0:24" name="Clip"/>
             </Shape>
             <Shape name="Pile">
-                <Ellipse y="16" width="24" height="0" name="Path" id="0:27"/>
+                <Ellipse y="16" width="24" height="0" name="Path" id="0:27">
+                    <DataBindContext sourcePathIds="0:100-0:107" propertyKey="21" converterId="0:125"/>
+                </Ellipse>
                 <Fill name="Fill"><SolidColor colorValue="FFF3F1EC" name="C"/></Fill>
                 <ClippingShape sourceId="0:24" name="Clip"/>
             </Shape>
             <Shape name="Upper">
-                <Rectangle y="-1.2" width="18" height="13" originY="1" name="Path" id="0:26"/>
+                <Rectangle y="-1.2" width="18" height="13" originY="1" name="Path" id="0:26">
+                    <DataBindContext sourcePathIds="0:100-0:107" propertyKey="21" converterId="0:124"/>
+                </Rectangle>
                 <Fill name="Fill"><SolidColor colorValue="FFF3F1EC" name="C"/></Fill>
                 <ClippingShape sourceId="0:24" name="Clip"/>
             </Shape>
@@ -187,14 +193,14 @@
                         <TransitionValueTriggerComparator/>
                     </TransitionViewModelCondition>
                 </StateTransition>
-                    <StateTransition stateToId="0:71" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100">
+                    <StateTransition stateToId="0:71" >
                     <TransitionViewModelCondition>
                         <TransitionPropertyViewModelComparator>
-                            <BindablePropertyBoolean>
-                                <DataBindContext sourcePathIds="0:100-0:105" propertyKey="634"/>
-                            </BindablePropertyBoolean>
+                            <BindablePropertyTrigger>
+                                <DataBindContext sourcePathIds="0:100-0:108" propertyKey="686"/>
+                            </BindablePropertyTrigger>
                         </TransitionPropertyViewModelComparator>
-                        <TransitionValueBooleanComparator value="false"/>
+                        <TransitionValueTriggerComparator/>
                     </TransitionViewModelCondition>
                 </StateTransition>
                 </AnimationState>
@@ -308,23 +314,14 @@
             </StateMachineLayer>
         </StateMachine>
 
-        <!-- sand: 6 s, then flip -->
-        <LinearAnimation duration="360" name="sand" id="0:60">
-            <KeyedObject objectId="0:26"><KeyedProperty propertyKey="21">
-                <KeyFrameDouble value="13" frame="0" interpolationType="linear"/>
-                <KeyFrameDouble value="0" frame="360"/>
-            </KeyedProperty></KeyedObject>
-            <KeyedObject objectId="0:27"><KeyedProperty propertyKey="21">
-                <KeyFrameDouble value="0" frame="0" interpolationType="linear"/>
-                <KeyFrameDouble value="22" frame="360"/>
-            </KeyedProperty></KeyedObject>
-            <KeyedObject objectId="0:28"><KeyedProperty propertyKey="21">
-                <KeyFrameDouble value="17.5" frame="0" interpolationType="linear"/>
-                <KeyFrameDouble value="6.5" frame="360"/>
-            </KeyedProperty></KeyedObject>
+        <!-- run: the sand's heights are bound to the view model's `sand` (0..1); this only fades the sand back in after a flip -->
+        <LinearAnimation duration="10" name="sand" id="0:60">
             <KeyedObject objectId="0:22"><KeyedProperty propertyKey="18">
                 <KeyFrameDouble value="0" frame="0" interpolationType="linear"/>
                 <KeyFrameDouble value="1" frame="10"/>
+            </KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:29"><KeyedProperty propertyKey="18">
+                <KeyFrameDouble value="1" frame="0"/>
             </KeyedProperty></KeyedObject>
         </LinearAnimation>
 
@@ -342,11 +339,9 @@
             </KeyedProperty></KeyedObject>
         </LinearAnimation>
 
-        <!-- reduced motion: one static frame -->
+        <!-- reduced motion: one static frame (the page writes sand = 0.46), no stream -->
         <LinearAnimation duration="1" name="rest" id="0:62">
-            <KeyedObject objectId="0:26"><KeyedProperty propertyKey="21"><KeyFrameDouble value="7" frame="0"/></KeyedProperty></KeyedObject>
-            <KeyedObject objectId="0:27"><KeyedProperty propertyKey="21"><KeyFrameDouble value="12" frame="0"/></KeyedProperty></KeyedObject>
-            <KeyedObject objectId="0:28"><KeyedProperty propertyKey="21"><KeyFrameDouble value="0" frame="0"/></KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:29"><KeyedProperty propertyKey="18"><KeyFrameDouble value="0" frame="0"/></KeyedProperty></KeyedObject>
             <KeyedObject objectId="0:22"><KeyedProperty propertyKey="18"><KeyFrameDouble value="1" frame="0"/></KeyedProperty></KeyedObject>
         </LinearAnimation>
 
@@ -419,6 +414,8 @@
         <ViewModelPropertyBoolean name="hover" id="0:104"/>
         <ViewModelPropertyBoolean name="reduced" id="0:105"/>
         <ViewModelPropertyTrigger name="tick" id="0:106"/>
+        <ViewModelPropertyNumber name="sand" id="0:107"/>
+        <ViewModelPropertyTrigger name="turn" id="0:108"/>
         <ViewModelInstance exports="true" name="Default" id="0:110">
             <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:101"/>
             <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:102"/>
@@ -426,6 +423,8 @@
             <ViewModelInstanceBoolean propertyValue="false" viewModelPropertyId="0:104"/>
             <ViewModelInstanceBoolean propertyValue="false" viewModelPropertyId="0:105"/>
             <ViewModelInstanceTrigger viewModelPropertyId="0:106"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:107"/>
+            <ViewModelInstanceTrigger viewModelPropertyId="0:108"/>
         </ViewModelInstance>
     </ViewModel>
 
@@ -433,6 +432,9 @@
     <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="-3" maxOutput="3" clampLower="true" clampUpper="true" name="LookY to px" id="0:121"/>
     <DataConverterRangeMapper minInput="0" maxInput="1" minOutput="0" maxOutput="1" clampLower="true" clampUpper="true" name="Badge to opacity" id="0:122"/>
     <DataConverterToString decimals="0" round="true" name="Count text" id="0:123"/>
+    <DataConverterRangeMapper minInput="0" maxInput="1" minOutput="13" maxOutput="0" clampLower="true" clampUpper="true" name="Sand to upper" id="0:124"/>
+    <DataConverterRangeMapper minInput="0" maxInput="1" minOutput="0" maxOutput="22" clampLower="true" clampUpper="true" name="Sand to pile" id="0:125"/>
+    <DataConverterRangeMapper minInput="0" maxInput="1" minOutput="17.5" maxOutput="6.5" clampLower="true" clampUpper="true" name="Sand to stream" id="0:126"/>
 
     <FontAsset file="AlbertSans.ttf" name="Albert Sans" id="0:130"/>
 </Rive>

@@ -14,26 +14,38 @@ const cases = {
   disappears: ["1", "0", "Waitlist button", "Element disappeared", () => attr("wt-joinbtn", "data-on")],
   subtree: ["0", "1", "Notifications bell", "Something changed inside the watched area", () => attr("wt-val-subtree", "data-on")],
 };
+const WAS = { badge: "3", count: "3 items", text: "Open", exists: "absent", disappears: "present", subtree: "no badge" };
 const badge = async () => Number(await page.$eval(T("watch-badge"), (e) => e.textContent.trim()).catch(() => 0));
 const shot = async (n) => { if (!SHOTS) return; const el = await page.$("#watch-types"); await el.screenshot({ path: `${SHOTS}/${n}.png` }); };
 const count = (sel) => page.$$eval(sel, (e) => e.length);
 
-for (const [w, h] of [[1440, 900], [390, 844]]) {
+for (const [w, h] of [[1440, 900], [1280, 900], [834, 900], [390, 844]]) {
   console.log(`--- ${w}`);
   await page.setViewport({ width: w, height: h, hasTouch: w < 500, isMobile: false });
   await page.goto((process.env.BASE || "http://localhost:3201") + "/", { waitUntil: "networkidle2", timeout: 90000 });
   await page.$eval("#watch-types", (e) => e.scrollIntoView());
   await sleep(500);
   ok((await page.$eval("#types-title", (e) => e.className)).includes("h2-v3"), "title uses h2-v3");
-  ok(await page.$eval(".wt-wall", (e) => getComputedStyle(e).gap) === "1px", "wall gap is 1px");
-  const cols = await page.$eval(".wt-wall", (e) => getComputedStyle(e).gridTemplateColumns.split(" ").length);
-  ok(cols === (w >= 1100 ? 3 : 1), `${w}: ${cols} column(s)`);
+  const rowsW = await page.$$eval(".wt-panel", (els) => els.map((e) => e.getBoundingClientRect().width));
+  const contW = await page.$eval("#watch-types .container", (e) => e.getBoundingClientRect().width - 2 * parseFloat(getComputedStyle(e).paddingLeft));
+  ok(rowsW.every((x) => x >= contW * 0.9), `${w}: six full-width rows (${rowsW.map(Math.round)} of ${Math.round(contW)})`);
+  const nx = await page.$$eval('[data-testid^="wt-next-"]', (els) => els.map((e) => e.textContent.trim()));
+  ok(nx.length === 6 && nx.every((t) => /^\d+:\d\d$/.test(t)), `${w}: countdowns ${nx}`);
+  ok(new Set(nx).size > 1, "countdowns are not all equal");
   ok((await count(".wt-panel")) === 6 && (await count(T("wt-notif"))) === 0, "six panels, no notification initially");
   ok((await page.$eval(".wt-live", (e) => e.textContent.trim())) === "", "live region empty before any click");
   const names = await page.$$eval(".wt-name", (els) => els.map((e) => e.textContent));
   ok(names.join("|") === "Badge/Number|Element Count|Text Change|Element Exists|Element Disappears|Anything Changes Inside", `six real type names`);
   const ph = await page.$$eval(".wt-panel", (els) => Math.min(...els.map((e) => e.getBoundingClientRect().height)));
-  ok(ph >= (w >= 1100 ? 300 : 220), `panel min-height (${Math.round(ph)})`);
+  ok(ph >= 176 && ph <= (w >= 1100 ? 222 : 9999), `row min-height (${Math.round(ph)})`);
+  {
+    const t0 = await txt(page, "wt-next-badge"); await sleep(1200);
+    ok((await txt(page, "wt-next-badge")) !== t0 || (await txt(page, "wt-next-count")) !== "", "countdown ticks");
+    const a = await page.$$eval('[data-testid^="wt-next-"]', (els) => els.map((e) => e.textContent));
+    await sleep(1100);
+    const c = await page.$$eval('[data-testid^="wt-next-"]', (els) => els.map((e) => e.textContent));
+    ok(a.join() !== c.join(), "countdown text changes within 1.2 s");
+  }
   const sp = await page.$$eval(".wt-stage > *", (els) => els.map((e) => Math.round(Math.max(e.getBoundingClientRect().height, e.getBoundingClientRect().width))));
   ok(Math.min(...sp) >= 160, `specimens >= 160px (${sp})`);
   const sm = await page.$$eval(".wt-btn", (els) => els.filter((e) => e.getBoundingClientRect().height < 44).length);
@@ -42,21 +54,30 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
 
   {
     const ph0 = () => page.$eval('.wt-panel[data-s="count"]', (e) => Math.round(e.getBoundingClientRect().height));
+    const gap = () => page.evaluate(() => { const rs = [...document.querySelectorAll(".wt-list__r")]; const l = document.querySelector(".wt-list__n").getBoundingClientRect(); return l.top - rs[rs.length - 1].getBoundingClientRect().bottom; });
+    const g0 = await gap();
+    ok(g0 >= 0 && g0 <= 12, `count: label directly under third row (${Math.round(g0)})`);
     ok((await count(".wt-list__r")) === 3, "count: exactly 3 rows before the click, no empty slot");
     const h0 = await ph0();
     await click(page, "wt-row-count"); await sleep(900);
     ok((await count(".wt-list__r")) === 4, "count: fourth row cuts in");
     ok((await ph0()) === h0, `count: panel height unchanged (${h0})`);
+    const g1 = await gap();
+    ok(g1 >= 0 && g1 <= 12, `count: label under fourth row (${Math.round(g1)})`);
     await click(page, "wt-reset-count"); await sleep(500);
   }
   let b = await badge();
   for (const [s, [b0, a, title, body, read]] of Object.entries(cases)) {
     ok(norm(await read()) === b0, `${s}: initial ${b0}`);
+    const rh = () => page.$eval(`.wt-panel[data-s="${s}"]`, (e) => e.getBoundingClientRect().height);
+    const rh0 = await rh();
     await click(page, `wt-row-${s}`);
     await sleep(200);
     ok(await page.$eval(`.wt-panel[data-s="${s}"]`, (e) => e.classList.contains("is-flash")), `${s}: top hairline flashes`);
     await sleep(900);
     ok(norm(await read()) === a, `${s}: outcome ${a}`);
+    ok((await rh()) === rh0, `${s}: row height unchanged (${Math.round(rh0)})`);
+    ok(norm(await txt(page, `wt-was-${s}`)) === WAS[s] && (await txt(page, `wt-now-${s}`)).length > 0, `${s}: was / now values`);
     ok((await count(T("wt-notif"))) === 1, `${s}: exactly one notification`);
     ok(await page.$eval(T("wt-notif"), (e, s2) => e.closest(".wt-panel")?.dataset.s === s2, s), `${s}: notification lands inside its panel`);
     ok((await txt(page, "wt-notif-title")) === title, `${s}: title "${title}"`);
@@ -91,6 +112,9 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
 await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
 await page.setViewport({ width: 1440, height: 900 });
 await page.goto((process.env.BASE || "http://localhost:3201") + "/", { waitUntil: "networkidle2", timeout: 90000 });
+await page.$eval("#watch-types", (e) => e.scrollIntoView()); await sleep(300);
+const r0 = await txt(page, "wt-next-badge"); await sleep(2200);
+ok(r0 === (await txt(page, "wt-next-badge")) && /^\d+ (s|min)$/.test(r0), `reduced motion: countdown static (${r0})`);
 await click(page, "wt-row-badge"); await sleep(1000);
 ok((await txt(page, "wt-val-badge")) === "5", "reduced motion: value swapped");
 ok(await page.$eval(".wt-btn", () => getComputedStyle(document.querySelector(".wt .roll__v")).animationName === "none"), "reduced motion: roll animation off");

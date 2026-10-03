@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Volume2, X } from "lucide-react";
 import { asset } from "@/lib/config";
 import "@/styles/herald.css";
+import Ruler from "./Ruler";
+import { barLevel, type Key } from "./samples";
 
 type Phase = "idle" | "shown" | "leaving" | "snoozed" | "done";
 type Id = 1 | 2;
@@ -11,8 +13,7 @@ const AUDIO_EMAIL3 = "/audio/herald-email-3.mp3";
 const AUDIO_EMAIL4 = "/audio/herald-email-4.mp3";
 const AUDIO_CONTRA = "/audio/herald-contra.mp3";
 const BARS = [0, 1, 2, 3, 4];
-// deterministic pseudo level for bar i at playback time t (0.25..1)
-const barLevel = (t: number, i: number) => 0.25 + 0.75 * Math.abs(Math.sin(t * 7.3 + i * 1.7) * Math.cos(t * 3.1 + i * 0.9));
+const FILE: Record<Key, string> = { "herald-email-3": AUDIO_EMAIL3, "herald-email-4": AUDIO_EMAIL4, "herald-contra": AUDIO_CONTRA };
 const SLIDE_MS = 240;
 const GROW_MS = 220;
 
@@ -29,7 +30,7 @@ type BannerProps = {
   closeId: string;
   speakId: string;
   speaking: boolean;
-  level: number;
+  sample: Key;
   onLeave: (next: "done" | "snoozed") => void;
   onSpeak: () => void;
   icon: string;
@@ -61,7 +62,7 @@ function Banner(p: BannerProps) {
             {p.speaking ? (
               <span className="hx__meter" aria-hidden="true">
                 {BARS.map((i) => (
-                  <i key={i} style={{ "--l": barLevel(p.level, i).toFixed(2) } as CSSProperties} />
+                  <i key={i} style={{ "--l": barLevel(p.sample, 0, i, BARS.length).toFixed(2) } as CSSProperties} />
                 ))}
               </span>
             ) : (
@@ -94,14 +95,14 @@ function Banner(p: BannerProps) {
 }
 
 
-export default function HeraldDemo() {
+export default function HeraldDemo({ children }: { children?: ReactNode }) {
   const [ph, setPh] = useState<Record<Id, Phase>>({ 1: "idle", 2: "idle" });
   const phRef = useRef<Record<Id, Phase>>({ 1: "idle", 2: "idle" });
   const [enter, setEnter] = useState<Record<Id, number>>({ 1: 0, 2: 0 });
   const [speaking, setSpeaking] = useState<0 | Id>(0);
   const [count, setCount] = useState(3);
   const [prev, setPrev] = useState<number | null>(null);
-  const [level, setLevel] = useState(0);
+  const [playKey, setPlayKey] = useState<Key | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const slots = useRef<Record<Id, HTMLDivElement | null>>({ 1: null, 2: null });
@@ -180,6 +181,7 @@ export default function HeraldDemo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const getAudio = useCallback(() => audioRef.current, []);
   const stopSpeech = () => {
     audioRef.current?.pause();
     setSpeaking(0);
@@ -213,15 +215,17 @@ export default function HeraldDemo() {
     if (!a) {
       a = new Audio();
       a.preload = "none";
-      a.addEventListener("timeupdate", () => setLevel(a!.currentTime));
       a.addEventListener("ended", () => setSpeaking(0));
       a.addEventListener("error", () => setSpeaking(0));
       audioRef.current = a;
     }
+    /* eslint-disable react-hooks/immutability -- the audio element is an imperative resource; the ruler reads it through getAudio */
     a.pause();
-    a.src = asset(id === 2 ? AUDIO_CONTRA : count > 3 ? AUDIO_EMAIL4 : AUDIO_EMAIL3);
+    const key: Key = id === 2 ? "herald-contra" : count > 3 ? "herald-email-4" : "herald-email-3";
+    a.src = asset(FILE[key]);
+    setPlayKey(key);
     a.currentTime = 0;
-    setLevel(0);
+    /* eslint-enable react-hooks/immutability */
     setSpeaking(id);
     try {
       void Promise.resolve(a.play()).catch(() => setSpeaking(0));
@@ -242,14 +246,20 @@ export default function HeraldDemo() {
   const emailBody = (count > 3 ? "Beta invite · " : "") + "Scripting update · Office hours · Release notes";
   const note1 = ph[1];
 
+  const emailKey: Key = count > 3 ? "herald-email-4" : "herald-email-3";
+  const topKey: Key = ph[1] === "shown" || ph[1] === "leaving" ? emailKey : ph[2] === "shown" || ph[2] === "leaving" ? "herald-contra" : emailKey;
+  const sample: Key = speaking && playKey ? playKey : topKey;
+
   return (
-    <div className="hxw">
-      <div className="hx" ref={stage}>
-        <div className="hx__menubar" aria-hidden="true">
-          <span className="hx__apple" />
-          <span>Finder</span>
-          <span className="hx__clock">Thu 8:14 PM</span>
-        </div>
+    <>
+      <div className="hx__menubar" aria-hidden="true">
+        <span className="hx__apple" />
+        <span>Finder</span>
+        <span className="hx__clock">Thu 8:14 PM</span>
+      </div>
+      <div className="container hxw">
+        {children}
+        <div className="hx" ref={stage}>
         <div className="hx__stack" aria-live="off">
           {ph[1] !== "idle" ? (
             <div className="hx__slot" ref={(el) => { slots.current[1] = el; }}>
@@ -284,7 +294,7 @@ export default function HeraldDemo() {
                   closeId="hb-close"
                   speakId="hb-speak"
                   speaking={speaking === 1}
-                  level={level}
+                  sample={emailKey}
                   onLeave={(n) => leave(1, n)}
                   onSpeak={() => speak(1)}
                 />
@@ -314,7 +324,7 @@ export default function HeraldDemo() {
                   closeId="hb2-close"
                   speakId="hb2-speak"
                   speaking={speaking === 2}
-                  level={level}
+                  sample="herald-contra"
                   onLeave={(n) => leave(2, n)}
                   onSpeak={() => speak(2)}
                 />
@@ -332,14 +342,15 @@ export default function HeraldDemo() {
             </span>
           ) : null}
         </div>
+          <div className="hx__under">
+            <button type="button" className="hx__link hx__more" data-testid="hb-more" disabled={count >= 4} onClick={deliver}>
+              {count >= 4 ? "Delivered from Rive team" : "Deliver another from Rive team"}
+            </button>
+            <p className="hx__caption">Banners stay until you act on them, stacked per sender or site.</p>
+          </div>
+        </div>
+        <Ruler sample={sample} playing={speaking !== 0} getAudio={getAudio} />
       </div>
-      <div className="hx__under">
-        <button type="button" className="hx__link hx__more" data-testid="hb-more" disabled={count >= 4} onClick={deliver}>
-          {count >= 4 ? "Delivered from Rive team" : "Deliver another from Rive team"}
-        </button>
-        <p className="hx__caption">Banners stay until you act on them, stacked per sender or site.</p>
-        <p className="hx__caption">Herald can read a banner aloud. This is how it sounds.</p>
-      </div>
-    </div>
+    </>
   );
 }

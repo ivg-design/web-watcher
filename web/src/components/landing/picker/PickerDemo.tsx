@@ -4,10 +4,12 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { Bell, Check, ChevronLeft, ChevronRight, Eye, Lock, MessageCircle } from "lucide-react";
 import { asset } from "@/lib/config";
 import { useWatch } from "@/components/watch/WatchContext";
+import Roll from "../hero/Roll";
 import { CANDIDATES, GROUPS, NODES, siblings, type NodeId } from "./data";
 import "@/styles/picker.css";
 
 type Step = 1 | 2 | 3;
+type Box = { left: number; top: number; width: number; height: number };
 type Rect = { left: number; top: number; width: number; height: number; vw: number };
 
 const DESIGN_W = 520; // the page is laid out at this width and scaled down below it
@@ -34,12 +36,18 @@ export default function PickerDemo() {
   const [added, setAdded] = useState(false);
   const [rect, setRect] = useState<Rect | null>(null);
   const [scale, setScale] = useState(1);
+  const [found, setFound] = useState(false);
+  const [foundRects, setFoundRects] = useState<Record<string, Box>>({});
 
   const swRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const radios = useRef<(HTMLButtonElement | null)[]>([]);
   const timers = useRef<number[]>([]);
   useEffect(() => { const t = timers.current; return () => t.forEach(window.clearTimeout); }, []);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const touched = useRef(false);
+  const autoRan = useRef(false);
+  const scanRef = useRef<() => void>(() => {});
   const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)); };
 
   // While picking the outline follows hover (mouse) or the keyboard cursor; otherwise the selected candidate.
@@ -55,6 +63,20 @@ export default function PickerDemo() {
     setRect({ left: b.left - a.left, top: b.top - a.top, width: b.width, height: b.height, vw: a.width });
   }, [lit]);
   useLayoutEffect(() => { measure(); }, [measure, step, scale]);
+  useLayoutEffect(() => {
+    if (!found) return;
+    const root = swRef.current;
+    if (!root) return;
+    const a = root.getBoundingClientRect();
+    const next: Record<string, Box> = {};
+    CANDIDATES.forEach((c) => {
+      const el = root.querySelector<HTMLElement>(`[data-node="${c.id}"]`);
+      if (!el) return;
+      const b = el.getBoundingClientRect();
+      next[c.id] = { left: b.left - a.left, top: b.top - a.top, width: b.width, height: b.height };
+    });
+    setFoundRects(next);
+  }, [found, scale]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -69,8 +91,38 @@ export default function PickerDemo() {
   const runScan = () => {
     setScanning(true);
     setPicking(false);
-    later(() => { setScanning(false); setScanned(true); setStep(2); }, 650);
+    setFound(false);
+    later(() => {
+      // Scan page unmounts with step 1: keep keyboard focus in the sheet (on "Pick in Safari") instead of dropping it.
+      const scanBtn = rootRef.current?.querySelector<HTMLElement>('[data-testid="pd-scan"]');
+      const hadFocus = !!scanBtn && document.activeElement === scanBtn;
+      setScanning(false); setScanned(true); setStep(2);
+      if (hadFocus) later(() => rootRef.current?.querySelector<HTMLElement>('[data-testid="pd-pick"]')?.focus({ preventScroll: true }), 40);
+      // The candidates cut in one after another (60 ms apart), hold, then cut out. Skipped under reduced motion.
+      if (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      setFound(true);
+      later(() => setFound(false), 4 * 60 + 900);
+    }, 650);
   };
+
+  useEffect(() => { scanRef.current = runScan; });
+
+  // Open already read: reduced motion starts scanned; otherwise the scan runs once when Safari is half in view.
+  useEffect(() => {
+    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- must wait for mount: the server render cannot know the preference
+    if (reduce) { setScanned(true); setStep(2); autoRan.current = true; return; }
+    const el = viewRef.current?.closest(".pd__safari");
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((es) => {
+      if (autoRan.current || !es.some((e) => e.isIntersecting && e.intersectionRatio >= 0.5)) return;
+      autoRan.current = true;
+      io.disconnect();
+      if (!touched.current) scanRef.current();
+    }, { threshold: [0.5] });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const confirmElement = (id: NodeId) => {
     setChosen(id);
@@ -169,7 +221,7 @@ export default function PickerDemo() {
   const state = selecting || (step === 3 && !picking) ? "selected" : "hover";
 
   return (
-    <div className="pd" data-testid="pd" data-step={step} data-picking={picking ? "1" : "0"}>
+    <div className="pd" ref={rootRef} onPointerDownCapture={() => { touched.current = true; }} onKeyDownCapture={() => { touched.current = true; }} onFocusCapture={() => { touched.current = true; }} data-testid="pd" data-step={step} data-picking={picking ? "1" : "0"}>
       {/* RIGHT on desktop, first on mobile: the Safari window */}
       <div className="pd__safari">
         <div
@@ -227,6 +279,17 @@ export default function PickerDemo() {
 
           {scanning && <span className="sw__sweep" aria-hidden />}
 
+          {found && showOutline && CANDIDATES.map((c, i) => foundRects[c.id] && (
+            <span
+              key={c.id}
+              className="sw__found"
+              data-testid="pd-found"
+              data-found={c.id}
+              style={{ transform: `translate(${foundRects[c.id].left}px, ${foundRects[c.id].top}px)`, width: foundRects[c.id].width, height: foundRects[c.id].height, "--i": i } as React.CSSProperties}
+              aria-hidden
+            />
+          ))}
+
           {showOutline && rect && (
             <>
               <span
@@ -262,7 +325,7 @@ export default function PickerDemo() {
         </div>
       </div>
 
-      {/* LEFT on desktop: the Add Watcher sheet */}
+      {/* The Add Watcher sheet */}
       <div className="pd__sheet">
         <div className="sh__title" aria-hidden><span className="sh__lights"><i /><i /><i /></span><span>Add Watcher</span></div>
         <div className="sh__seg" aria-hidden><span className="is-on">Web page</span><span>Gmail sender</span></div>
@@ -389,7 +452,26 @@ export default function PickerDemo() {
         </div>
       </div>
 
+      <Readout node={scanned ? NODES[lit] : null} />
       <PopoverMock done={done} added={added} />
+    </div>
+  );
+}
+
+/** The value of the outlined element, set at poster scale. Fixed-height box: nothing below it moves. */
+function Readout({ node }: { node: (typeof NODES)[NodeId] | null }) {
+  const v = node?.value ?? "nothing yet";
+  const size = !node ? "none" : v.length <= 3 ? "xl" : v.length <= 10 ? "m" : "s";
+  return (
+    <div className="rd" data-testid="pd-readout">
+      <p className="t-label rd__label">It reads</p>
+      <div className="rd__box">
+        <p className="rd__v t-wide t-num" data-size={size} data-testid="pd-readout-value">
+          {size === "xl" || size === "m" ? <Roll v={v} /> : v}
+        </p>
+      </div>
+      <p className="t-label rd__strategy" data-testid="pd-readout-strategy" style={{ visibility: node ? "visible" : "hidden" }}>{node?.strategy ?? "Badge count"}</p>
+      <code className="rd__sel" data-testid="pd-readout-selector" style={{ visibility: node ? "visible" : "hidden" }}>{node?.selector ?? "-"}</code>
     </div>
   );
 }

@@ -43,10 +43,9 @@ export default function WatchMark() {
 
   const [renderer, setRenderer] = useState<"svg" | "rive">("svg");
   const [mountRive, setMountRive] = useState(false);
-  // The Rive file keeps a fixed 6.5 s sand loop and its runtime cannot retime it, so it is mounted only where the
-  // SVG loop would be the same 6.5 s (interval above 60 s). At 60 s or less the SVG sand follows the interval.
-  const riveAllowed = interval > 60;
-  const shown: "svg" | "rive" = riveAllowed ? renderer : "svg";
+  // The Rive file's sand is bound to a view-model number the page writes (progress of the current check), so it
+  // follows every interval and the Rive renderer is the one on screen once it has loaded; the SVG is the fallback.
+  const shown: "svg" | "rive" = renderer;
   const [hover, setHover] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [tickSignal, setTickSignal] = useState(0);
@@ -291,13 +290,15 @@ export default function WatchMark() {
             </g>
           </g>
         </svg>
-        {mountRive && riveAllowed && RiveComp && (
+        {mountRive && RiveComp && (
           <RiveComp
             sinkRef={sinkRef}
             unseen={unseen}
             hover={hover}
             reduced={reduced}
             tickSignal={tickSignal}
+            interval={interval}
+            lastCheck={lastCheck}
             onReady={() => setRenderer("rive")}
             onError={() => { setRenderer("svg"); setMountRive(false); }}
           />

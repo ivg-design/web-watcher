@@ -19,3 +19,7 @@ export const FINAL_SUB = [0, 3, 2] as const;
 
 export const HOLD_MS = 12000;
 export const TOOLBAR_TEXT = "← → siblings · ↑ parent · ↓ child · ⏎ use · ⎋ cancel";
+
+/** Whole run in ms, and the moment the notification lands (beat 3 start + second sub-step). */
+export const TOTAL_MS = DURATION[0] + DURATION[1] + DURATION[2];
+export const NOTIFY_MS = DURATION[0] + DURATION[1] + SUBS[2][1];

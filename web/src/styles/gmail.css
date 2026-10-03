@@ -1,50 +1,33 @@
-/* Gmail section: copy left, the demo on a graphite panel right, the editor capture under both. */
-.gmail__grid { display: grid; gap: 48px; align-items: start; }
-@media (min-width: 1000px) { .gmail__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 32px; } .gmail__copy { grid-column: 1 / span 5; } .gx { grid-column: 6 / -1; } }
-.gmail__p { color: var(--n-ink-2); font-size: 17px; line-height: 1.55; margin-top: 28px; max-width: 34em; }
+/* Gmail section: the headline is the diagram. Left half lit (one sender, one notification), right half dim (the inbox). */
+.gmail__a { display: grid; grid-template-columns: minmax(0, 1fr); }
+.gmail__h { display: contents; }
+.gmail__h-a, .gmail__h-b { display: block; font-size: clamp(40px, 11.3vw, 44px); line-height: 0.94; text-wrap: nowrap; }
+.gmail__h-a { color: var(--n-ink); }
+.gmail__h-b { color: color-mix(in oklch, var(--n-ink) 40%, transparent); }
+.gx { display: contents; }
+.gx__left { margin-top: 32px; }
+.gx__mail { margin-top: 32px; }
+
+.gmail__b { display: grid; gap: 40px; margin-top: clamp(56px, 8vw, 96px); align-items: center; }
+.gmail__p { color: var(--n-ink-2); font-size: 17px; line-height: 1.55; max-width: 34em; }
+.gx__left .gmail__p { margin-top: 32px; }
 .glink { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding-inline: 20px 22px; border: 1px solid var(--n-line-2); border-radius: 999px; font-weight: 600; font-size: 15.5px; margin-top: 28px; color: var(--n-ink); white-space: nowrap; }
 .glink:hover { border-color: var(--n-ink); }
 .glink svg { width: 18px; height: 18px; flex: none; }
 .gmail__fine { margin-top: 24px; max-width: 34em; line-height: 1.6; }
 
-.gmail__fig { margin: clamp(48px, 6vw, 88px) 0 0; }
+.gmail__fig { margin: 0; }
 .gmail__frame { display: grid; place-items: center; padding: 40px; border-radius: 16px; background: linear-gradient(150deg, #f6b25c, #ef7a6b 35%, #e0508a 70%, #b44fd0); }
-/* The capture already carries a 40 px gradient margin; crop to the window so the frame below is the only backdrop. */
+/* The capture already carries a 40 px gradient margin; crop to the window so the frame is the only backdrop. */
 .gmail__win { position: relative; width: min(480px, 100%); aspect-ratio: 480 / 652; overflow: hidden; border-radius: 12px; box-shadow: 0 30px 60px -24px rgb(40 10 40 / 0.55); }
 .gmail__win img { position: absolute; left: -8.3333%; top: -6.135%; width: 116.667%; max-width: none; height: auto; }
 .gmail__fig figcaption { margin-top: 14px; }
 @media (max-width: 700px) { .gmail__frame { padding: 20px; } }
 
-.gx { position: relative; width: 100%; display: flex; flex-direction: column; background: var(--n-bg-2); border: 1px solid var(--n-line); border-radius: 16px; padding: 28px; }
-.gx__mail { background: #fff; border-radius: 10px; overflow: hidden; color: #202124; }
-.gx__bar { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid #e8eaed; font-size: 13px; min-height: 46px; }
-.gx__label { font-weight: 700; padding-left: 10px; border-left: 3px solid #d93025; color: #202124; }
-.gx__watch { color: #5f6368; font-size: 12px; min-width: 0; }
-.gx__watch.is-cleared { color: #202124; font-weight: 600; }
-.gx__undo { margin: 0; padding: 10px 16px; background: #323232; color: #f1f3f4; font-size: 13px; }
-.gx__link { background: none; border: 0; padding: 0 2px; font: inherit; font-weight: 700; color: #8ab4f8; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 24px; }
-.gx__rows { min-height: 250px; }
-/* Rows cut in and out: no tween, the stack simply re-lays out. */
-.gx__rw { display: grid; grid-template-rows: 1fr; }
-.gx__rw > .gx__row { min-height: 0; overflow: hidden; }
-.gx__rw.is-out { grid-template-rows: 0fr; visibility: hidden; }
-.gx__rw.is-struck .gx__row { text-decoration: line-through; opacity: 0.6; }
-.gx__row { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 0 16px; height: 50px; border-bottom: 1px solid #f1f3f4; font-size: 13.5px; color: #5f6368; background: #f6f8fc; }
-.gx__row.is-unread { background: #fff; color: #202124; }
-.gx__row.is-unread .gx__from, .gx__row.is-unread b { font-weight: 700; }
-.gx__row.is-opened { background: #e8f0fe; box-shadow: inset 3px 0 0 #1a73e8; }
-.gx__from { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; }
-.gx__msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gx__msg b { font-weight: 500; }
-.gx__msg span { color: #5f6368; font-weight: 400; }
-.gx__time { font-size: 12px; color: #5f6368; font-variant-numeric: tabular-nums; }
-.gx__row.is-unread .gx__time { color: #202124; font-weight: 700; }
-
-/* The notification sits above the inbox with a 12 px gap and cuts in and out. */
-.gx__nw { order: -1; position: relative; align-self: flex-end; width: min(396px, 100%); display: grid; grid-template-rows: 1fr; z-index: 2; }
-.gx__nwin { min-height: 0; padding: 0 0 12px; }
-.gx__nw.is-gone .gx__nwin { overflow: hidden; }
-.gx__nw.is-gone { grid-template-rows: 0fr; visibility: hidden; pointer-events: none; }
+/* Notification slot: fixed height whether or not a card is showing (CLS 0). */
+.gx__slot { height: 138px; }
+.gx__nw { width: min(420px, 100%); }
+.gx__nw.is-gone { visibility: hidden; pointer-events: none; }
 .gx__notif { background: rgb(246 247 250 / 0.97); border: 1px solid rgb(20 22 28 / 0.08); border-radius: 16px; box-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.55); padding: 12px 14px 12px; color: #14161c; }
 .gx__notif:hover { border-color: rgb(20 22 28 / 0.3); }
 .gx__notif:has(.gx__nhead:focus-visible) { border-color: #14161c; }
@@ -61,18 +44,74 @@
 .gx__acts button { height: 30px; padding-inline: 11px; border: 0; border-radius: 8px; background: rgb(20 22 28 / 0.07); color: #14161c; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 @media (pointer: coarse) { .gx__acts button { min-height: 44px; } }
 .gx__acts button:hover { background: rgb(20 22 28 / 0.16); }
-.gx__more { display: block; margin: 18px auto 0; min-height: 44px; padding-inline: 10px; background: none; border: 0; font: inherit; font-size: 14px; font-weight: 600; color: var(--n-ink); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.gx__more { display: block; margin: 0; min-height: 44px; padding-inline: 0; background: none; border: 0; font: inherit; font-size: 14px; font-weight: 600; color: var(--n-ink); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
 
-@media (max-width: 960px) {
-  .gx__nw { align-self: stretch; width: 100%; }
+/* The inbox on the night surface: hairline rows, no card. */
+.gx__mail { color: var(--n-muted); }
+.gx__bar { display: flex; align-items: center; gap: 14px; padding: 0 0 12px; border-bottom: 1px solid var(--n-line); min-height: 46px; font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.02em; }
+.gx__label { font-weight: 600; color: var(--n-ink-2); }
+.gx__watch { color: var(--n-muted); min-width: 0; }
+.gx__watch.is-cleared { color: var(--n-ink); }
+.gx__undoslot { height: 40px; display: flex; align-items: center; }
+.gx__undo { margin: 0; font-family: var(--font-mono); font-size: 12.5px; color: var(--n-ink-2); }
+.gx__link { background: none; border: 0; padding: 0 2px; font: inherit; font-weight: 600; color: var(--n-ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 24px; }
+.gx__rows { height: 400px; overflow: hidden; }
+/* Rows cut in and out: no tween, the stack simply re-lays out. */
+.gx__rw { display: grid; grid-template-rows: 1fr; }
+.gx__rw > .gx__row { min-height: 0; overflow: hidden; }
+.gx__rw.is-out { grid-template-rows: 0fr; visibility: hidden; }
+.gx__rw.is-struck .gx__row { text-decoration: line-through; opacity: 0.6; }
+.gx__row { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 0; height: 50px; border-bottom: 1px solid var(--n-line); font-size: 14px; color: var(--n-muted); }
+.gx__row[data-rive="1"] { color: var(--n-ink); }
+.gx__row.is-unread .gx__from, .gx__row.is-unread b { font-weight: 600; }
+.gx__row.is-unread .gx__from::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--n-signal); margin-right: 8px; vertical-align: 1px; }
+.gx__row.is-opened { background: var(--n-bg-2); box-shadow: inset 2px 0 0 var(--n-ink); padding-left: 10px; }
+.gx__from { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; }
+.gx__msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gx__msg b { font-weight: 400; }
+.gx__msg span { color: var(--n-muted); font-weight: 400; }
+.gx__row[data-rive="1"] .gx__msg span { color: var(--n-ink-2); }
+.gx__time { font-family: var(--font-mono); font-size: 12px; color: var(--n-muted); font-variant-numeric: tabular-nums; }
+.gx__row.is-unread .gx__time { color: var(--n-ink); }
+
+@media (min-width: 1100px) {
+  .gmail__a { grid-template-columns: 5fr 7fr; }
+  .gmail__h-a, .gmail__h-b { font-size: clamp(48px, 6.4vw, 92px); align-self: end; }
+  .gmail__h-a { padding-right: 48px; }
+  .gmail__h-b, .gx__mail { padding-left: 48px; border-left: 1px solid var(--n-line); }
+  .gx__left { margin-top: 0; padding: 40px 48px 0 0; }
+  /* The paragraph closes the lit column, level with the last inbox row. */
+  .gx__left { display: flex; flex-direction: column; align-items: flex-start; }
+  .gx__left .gmail__p { margin-top: auto; padding-top: 32px; max-width: 30em; }
+  .gmail__copy .glink { margin-top: 0; }
+  .gx__mail { margin-top: 0; padding-top: 40px; }
+  .gmail__b { grid-template-columns: 7fr 5fr; gap: 64px; }
 }
-@media (max-width: 700px) {
-  .gx { padding: 14px; }
+@media (min-width: 1100px) and (max-width: 1219px) { .gx__slot { height: 184px; } }
+@media (min-width: 700px) and (max-width: 1099px) {
+  .gmail__h-a, .gmail__h-b { font-size: clamp(56px, 9vw, 92px); }
+}
+@media (max-width: 699px) {
   .gx__acts { padding-left: 0; }
   .gx__acts button { height: 44px; flex: 1 1 auto; }
-  .gx__bar { min-height: 58px; }
-  .gx__row { grid-template-columns: 78px minmax(0, 1fr) auto; gap: 10px; padding: 8px 12px; height: auto; min-height: 50px; }
-  .gx__msg { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .gx__bar { min-height: 58px; flex-wrap: wrap; row-gap: 2px; padding-bottom: 8px; }
+  .gx__row { grid-template-columns: 78px minmax(0, 1fr) auto; gap: 10px; }
   .gx__msg span { display: none; }
-  .gx__more { align-self: center; }
+  .gx__slot { height: 150px; }
+}
+@media (max-width: 359px) { .gx__slot { height: 200px; } }
+
+/* What the editor in the capture sets, as three ruled lines (the capture's own words). */
+.gmail__facts { margin: 0 0 36px; border-top: 1px solid var(--n-line); }
+.gmail__facts > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 18px 0; border-bottom: 1px solid var(--n-line); }
+.gmail__facts dt { color: var(--n-muted); }
+.gmail__facts dd { margin: 0; color: var(--n-ink); font-size: 17px; line-height: 1.45; }
+
+/* Stacked (under 1100): headline, notification, Deliver another, the inbox, then the paragraph. */
+@media (max-width: 1099px) {
+  .gx__left { display: contents; }
+  .gx__slot { order: 1; margin-top: 32px; }
+  .gx__more { order: 2; justify-self: start; }
+  .gx__mail { order: 3; margin-top: 16px; }
+  .gx__left .gmail__p { order: 4; margin-top: 40px; }
 }

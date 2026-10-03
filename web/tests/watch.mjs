@@ -22,20 +22,41 @@ const extHosts = (reqs) => reqs.filter((u) => /unpkg\.com|jsdelivr/.test(u));
   const period = () => page.$eval(T("watch-mark"), (e) => getComputedStyle(e).getPropertyValue("--ww-period").trim());
   await page.mouse.move(300, 300);
   await sleep(4000);
-  // The Rive file cannot retime its 6.5 s sand loop: at 60 s or less the SVG sand owns the loop and follows the interval.
-  chk((await rend()) === "svg", "interval 30 s: renderer stays svg (sand follows the interval)");
+  // The sand is bound to a view-model number the page writes, so the Rive mark is on screen at every interval.
+  const sand = () => page.$eval(`${T("watch-mark")} canvas`, (e) => Number(e.dataset.sand));
+  const upper = () => page.$eval(`${T("watch-mark")} canvas`, (c) => {
+    // bone pixels in the upper bulb of the glass (the artboard is 48 units; the bulb spans x 12..28, y 9..24)
+    const k = c.width / 48, x = Math.round(12 * k), y = Math.round(10 * k), w = Math.round(16 * k), h = Math.round(13 * k);
+    const t = document.createElement("canvas"); t.width = c.width; t.height = c.height;
+    const g = t.getContext("2d"); g.drawImage(c, 0, 0);
+    const d = g.getImageData(x, y, w, h).data; let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128 && d[i] > 180) n++;
+    return n;
+  });
+  await page.waitForFunction(() => document.querySelector('[data-testid="watch-mark"]')?.dataset.renderer === "rive", { timeout: 8000 }).catch(() => {});
+  chk((await rend()) === "rive", "interval 30 s (the default): renderer is rive");
   chk((await period()) === "30s", `interval 30 s: --ww-period ${await period()}`);
-  await page.evaluate(() => window.__ww_setInterval(90));
-  await page.waitForFunction(() => document.querySelector('[data-testid="watch-mark"]')?.dataset.renderer === "rive", { timeout: 8000 }).catch(() => {});
-  chk((await rend()) === "rive", "interval 90 s: renderer reaches rive (both loops are 6.5 s)");
-  chk((await period()) === "6.5s", `interval 90 s: --ww-period ${await period()}`);
   await page.evaluate(() => window.__ww_setInterval(15));
-  await sleep(300);
-  chk((await rend()) === "svg" && (await period()) === "15s", `interval 15 s: back to svg with --ww-period ${await period()}`);
-  chk((await page.$(`${T("watch-mark")} canvas`)) === null, "interval 15 s: rive canvas unmounted");
+  await sleep(1500);
+  chk((await rend()) === "rive", "interval 15 s: still rive");
+  const s1 = await sand(); const u1 = await upper();
+  await sleep(6000);
+  const s2 = await sand(); const u2 = await upper();
+  chk(s2 - s1 > 0.3 && s2 - s1 < 0.5, `interval 15 s: sand advanced by 6 s of 15 (${s1} -> ${s2})`);
+  chk(u1 > 0 && u2 < u1 * 0.8, `interval 15 s: the upper bulb drained on the canvas (${u1} -> ${u2} bone pixels)`);
+  await page.evaluate(() => window.__ww_setInterval(30));
+  await sleep(1200);
+  const s3 = await sand();
+  await sleep(3000);
+  const s4 = await sand();
+  chk(s4 - s3 > 0.07 && s4 - s3 < 0.14, `interval 30 s: sand advanced by 3 s of 30 (${s3} -> ${s4})`);
   await page.evaluate(() => window.__ww_setInterval(120));
-  await page.waitForFunction(() => document.querySelector('[data-testid="watch-mark"]')?.dataset.renderer === "rive", { timeout: 8000 }).catch(() => {});
-  chk((await rend()) === "rive", "interval 120 s: rive again");
+  await sleep(1200);
+  const s5 = await sand();
+  await sleep(2000);
+  const s6 = await sand();
+  chk((await rend()) === "rive" && (await period()) === "6.5s", `interval 120 s: rive, idle loop ${await period()}`);
+  chk(Math.abs(s6 - s5) > 0.2, `interval 120 s: sand runs the 6.5 s idle loop (${s5} -> ${s6})`);
   const after = reqs.slice(mark0);
   chk(riveReqs(after).some((u) => /\/rive\/rive\.wasm/.test(u)), "wasm is self-hosted at /rive/rive.wasm");
   chk(extHosts(reqs).length === 0, `no unpkg/jsdelivr request (${extHosts(reqs).join(",")})`);
@@ -148,6 +169,17 @@ for (const w of [1280, 390]) {
   chk(g.nt >= g.mb, "chip sits under the mark, not beside it");
   chk(g.nl >= 0 && g.nr <= g.cw, "chip inside the viewport");
   chk(g.sw <= g.cw, `no horizontal overflow with chip visible (${g.sw}/${g.cw})`);
+  if (w >= 1100) {
+    // The chip's box must end clear of the hero numeral: no red numeral ink within 12 px under the chip.
+    const sharp = (await import("sharp")).default;
+    await sleep(500); // the numeral's 180 ms roll has finished
+    const png = await page.screenshot({ clip: { x: Math.round(g.nl), y: Math.round(g.nb), width: Math.round(g.nw), height: 12 } });
+    const { data, info } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+    let red = 0;
+    for (let i = 0; i < data.length; i += info.channels) if (data[i] > 200 && data[i + 1] < 110 && data[i + 2] < 110) red++;
+    chk(g.nb - g.nt <= 44, `chip is one line on desktop (${Math.round(g.nb - g.nt)} px tall)`);
+    chk(red === 0, `chip clears the hero numeral's bracket by 12 px (${red} red px under it)`);
+  }
   const t1 = Date.now();
   await page.waitForFunction(() => !document.querySelector('[data-testid="watch-notice"]'), { timeout: 9000 }).catch(() => {});
   chk(!(await page.$(T("watch-notice"))) && Date.now() - t1 < 8000, "callout auto-dismissed (~6 s)");

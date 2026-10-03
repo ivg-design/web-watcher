@@ -46,8 +46,7 @@ async function run(w, h) {
   const appFull = () => page.$$eval(".hx__app", (a) => a.every((e) => e.scrollWidth <= e.clientWidth + 0.5 && getComputedStyle(e).textOverflow !== "ellipsis"));
   ok(await appFull(), ".hx__app not truncated (idle)");
   await page.screenshot({ path: SHOT + `herald-shown-${w}.png` });
-  if (w > 900) ok(g.ratio <= 1.62 && g.ratio > 1.4, "stage ~16:10 (min-height keeps two banners in)");
-  if (w > 900) ok(g.bl > g.sl + 100, "banner at the right side"); else ok(g.br - g.bl > g.sr - g.sl - 24, "banner full width of stage");
+  if (w >= 700) ok(Math.abs(g.br - g.sr) < 1.5 && g.br - g.bl > 380 && g.br - g.bl < 402, "banner at its natural width, right-aligned in its column"); else ok(g.br - g.bl > g.sr - g.sl - 24, "banner full width of stage");
   await sleep(1500);
   ok(await has(page, "hb-banner"), "banner stays");
   const r = () => page.evaluate(() => {
@@ -66,7 +65,7 @@ async function run(w, h) {
   ok(q0.b.bottom <= q0.s.bottom + 1 && q0.b.right <= q0.s.right + 1, "banner 2 inside stage");
   ok(await page.evaluate((s) => [...document.querySelectorAll(s)].every((e) => e.getBoundingClientRect().right <= innerWidth + 1), SEL), "no overflow with two banners");
   // tooltip: beside the Snooze pill, never over another pill
-  if (w > 900) {
+  if (w >= 700) {
     await page.hover(T("hb-snooze")); await sleep(200);
     ok(await page.$eval(".hx__tip", (e) => getComputedStyle(e).visibility === "visible" && e.textContent === "returns at 9:00"), "snooze tooltip");
     ok(await page.evaluate(() => {
@@ -122,7 +121,7 @@ async function run(w, h) {
   ok(!(await has(page, "hb-banner")) && Math.abs(q.b.top - q.s.top - top1) < 1.5, "banner 2 moved up into first slot");
   // deliver another: email re-enters with 4 + Beta invite
   ok(await page.$eval(T("hb-more"), (e) => e.textContent.includes("Deliver another from Rive team") && !e.disabled), "deliver control");
-  ok((await page.$$eval(".hx__caption", (e) => e.map((x) => x.textContent))).join("|") === "Banners stay until you act on them, stacked per sender or site.|Herald can read a banner aloud. This is how it sounds.", "captions");
+  ok((await page.$$eval(".hx__caption", (e) => e.map((x) => x.textContent))).join("|") === "Banners stay until you act on them, stacked per sender or site." && (await page.$eval(".vr__cap", (e) => e.textContent)) === "Herald can read a banner aloud. Press the speaker on a banner. This is the real sample.", "captions");
   await click(page, "hb-more"); await sleep(1000);
   ok(await has(page, "hb-banner"), "email banner re-enters");
   const t4 = await page.$eval(T("hb-banner"), (e) => e.textContent);
@@ -143,13 +142,88 @@ async function run(w, h) {
     ok((await has(page, "hb-banner")) && (await has(page, "hb-banner-2")), "show again restores both");
   }
 
-  if (w <= 900) {
+  if (w < 700) {
     const hts = await page.$$eval(".hx__pill, .hx__more", (b) => b.map((x) => x.getBoundingClientRect().height));
     ok(hts.every((x) => x >= 43.5), "targets >= 44px");
   }
   await page.close();
 }
+// real audio, real clock: the voice ruler
+async function ruler(w, h) {
+  console.log(`--- ruler ${w}x${h}`);
+  const page = await browser.newPage();
+  await page.setViewport({ width: w, height: h });
+  await page.goto(BASE + "/", { waitUntil: "networkidle2", timeout: 90000 });
+  await page.$eval("#herald .hx", (e) => e.scrollIntoView({ block: "center" }));
+  await page.waitForSelector(T("hb-banner-2"), { timeout: 6000 });
+  await sleep(600);
+  const R = () => page.$eval(T("hv-ruler"), (e) => ({ lit: +e.dataset.lit, sample: e.dataset.sample, w: e.getBoundingClientRect().width }));
+  const time = () => page.$eval(T("hv-time"), (e) => e.textContent);
+  const geo = () => page.evaluate(() => {
+    const c = document.querySelector("#herald .container"), cs = getComputedStyle(c);
+    const inner = c.getBoundingClientRect().right - parseFloat(cs.paddingRight);
+    const st = document.querySelector("#herald .hx__stack").getBoundingClientRect();
+    const b = (document.querySelector('[data-testid="hb-banner"]') || document.querySelector('[data-testid="hb-banner-2"]')).getBoundingClientRect();
+    const title = document.querySelector("#herald h2");
+    return { inner, sr: st.right, br: b.right, bt: b.top, tt: title.getBoundingClientRect().top, fs: parseFloat(getComputedStyle(title).fontSize), cw: c.getBoundingClientRect().width - 2 * parseFloat(cs.paddingRight), sh: document.querySelector("#herald").offsetHeight };
+  });
+  let r = await R();
+  ok(r.lit === 0 && r.sample === "herald-email-3", "ruler at rest: 0 lit, top banner's sample");
+  ok((await time()) === "0:00.0 / 0:04.2", "time readout at rest " + (await time()));
+  if (w >= 1100) {
+    const g = await geo();
+    ok(r.w >= g.cw * 0.9, `ruler >= 90 % of container width (${Math.round(r.w)} / ${Math.round(g.cw)})`);
+    ok(Math.abs(g.br - g.inner) <= 4 && Math.abs(g.sr - g.inner) <= 4, "banner stack right edge on the container edge");
+    ok(g.bt < g.tt, "banner stack top above the title top");
+    if (w >= 1440) ok(g.fs >= 96, "title >= 96 px at " + w + " (" + g.fs + ")");
+  }
+  ok(await page.evaluate(() => !!document.querySelector('[data-testid="hv-ruler"] canvas[role="img"][aria-label]')), "canvas role img with label");
+  const h0 = (await geo()).sh;
+  await page.$eval(T("hb-speak"), (e) => e.click());
+  await sleep(500);
+  const l1 = (await R()).lit, t1 = await time();
+  await sleep(500);
+  const l2 = (await R()).lit, t2 = await time();
+  ok(l1 > 0 && l2 > l1 && t1 !== t2, `playing: lit grows ${l1} -> ${l2}, time ${t1} -> ${t2}`);
+  await page.$eval(T("hb-speak"), (e) => e.click());
+  await sleep(250);
+  r = await R();
+  ok(r.lit === 0 && (await time()).startsWith("0:00.0"), "second click stops: lit 0, time 0:00.0");
+  await page.$eval(T("hb2-speak"), (e) => e.click());
+  await sleep(300);
+  ok((await R()).sample === "herald-contra", "contra speaker switches the ruler to the contra sample");
+  await page.$eval(T("hb2-speak"), (e) => e.click());
+  await sleep(200);
+  // dismiss: ruler follows the top visible banner, section does not move
+  await page.$eval(T("hb-close"), (e) => e.click());
+  await sleep(300);
+  const mid = (await geo()).sh;
+  await sleep(500);
+  ok((await R()).sample === "herald-contra", "email gone: ruler shows the contra sample");
+  const h1 = (await geo()).sh;
+  ok(h0 === h1 && h0 === mid, `section height unchanged by dismissing (${h0} / ${mid} / ${h1})`);
+  await page.$eval(T("hb-show"), (e) => e.click());
+  await sleep(1200);
+  ok((await geo()).sh === h0 && (await R()).sample === "herald-email-3", "show again: same height, email sample back");
+  await page.$eval(T("hb-more"), (e) => e.click());
+  await sleep(900);
+  ok((await R()).sample === "herald-email-4" && (await time()).endsWith("/ 0:05.2"), "deliver another: ruler follows to email-4");
+  // ruler plays to the end by itself
+  await page.$eval(T("hb-speak"), (e) => e.click());
+  await sleep(5900);
+  r = await R();
+  ok(r.lit === 0 && (await page.$eval(T("hb-speak"), (e) => e.dataset.speaking)) === "0", "sample ends: ticks dim again");
+  ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "no horizontal overflow");
+  await page.close();
+}
 try {
+  const { readFileSync, readdirSync, statSync } = await import("node:fs");
+  const walk = (d) => readdirSync(d).flatMap((f) => { const q = d + "/" + f; return statSync(q).isDirectory() ? walk(q) : [q]; });
+  ok(!walk("src").some((f) => /\.(tsx?|css)$/.test(f) && readFileSync(f, "utf8").includes("speechSynthesis")), "no speechSynthesis anywhere in src");
+  await ruler(1280, 900);
+  await ruler(1440, 900);
+  await ruler(834, 900);
+  await ruler(390, 844);
   await run(1280, 900);
   await run(1440, 900);
   await run(390, 844);

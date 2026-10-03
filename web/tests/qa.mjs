@@ -43,7 +43,7 @@ for (const [w, h] of want_(1) ? VPS : []) {
   await step("watch-type row", () => jsclick(page, T("wt-row-badge")));
   await step("picker scan", () => jsclick(page, T("pd-scan")));
   await step("picker confirm flow", async () => { for (const id of ["pd-pick", "pd-use", "pd-confirm", "pd-add"]) { await sleep(300); await jsclick(page, T(id)); } });
-  await step("gmail view", async () => { await page.$eval("#gmail .gx", (e) => e.scrollIntoView({ block: "center", behavior: "instant" })); await page.waitForFunction(() => document.querySelectorAll('[data-testid="gm-row"]').length >= 5, { timeout: 8000 }); });
+  await step("gmail view", async () => { await page.$eval("#gmail .gx__slot", (e) => e.scrollIntoView({ block: "center", behavior: "instant" })); await page.waitForFunction(() => document.querySelectorAll('[data-testid="gm-row"]').length >= 5, { timeout: 8000 }); });
   await step("gmail mark read", () => jsclick(page, T("gm-markread")));
   await step("herald snooze", async () => { await page.$eval("#herald .hx", (e) => e.scrollIntoView({ block: "center", behavior: "instant" })); await page.waitForSelector(T("hb-banner"), { timeout: 6000 }); return jsclick(page, T("hb-snooze")); });
   await step("privacy switches", async () => { for (const i of [1, 2, 3]) await jsclick(page, T(`pv-switch-${i}`)); });
@@ -68,7 +68,7 @@ for (const [w, h] of want_(2) ? VPS : []) {
   const st = await page.$eval(T("hw-stage"), (e) => e.dataset.beat).catch(() => null);
   const n = await page.$eval(T("hw-notif"), (e) => e.classList.contains("is-on") && getComputedStyle(e).opacity === "1").catch(() => false);
   if (st !== "3" || !n) d.push(`how-it-works not on final beat statically (beat=${st}, notif visible=${n})`);
-  await page.$eval("#gmail .gx", (e) => e.scrollIntoView({ block: "center", behavior: "instant" })); await sleep(1500);
+  await page.$eval("#gmail .gx__slot", (e) => e.scrollIntoView({ block: "center", behavior: "instant" })); await sleep(1500);
   const rows = await page.$$eval(T("gm-row"), (r) => r.map((e) => e.getBoundingClientRect().height > 0 && getComputedStyle(e).opacity === "1"));
   if (rows.length < 5 || rows.some((x) => !x)) d.push(`gmail rows not all present/visible: ${JSON.stringify(rows)}`);
   const gmAnim = await page.evaluate(() => document.querySelector("#gmail").getAnimations({ subtree: true }).filter((a) => a.playState === "running").length);
@@ -92,7 +92,7 @@ for (const [w, h] of want_(3) ? VPS : []) {
   await go(page, "/");
   await sleep(2000);
   // The Gmail notification (and its buttons) is inert until the arrivals have run: show the stage and wait for it, then tab from the top.
-  await page.$eval("#gmail .gx", (e) => e.scrollIntoView({ block: "center", behavior: "instant" }));
+  await page.$eval("#gmail .gx__slot", (e) => e.scrollIntoView({ block: "center", behavior: "instant" }));
   await page.waitForFunction(() => document.querySelector("#gmail .gx__nw") && !document.querySelector("#gmail .gx__nw").classList.contains("is-gone"), { timeout: 8000 });
   await page.evaluate(() => { window.scrollTo(0, 0); document.activeElement?.blur(); const s = document.createElement("span"); s.tabIndex = -1; document.body.prepend(s); s.focus(); s.remove(); });
   const seq = [];
@@ -112,10 +112,11 @@ for (const [w, h] of want_(3) ? VPS : []) {
     if (seq.length > 1 && info.id === "dl-btn") break;
   }
   const d = [];
-  const want = ["watch-mark", "hv-play", "hw-step-1", "hw-step-2", "hw-step-3", "pd-scan", ...["badge", "count", "text", "exists", "disappears", "subtree"].map((s) => "wt-row-" + s), "gm-open", "gm-markread", "gm-archive", "gm-delete", "gm-spam", "hb-read", "hb-archive", "hb-delete", "hb-spam", "hb-snooze", "pv-switch-1", "pv-switch-2", "pv-switch-3", "dl-btn"];
+  const want = ["watch-mark", "hv-play", "hw-step-1", "hw-step-2", "hw-step-3", "pd-scan|pd-pick", ...["badge", "count", "text", "exists", "disappears", "subtree"].map((s) => "wt-row-" + s), "gm-open", "gm-markread", "gm-archive", "gm-delete", "gm-spam", "hb-read", "hb-archive", "hb-delete", "hb-spam", "hb-snooze", "pv-switch-1", "pv-switch-2", "pv-switch-3", "dl-btn"];
   let last = -1;
   for (const id of want) {
-    const idx = seq.findIndex((s) => s.id === id);
+    // "a|b": either control (the picker scans by itself when it scrolls into view, which swaps Scan page for Pick in Safari)
+    const idx = seq.findIndex((s) => id.split("|").includes(s.id));
     if (idx < 0) { d.push(`not reachable by Tab: ${id}${id.startsWith("gm-") || id.startsWith("hb-") ? " (may be hidden/inert until the notification shows)" : ""}`); continue; }
     if (idx < last) d.push(`out of document order: ${id} (tab index ${idx} after ${last})`);
     last = Math.max(last, idx);

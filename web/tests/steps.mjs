@@ -1,4 +1,4 @@
-import { open, T, txt, click, sleep, ok, done } from "./_h.mjs";
+import { open, T, txt, has, click, sleep, ok, done } from "./_h.mjs";
 const { browser, page } = await open();
 await page.$eval("#how-it-works", (e) => e.scrollIntoView({ block: "center" }));
 await sleep(500);
@@ -8,6 +8,16 @@ const cur = (i) => page.$eval(T(`hw-step-${i}`), (e) => e.getAttribute("aria-cur
 ok(await cur(1), "step 1 active on entry");
 ok((await txt(page, "hw-sheet")).includes("Found in Safari: Inbox · Contra"), "sheet: Found in Safari");
 ok((await page.$eval(T("hw-stage"), (e) => e.textContent)).includes("contra.com/inbox"), "URL field text");
+
+// timecode, chapters, stage width
+const clk = () => txt(page, "hw-clock");
+const c1 = await clk(); await sleep(600); const c2 = await clk();
+ok(/^\d\d\.\d$/.test(c1) && /^\d\d\.\d$/.test(c2) && c1 !== c2, `timecode advances ${c1} -> ${c2}`);
+const [r1, r2, r3] = [await rect("hw-step-1"), await rect("hw-step-2"), await rect("hw-step-3")];
+ok(r2[2] > r1[2] && r2[2] > r3[2] && r3[2] > r1[2], `chapter widths proportional ${r1[2]} ${r2[2]} ${r3[2]}`);
+ok(Math.abs(r1[1] - r2[1]) < 2 && Math.abs(r2[1] - r3[1]) < 2, "chapters share one row");
+ok((await rect("hw-stage"))[2] >= 1000, "stage at least 1000 px wide at 1280");
+ok(!(await has(page, "hw-notified")), "no red tick before the notification");
 
 // auto-advance
 await sleep(4200);
@@ -36,6 +46,11 @@ ok(nt.includes("Contra") && nt.includes("You have 3 new messages") && !nt.includ
 ok(await page.$eval(T("hw-newmail"), (e) => e.classList.contains("unread")), "beat 3: the new mail row turns bold");
 ok((await page.$$eval(".hw-thread", (e) => e.length)) === 4, "four mails in the inbox");
 ok((await txt(page, "hw-badge")) === "3", "badge 3");
+ok(await has(page, "hw-notified"), "red tick label appears after the notification");
+const nc = await page.$eval(T("hw-notified"), (e) => { const c = document.createElement("canvas"); c.width = c.height = 1; const g = c.getContext("2d"); g.fillStyle = getComputedStyle(e).color; g.fillRect(0, 0, 1, 1); return "rgb(" + [...g.getImageData(0, 0, 1, 1).data].slice(0, 3).join(",") + ")"; });
+const [nr, ng, nb] = nc.match(/[\d.]+/g).map(Number);
+ok(nr > 150 && ng < 140 && nb < 140, "notified label is red " + nc);
+ok((await txt(page, "hw-notified")) === "t+8.5 s notified", "notified label text");
 ok((await txt(page, "hw-sheet")).includes("Contra · Inbox badge"), "popover row");
 
 for (const w of [1440, 390]) {
@@ -57,4 +72,13 @@ for (const w of [1440, 390]) {
   }
   await page.screenshot({ path: `/private/tmp/claude-501/-Users-ivg-github-web-watcher/1b5c3420-5ad4-4c49-88f4-04aad1e374ed/scratchpad/steps-${w}.png` });
 }
-await done(browser);
+// reduced motion: final state
+await browser.close().catch(() => {});
+{
+  const o = await open(null, true);
+  await o.page.$eval("#how-it-works", (e) => e.scrollIntoView({ block: "center" }));
+  await sleep(800);
+  ok((await o.page.$eval(T("hw-clock"), (e) => e.textContent.trim())) === "11.2", "reduced motion: clock shows 11.2");
+  ok(await has(o.page, "hw-notified"), "reduced motion: red tick present");
+  await done(o.browser);
+}

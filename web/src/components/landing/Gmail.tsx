@@ -19,15 +19,43 @@ export default function Gmail() {
   return (
     <section id="gmail" className="section">
       <div className="container">
-        <div className="gmail__grid">
-          <div className="gmail__copy">
-            <h2 className="h2-v3">Watch a sender, not an inbox.</h2>
+        <div className="gmail__a">
+          <h2 className="gmail__h h2-v3">
+            <span className="gmail__h-a">Watch a sender,</span> <span className="gmail__h-b">not an inbox.</span>
+          </h2>
+          <GmailDemo>
             <p className="gmail__p">
               Sign in with Google once. Then watch one address, several, or a whole domain. New mail from them becomes a
               single notification that counts up as mail arrives. The menu count follows as you read, and the notification clears
               once nothing is unread. Click it to open the message. Archive, Mark as Read, Delete and Spam work on every
               message it counted.
             </p>
+          </GmailDemo>
+        </div>
+        <div className="gmail__b">
+          <figure className="gmail__fig" data-testid="gm-figure">
+            <div className="gmail__frame">
+              <div className="gmail__win">
+                <img
+                  src={img}
+                  srcSet={`${img} 1x, ${asset("/shots/gmail-sender-editor@2x.png")} 2x`}
+                  alt="The Gmail sender watcher editor in WebWatcher"
+                  width={560}
+                  height={732}
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <figcaption className="t-label">
+              The sender watcher editor in <span className="nw">WebWatcher</span> 1.10.9.
+            </figcaption>
+          </figure>
+          <div className="gmail__copy">
+            <dl className="gmail__facts" data-testid="gm-facts">
+              <div><dt className="t-label">Senders</dt><dd>One address, several, or a whole domain like @company.com.</dd></div>
+              <div><dt className="t-label">Checked</dt><dd>Every minute. Change it in Settings.</dd></div>
+              <div><dt className="t-label">Seen</dt><dd>Only mail that lands in the Inbox. Gmail accounts only.</dd></div>
+            </dl>
             <a className="glink" href={asset("/docs/sign-in-with-google")} data-testid="gm-signin">
               <GoogleG />
               Sign in with Google
@@ -36,25 +64,7 @@ export default function Gmail() {
               Scope: gmail.modify only. Tokens stay in your Keychain. The app ships its own OAuth client, nothing to configure.
             </p>
           </div>
-          <GmailDemo />
         </div>
-        <figure className="gmail__fig" data-testid="gm-figure">
-          <div className="gmail__frame">
-            <div className="gmail__win">
-              <img
-                src={img}
-                srcSet={`${img} 1x, ${asset("/shots/gmail-sender-editor@2x.png")} 2x`}
-                alt="The Gmail sender watcher editor in WebWatcher"
-                width={560}
-                height={732}
-                loading="lazy"
-              />
-            </div>
-          </div>
-          <figcaption className="t-label">
-            The sender watcher editor in <span className="nw">WebWatcher</span> 1.10.9.
-          </figcaption>
-        </figure>
       </div>
     </section>
   );

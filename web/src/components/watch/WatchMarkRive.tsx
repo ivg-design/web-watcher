@@ -1,4 +1,9 @@
-/** Rive renderer for the mark. Contract: view model `Mark` (lookX, lookY, badge, hover, reduced, tick), state machine `Mark`. */
+/**
+ * Rive renderer for the mark. Contract: view model `Mark` (lookX, lookY, badge, hover, reduced, tick, sand, turn),
+ * state machine `Mark`. The sand is not a timeline: the page writes the progress of the current check (0..1) into `sand`,
+ * so the glass drains over the real interval. `tick` flips the glass with the eye's pop (a check); `turn` flips it
+ * without the pop (the idle loop at intervals above a minute).
+ */
 import { useEffect, useRef } from "react";
 import {
   RuntimeLoader,
@@ -19,12 +24,18 @@ export interface RiveProps {
   hover: boolean;
   reduced: boolean;
   tickSignal: number;
+  /** The check interval in seconds and the time (Date.now) of the last check. */
+  interval: number;
+  lastCheck: number;
   onReady: () => void;
   onError: () => void;
 }
 
-export default function WatchMarkRive({ sinkRef, unseen, hover, reduced, tickSignal, onReady, onError }: RiveProps) {
-  const { rive, RiveComponent } = useRive({
+const FLIP_MS = 500;
+const IDLE_MS = 6500;
+
+export default function WatchMarkRive({ sinkRef, unseen, hover, reduced, tickSignal, interval, lastCheck, onReady, onError }: RiveProps) {
+  const { rive, RiveComponent, canvas } = useRive({
     src: asset("/rive/watcher-mark.riv"),
     stateMachines: "Mark",
     autoplay: true,
@@ -39,6 +50,8 @@ export default function WatchMarkRive({ sinkRef, unseen, hover, reduced, tickSig
   const hov = useViewModelInstanceBoolean("hover", vmi);
   const red = useViewModelInstanceBoolean("reduced", vmi);
   const tick = useViewModelInstanceTrigger("tick", vmi);
+  const sand = useViewModelInstanceNumber("sand", vmi);
+  const turn = useViewModelInstanceTrigger("turn", vmi);
 
   const refs = useRef({ lookX, lookY });
   useEffect(() => {
@@ -56,6 +69,41 @@ export default function WatchMarkRive({ sinkRef, unseen, hover, reduced, tickSig
   useEffect(() => {
     if (tickSignal !== last.current) { last.current = tickSignal; tick.trigger?.(); }
   }, [tick, tickSignal]);
+
+  // Sand = time. At 60 s or less the glass drains over the interval itself; above that it keeps a 6.5 s idle loop
+  // (the popover carries the real countdown). Ten writes a second is far below a pixel of sand per write.
+  const sandRef = useRef({ sand, turn });
+  useEffect(() => { sandRef.current = { sand, turn }; });
+  // Changing the interval re-arms the page's timer, so the glass starts over from that moment.
+  const armed = useRef(0);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    armed.current = Date.now();
+  }, [interval]);
+  useEffect(() => {
+    if (!vmi) return;
+    if (reduced) { sandRef.current.sand.setValue?.(0.46); return; }
+    const real = interval <= 60;
+    const span = real ? interval * 1000 : IDLE_MS;
+    let lap = 0;
+    const write = () => {
+      if (document.hidden) return;
+      const since = Date.now() - Math.max(lastCheck, armed.current);
+      let t = since;
+      if (!real) {
+        const n = Math.floor(since / IDLE_MS);
+        if (n !== lap) { lap = n; sandRef.current.turn.trigger?.(); }
+        t = since - n * IDLE_MS;
+      }
+      const v = Math.max(0, Math.min(1, (t - FLIP_MS) / (span - FLIP_MS)));
+      sandRef.current.sand.setValue?.(v);
+      canvas?.setAttribute("data-sand", v.toFixed(3));
+    };
+    write();
+    const id = window.setInterval(write, 100);
+    return () => window.clearInterval(id);
+  }, [vmi, canvas, interval, lastCheck, reduced]);
 
   return <RiveComponent className="ww-mark__rive" aria-hidden />;
 }

@@ -3,7 +3,7 @@ import PickerDemo from "./picker/PickerDemo";
 export default function Picker() {
   return (
     <section id="picker" className="section picker" aria-labelledby="picker-title">
-      <div className="container">
+      <div className="container picker__in">
         <div className="picker__head">
           <h2 id="picker-title" className="h2-v3 picker__h">It reads the page so you don’t have to.</h2>
           <p className="picker__p">
@@ -13,10 +13,10 @@ export default function Picker() {
         </div>
         <div className="picker__demo">
           <PickerDemo />
-          <p className="picker__note">
-            Simulation on a sample page. In the app the same steps run on the tab you have open in Safari.
-          </p>
         </div>
+        <p className="picker__note">
+          Simulation on a sample page. In the app the same steps run on the tab you have open in Safari.
+        </p>
       </div>
     </section>
   );

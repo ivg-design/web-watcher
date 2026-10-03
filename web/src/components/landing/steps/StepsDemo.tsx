@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useWatch } from "@/components/watch/WatchContext";
 import { STEPS, DURATION, SUBS, FINAL_SUB, HOLD_MS } from "./data";
 import Stage from "./Stage";
+import Transport from "./Transport";
 
 type Key = "down" | "right" | "enter" | null;
 
@@ -15,10 +16,10 @@ export default function StepsDemo() {
   const [beat, setBeat] = useState(0);
   const [sub, setSub] = useState(0);
   const [epoch, setEpoch] = useState(0);
-  const [held, setHeld] = useState(false);
   const [active, setActive] = useState(false);
   const [reduce, setReduce] = useState(false);
   const [pressed, setPressed] = useState<Key>(null);
+  const [notified, setNotified] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const holdUntil = useRef(0);
   const clicked = useRef(false);
@@ -29,7 +30,7 @@ export default function StepsDemo() {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => {
       setReduce(mq.matches);
-      if (mq.matches) { setBeat(2); setSub(FINAL_SUB[2]); }
+      if (mq.matches) { setBeat(2); setSub(FINAL_SUB[2]); setNotified(true); }
     };
     apply();
     mq.addEventListener("change", apply);
@@ -63,6 +64,7 @@ export default function StepsDemo() {
       const n = i + 1;
       timers.push(window.setTimeout(() => {
         setSub(n);
+        if (beat === 2 && n >= 2) setNotified(true);
         if (beat === 1) {
           setPressed(keys[n]);
           timers.push(window.setTimeout(() => setPressed(null), 320));
@@ -72,12 +74,12 @@ export default function StepsDemo() {
     const advance = () => {
       const wait = holdUntil.current - Date.now();
       if (wait > 0) {
-        timers.push(window.setTimeout(() => { setHeld(false); advance(); }, wait));
+        timers.push(window.setTimeout(advance, wait));
         return;
       }
-      setHeld(false);
       setSub(0);
       setPressed(null);
+      if (beat === 2) setNotified(false);
       setBeat((b) => (b + 1) % 3);
     };
     timers.push(window.setTimeout(advance, DURATION[beat]));
@@ -95,50 +97,45 @@ export default function StepsDemo() {
   const go = useCallback((i: number) => {
     clicked.current = true;
     holdUntil.current = Date.now() + HOLD_MS;
-    setHeld(true);
     activeRef.current = true;
     setActive(true);
+    if (i === 0) setNotified(false);
+    else if (reduce && i === 2) setNotified(true);
     setBeat(i);
     setSub(reduce ? FINAL_SUB[i] : 0);
     setPressed(null);
     setEpoch((e) => e + 1);
   }, [reduce]);
 
+  const chapters = (
+    <ol className="hw-steps" aria-label="Three steps on a time ruler">
+      {STEPS.map((s, i) => {
+        const on = i === beat;
+        return (
+          <li key={s.title}>
+            <button
+              type="button"
+              className={"hw-step" + (on ? " is-on" : "")}
+              data-testid={`hw-step-${i + 1}`}
+              aria-current={on ? "step" : undefined}
+              onClick={() => go(i)}
+            >
+              <span className="hw-step__n t-label" data-testid={`hw-time-${i + 1}`}>{stamp(STARTS[i])}</span>
+              <span className="hw-step__t">{s.title}</span>
+              <span className="hw-step__c">{s.copy}</span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+
   return (
     <div className="hw" ref={root}>
-      <ol className="hw-steps" aria-label="Three steps on a time ruler">
-        {STEPS.map((s, i) => {
-          const on = i === beat;
-          return (
-            <li key={s.title}>
-              <button
-                type="button"
-                className={"hw-step" + (on ? " is-on" : "")}
-                data-testid={`hw-step-${i + 1}`}
-                aria-current={on ? "step" : undefined}
-                onClick={() => go(i)}
-              >
-                <span className="hw-tick" aria-hidden="true" />
-                <span className="hw-step__n t-label" data-testid={`hw-time-${i + 1}`}>{stamp(STARTS[i])}</span>
-                <span className="hw-step__t">{s.title}</span>
-                                <span className="hw-step__c">{s.copy}</span>
-                <span className="hw-bar" aria-hidden="true">
-                  {on && (
-                    <i
-                      key={`${beat}-${epoch}`}
-                      className={held || reduce ? "is-full" : ""}
-                      style={{ animationDuration: `${DURATION[beat]}ms`, animationPlayState: active ? "running" : "paused" }}
-                    />
-                  )}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
       <div className="hw-frame">
         <Stage beat={beat} sub={sub} pressed={pressed} />
       </div>
+      <Transport beat={beat} epoch={epoch} active={active} reduce={reduce} notified={notified}>{chapters}</Transport>
     </div>
   );
 }

@@ -20,7 +20,11 @@ type Notif = "shown" | "dismissed";
 type Undo = { kind: "archived" | "trashed" | "spam"; rows: Mail[] };
 
 const SEED: Mail[] = [
-  { id: 2, rive: false, sender: "Linear", subject: "Your weekly digest", snippet: "12 issues closed, 4 new in Backlog", time: "Mon", unread: false },
+  { id: 6, rive: false, sender: "Linear", subject: "Your weekly digest", snippet: "12 issues closed, 4 new in Backlog", time: "Mon", unread: false },
+  { id: 5, rive: false, sender: "GitHub", subject: "Your pull request was merged", snippet: "web-watcher #214 is now in main", time: "Mon", unread: false },
+  { id: 4, rive: false, sender: "Stripe", subject: "Your September payout is on the way", snippet: "Expected to arrive on October 3", time: "Sep 30", unread: false },
+  { id: 3, rive: false, sender: "Vercel", subject: "Deployment ready", snippet: "web-watcher is live on production", time: "Sep 29", unread: false },
+  { id: 2, rive: false, sender: "Notion", subject: "Meeting notes shared with you", snippet: "Roadmap review, notes and actions", time: "Sep 29", unread: false },
   { id: 1, rive: false, sender: "Figma", subject: "Dev Mode is now generally available", snippet: "Inspect, copy and ship straight from your files", time: "Sep 28", unread: false },
 ];
 const RIVE: [string, string][] = [
@@ -30,7 +34,7 @@ const RIVE: [string, string][] = [
   ["Beta invite: Rive 0.9", "You are in. Here is how to opt in to the beta"],
   ["Community call tomorrow", "Bring your files, we will review them live"],
 ];
-const MAX_ROWS = 7;
+const MAX_ROWS = 8;
 
 const mkRive = (n: number, id: number): Mail => ({
   id,
@@ -43,7 +47,7 @@ const mkRive = (n: number, id: number): Mail => ({
   fx: "in",
 });
 
-export default function GmailDemo() {
+export default function GmailDemo({ children }: { children?: React.ReactNode }) {
   const { record } = useWatch();
   const recordRef = useRef(record);
   useEffect(() => {
@@ -60,6 +64,7 @@ export default function GmailDemo() {
   const started = useRef(false);
   const seq = useRef(0);
   const nextId = useRef(10);
+  const view = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
   const later = (fn: () => void, ms: number) => {
     timers.current.push(window.setTimeout(fn, ms));
@@ -91,7 +96,8 @@ export default function GmailDemo() {
 
   useEffect(() => {
     const el = stage.current;
-    if (!el) return;
+    const vw = view.current;
+    if (!el || !vw) return;
     // Keyboard users reach the section before it is half in view: focus entering it starts the arrivals too.
     const begin = () => {
       if (started.current) return;
@@ -105,7 +111,10 @@ export default function GmailDemo() {
       }
     };
     const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) begin(); }, { threshold: 0.5 });
-    io.observe(el);
+    io.observe(vw);
+    // On phones the notification slot is a screen above the inbox: either one coming into view starts the arrivals.
+    const slot = el.querySelector(".gx__slot");
+    if (slot) io.observe(slot);
     el.addEventListener("focusin", begin);
     const t = timers.current;
     return () => {
@@ -177,21 +186,60 @@ export default function GmailDemo() {
 
   return (
     <div className="gx" ref={stage} aria-live="off" data-testid="gm-demo">
-      <div className="gx__mail">
+      <div className="gx__left">
+        <div className="gx__slot">
+          <div className={`gx__nw${notif === "dismissed" ? " is-gone" : ""}`} aria-hidden={notif === "dismissed"} inert={notif === "dismissed"}>
+            <div className="gx__notif" data-testid="gm-notif" role="group" aria-label="Grouped notification from WebWatcher">
+              <button type="button" className="gx__nhead" data-testid="gm-open" aria-label="Open the newest message" onClick={open}>
+                <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={36} height={36} />
+                <span className="gx__nt">
+                  <strong>{`${count} new from Rive team`}</strong>
+                  {count > 0 ? (
+                    <>
+                      <span className="gx__subj" data-testid="gm-subjects">
+                        {subjects}
+                        {more > 0 ? <em> +{more} more</em> : null}
+                      </span>
+                      <span>received Today 8:14 PM</span>
+                    </>
+                  ) : null}
+                </span>
+                <span className="gx__count" data-testid="gm-count">
+                  <Roll v={count} instant={reducedNow} />
+                </span>
+              </button>
+              <div className="gx__acts">
+                <button type="button" data-testid="gm-markread" onClick={markRead}>Mark as Read</button>
+                <button type="button" data-testid="gm-archive" onClick={() => remove("archived")}>Archive</button>
+                <button type="button" data-testid="gm-delete" onClick={() => remove("trashed")}>Delete</button>
+                <button type="button" data-testid="gm-spam" onClick={() => remove("spam")}>Spam</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" className="gx__more" data-testid="gm-newmail" onClick={deliver}>
+          Deliver another
+        </button>
+        {children}
+      </div>
+
+      <div className="gx__mail" ref={view}>
         <div className="gx__bar">
           <span className="gx__label">Inbox</span>
           <span className={`gx__watch${cleared ? " is-cleared" : ""}`} role="status" data-testid="gm-status">
-            {cleared ? "Nothing unread from @rive.app — notification cleared" : "Watching @rive.app"}
+            {cleared ? "Nothing unread from @rive.app. Notification cleared." : "Watching @rive.app"}
           </span>
         </div>
-        {undo ? (
-          <p className="gx__undo">
-            {undoText} ·{" "}
-            <button type="button" className="gx__link" data-testid="gm-restore" onClick={restore}>
-              Put it back (demo)
-            </button>
-          </p>
-        ) : null}
+        <div className="gx__undoslot">
+          {undo ? (
+            <p className="gx__undo">
+              {undoText} ·{" "}
+              <button type="button" className="gx__link" data-testid="gm-restore" onClick={restore}>
+                Put it back (demo)
+              </button>
+            </p>
+          ) : null}
+        </div>
         <div className="gx__rows" data-testid="gm-inbox">
           {rows.map((m) => (
             <div className={`gx__rw${m.fx ? ` is-${m.fx}` : ""}`} key={m.id}>
@@ -203,8 +251,7 @@ export default function GmailDemo() {
               >
                 <span className="gx__from">{m.sender}</span>
                 <span className="gx__msg">
-                  <b>{m.subject}</b>
-                  <span> — {m.snippet}</span>
+                  <b>{m.subject}</b> <span>{m.snippet}</span>
                 </span>
                 <span className="gx__time">{m.time}</span>
               </div>
@@ -212,41 +259,6 @@ export default function GmailDemo() {
           ))}
         </div>
       </div>
-
-      <div className={`gx__nw${notif === "dismissed" ? " is-gone" : ""}`} aria-hidden={notif === "dismissed"} inert={notif === "dismissed"}>
-        <div className="gx__nwin">
-          <div className="gx__notif" data-testid="gm-notif" role="group" aria-label="Grouped notification from WebWatcher">
-            <button type="button" className="gx__nhead" data-testid="gm-open" aria-label="Open the newest message" onClick={open}>
-              <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={36} height={36} />
-              <span className="gx__nt">
-                <strong>{`${count} new from Rive team`}</strong>
-                {count > 0 ? (
-                  <>
-                    <span className="gx__subj" data-testid="gm-subjects">
-                      {subjects}
-                      {more > 0 ? <em> +{more} more</em> : null}
-                    </span>
-                    <span>received Today 8:14 PM</span>
-                  </>
-                ) : null}
-              </span>
-              <span className="gx__count" data-testid="gm-count">
-                <Roll v={count} instant={reducedNow} />
-              </span>
-            </button>
-            <div className="gx__acts">
-              <button type="button" data-testid="gm-markread" onClick={markRead}>Mark as Read</button>
-              <button type="button" data-testid="gm-archive" onClick={() => remove("archived")}>Archive</button>
-              <button type="button" data-testid="gm-delete" onClick={() => remove("trashed")}>Delete</button>
-              <button type="button" data-testid="gm-spam" onClick={() => remove("spam")}>Spam</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button type="button" className="gx__more" data-testid="gm-newmail" onClick={deliver}>
-        Deliver another
-      </button>
     </div>
   );
 }

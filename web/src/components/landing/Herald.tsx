@@ -6,11 +6,13 @@ import HeraldDemo from "./herald/HeraldDemo";
 export default function Herald() {
   return (
     <section id="herald" className="herald">
-      <div className="container herald__grid">
+      <HeraldDemo>
         <div className="herald__copy">
           <div className="herald__head">
             <img className="herald__logo" src={asset("/images/herald-logo.png")} alt="Herald" width={64} height={64} />
-            <h2 className="h2-v3">Make it talk back.</h2>
+            <h2 className="h2-v3 herald__title">
+              <span className="herald__l">Make it</span> <span className="herald__l">talk back.</span>
+            </h2>
           </div>
           <p className="herald__p">
             Herald turns <span className="nw">WebWatcher</span>’s alerts into banners that stay until you deal with them, can
@@ -25,8 +27,7 @@ export default function Herald() {
             <span className="t-label herald__free">free</span>
           </div>
         </div>
-        <HeraldDemo />
-      </div>
+      </HeraldDemo>
     </section>
   );
 }
