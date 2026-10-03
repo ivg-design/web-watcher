@@ -11,11 +11,12 @@ import DownloadSection from "@/components/landing/DownloadSection";
 import ChangelogPreview from "@/components/landing/ChangelogPreview";
 import { getLatestRelease } from "@/lib/release";
 import { recentUpdates } from "@/lib/changelog";
+import { WatchProvider } from "@/components/watch/WatchContext";
 
 export default async function Home() {
   const release = await getLatestRelease();
   return (
-    <>
+    <WatchProvider>
       <SiteHeader />
       <main>
         <Hero release={release} />
@@ -29,6 +30,6 @@ export default async function Home() {
         <ChangelogPreview entries={recentUpdates(3)} />
       </main>
       <Footer />
-    </>
+    </WatchProvider>
   );
 }

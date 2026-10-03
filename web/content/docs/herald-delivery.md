@@ -15,6 +15,8 @@ Go to Settings → Notifications → Delivery. Two choices:
 
 One switch, no Herald, no change.
 
+![Settings, Notifications: the Delivery picker with Herald when available](/shots/settings-notifications.png)
+
 ## Stacking
 
 Email banners stack per sender address, so mail from one sender folds into a single stack in Herald.

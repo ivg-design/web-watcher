@@ -1,0 +1,438 @@
+<Rive version="1" kind="fragment">
+    <Artboard defaultStateMachineId="0:7" viewModelId="0:100" viewModelInstanceId="0:110" styleId="0:3" width="48" height="48" name="Mark" id="0:2">
+        <LayoutComponentStyle name="Artboard Style" id="0:3"/>
+        <!-- Eye badge (lower right) -->
+        <Node x="38" y="38.5" name="Eye" id="0:30">
+            <Node name="Lid" id="0:31">
+                <Shape name="Rim">
+                    <PointsPath isClosed="true" name="Path">
+                        <StraightVertex x="-9" y="0"/>
+                        <CubicMirroredVertex x="0" y="-7" rotation="0" distance="5"/>
+                        <StraightVertex x="9" y="0"/>
+                        <CubicMirroredVertex x="0" y="7" rotation="3.1415927" distance="5"/>
+                    </PointsPath>
+                    <Stroke thickness="1.5" join="round" transformAffectsStroke="false" name="Ink">
+                        <SolidColor colorValue="FF14161C" name="C"/>
+                    </Stroke>
+                </Shape>
+                <Node name="Iris" id="0:32">
+                    <DataBindContext sourcePathIds="0:100-0:101" propertyKey="13" converterId="0:120"/>
+                    <DataBindContext sourcePathIds="0:100-0:102" propertyKey="14" converterId="0:121"/>
+                    <Shape name="Pupil">
+                        <Ellipse width="6.4" height="6.4" name="Path"/>
+                        <Fill name="Fill"><SolidColor colorValue="FF14161C" name="C"/></Fill>
+                        <ClippingShape sourceId="0:33" name="Clip"/>
+                    </Shape>
+                    <Shape x="-1" y="-1.1" name="Glint">
+                        <Ellipse width="1.8" height="1.8" name="Path"/>
+                        <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="C"/></Fill>
+                        <ClippingShape sourceId="0:33" name="Clip"/>
+                    </Shape>
+                </Node>
+                <Shape name="Base" id="0:33">
+                    <PointsPath isClosed="true" name="Path">
+                        <StraightVertex x="-9" y="0"/>
+                        <CubicMirroredVertex x="0" y="-7" rotation="0" distance="5"/>
+                        <StraightVertex x="9" y="0"/>
+                        <CubicMirroredVertex x="0" y="7" rotation="3.1415927" distance="5"/>
+                    </PointsPath>
+                    <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="C"/></Fill>
+                </Shape>
+            </Node>
+        </Node>
+
+        <!-- Count capsule (top right) -->
+        <Node x="38" y="8" name="Capsule" id="0:40">
+            <DataBindContext sourcePathIds="0:100-0:103" propertyKey="18" converterId="0:122"/>
+            <Text sizingValue="autoWidth" originX="0.5" originY="0.5" y="0.5" name="Count">
+                <TextStylePaint fontSize="9.5" fontAssetId="0:130" name="Bold" id="0:41">
+                    <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="C"/></Fill>
+                    <TextStyleAxis tag="2003265652" axisValue="700" name="wght"/>
+                </TextStylePaint>
+                <TextValueRun styleId="0:41" text="0" name="Run" id="0:42">
+                    <DataBindContext sourcePathIds="0:100-0:103" propertyKey="268" converterId="0:123"/>
+                </TextValueRun>
+            </Text>
+            <Shape name="Pill">
+                <Rectangle width="18" height="14" cornerRadiusTL="7" name="Path"/>
+                <Stroke thickness="2" name="Keyline"><SolidColor colorValue="FFFFFFFF" name="C"/></Stroke>
+                <Fill name="Fill"><SolidColor colorValue="FF1F5EFF" name="C"/></Fill>
+            </Shape>
+        </Node>
+
+        <!-- Hourglass outline (rotates on flip; symmetric under 180 degrees) -->
+        <Node x="20" y="25" name="Glass" id="0:20">
+            <Shape name="CapTop">
+                <Rectangle y="-16.5" width="22" height="3" cornerRadiusTL="1.5" name="Path"/>
+                <Fill name="Fill"><SolidColor colorValue="FF14161C" name="C"/></Fill>
+            </Shape>
+            <Shape name="CapBottom">
+                <Rectangle y="16.5" width="22" height="3" cornerRadiusTL="1.5" name="Path"/>
+                <Fill name="Fill"><SolidColor colorValue="FF14161C" name="C"/></Fill>
+            </Shape>
+            <Shape name="Body" id="0:21">
+                <PointsPath isClosed="true" name="Path">
+                    <StraightVertex x="-8" y="-16"/>
+                    <StraightVertex x="8" y="-16"/>
+                    <StraightVertex x="8" y="-11" radius="1"/>
+                    <StraightVertex x="1.4" y="-1.6" radius="1"/>
+                    <StraightVertex x="1.4" y="1.6" radius="1"/>
+                    <StraightVertex x="8" y="11" radius="1"/>
+                    <StraightVertex x="8" y="16"/>
+                    <StraightVertex x="-8" y="16"/>
+                    <StraightVertex x="-8" y="11" radius="1"/>
+                    <StraightVertex x="-1.4" y="1.6" radius="1"/>
+                    <StraightVertex x="-1.4" y="-1.6" radius="1"/>
+                    <StraightVertex x="-8" y="-11" radius="1"/>
+                </PointsPath>
+                <Stroke thickness="2" join="round" name="Ink">
+                    <SolidColor colorValue="FF14161C" name="C"/>
+                </Stroke>
+            </Shape>
+        </Node>
+
+        <!-- Sand (never rotated; clipped to its own static copy of the glass body) -->
+        <Node x="20" y="25" name="Sand" id="0:22">
+            <Shape name="Mask" id="0:24">
+                <PointsPath isClosed="true" name="Path">
+                <StraightVertex x="-8" y="-16"/>
+                <StraightVertex x="8" y="-16"/>
+                <StraightVertex x="8" y="-11" radius="1"/>
+                <StraightVertex x="1.4" y="-1.6" radius="1"/>
+                <StraightVertex x="1.4" y="1.6" radius="1"/>
+                <StraightVertex x="8" y="11" radius="1"/>
+                <StraightVertex x="8" y="16"/>
+                <StraightVertex x="-8" y="16"/>
+                <StraightVertex x="-8" y="11" radius="1"/>
+                <StraightVertex x="-1.4" y="1.6" radius="1"/>
+                <StraightVertex x="-1.4" y="-1.6" radius="1"/>
+                <StraightVertex x="-8" y="-11" radius="1"/>
+            </PointsPath>
+            </Shape>
+            <Shape name="Stream">
+                <Rectangle y="-1.5" width="1.4" height="17.5" originY="0" name="Path" id="0:28"/>
+                <Fill name="Fill"><SolidColor colorValue="FF1F5EFF" name="C"/></Fill>
+                <ClippingShape sourceId="0:24" name="Clip"/>
+            </Shape>
+            <Shape name="Pile">
+                <Ellipse y="16" width="24" height="0" name="Path" id="0:27"/>
+                <Fill name="Fill"><SolidColor colorValue="FF1F5EFF" name="C"/></Fill>
+                <ClippingShape sourceId="0:24" name="Clip"/>
+            </Shape>
+            <Shape name="Upper">
+                <Rectangle y="-1.2" width="18" height="13" originY="1" name="Path" id="0:26"/>
+                <Fill name="Fill"><SolidColor colorValue="FF1F5EFF" name="C"/></Fill>
+                <ClippingShape sourceId="0:24" name="Clip"/>
+            </Shape>
+        </Node>
+
+        <!-- Hover hit area (writes Mark/hover itself so the file works without host JS) -->
+        <Shape name="Hit" id="0:50">
+            <Rectangle x="24" y="24" width="48" height="48" name="Path"/>
+            <Fill name="Fill"><SolidColor colorValue="00FFFFFF" name="C"/></Fill>
+        </Shape>
+
+        <StateMachine name="Mark" id="0:7">
+            <StateMachineListenerSingle targetId="0:50" listenerTypeValue="enter" name="HoverIn">
+                <ListenerViewModelChange>
+                    <BindablePropertyBoolean propertyValue="true">
+                        <DataBindContext sourcePathIds="0:100-0:104" propertyKey="634" direction="true"/>
+                    </BindablePropertyBoolean>
+                </ListenerViewModelChange>
+            </StateMachineListenerSingle>
+            <StateMachineListenerSingle targetId="0:50" listenerTypeValue="exit" name="HoverOut">
+                <ListenerViewModelChange>
+                    <BindablePropertyBoolean propertyValue="false">
+                        <DataBindContext sourcePathIds="0:100-0:104" propertyKey="634" direction="true"/>
+                    </BindablePropertyBoolean>
+                </ListenerViewModelChange>
+            </StateMachineListenerSingle>
+
+            <StateMachineLayer name="Idle" id="0:8">
+                <AnyState x="200" y="-120"/>
+                <ExitState x="400" y="-120"/>
+                <EntryState>
+                    <StateTransition stateToId="0:72" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyBoolean>
+                                <DataBindContext sourcePathIds="0:100-0:105" propertyKey="634"/>
+                            </BindablePropertyBoolean>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueBooleanComparator value="true"/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                    <StateTransition stateToId="0:70" >
+                    
+                </StateTransition>
+                </EntryState>
+                <AnimationState x="200" y="0" animationId="0:60" reset="true" id="0:70">
+                    <StateTransition stateToId="0:72" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyBoolean>
+                                <DataBindContext sourcePathIds="0:100-0:105" propertyKey="634"/>
+                            </BindablePropertyBoolean>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueBooleanComparator value="true"/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                    <StateTransition stateToId="0:71" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyTrigger>
+                                <DataBindContext sourcePathIds="0:100-0:106" propertyKey="686"/>
+                            </BindablePropertyTrigger>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueTriggerComparator/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                    <StateTransition stateToId="0:71" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100">
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyBoolean>
+                                <DataBindContext sourcePathIds="0:100-0:105" propertyKey="634"/>
+                            </BindablePropertyBoolean>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueBooleanComparator value="false"/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                </AnimationState>
+                <AnimationState x="400" y="0" animationId="0:61" reset="true" id="0:71">
+                    <StateTransition stateToId="0:72" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyBoolean>
+                                <DataBindContext sourcePathIds="0:100-0:105" propertyKey="634"/>
+                            </BindablePropertyBoolean>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueBooleanComparator value="true"/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                    <StateTransition stateToId="0:70" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100">
+                    
+                </StateTransition>
+                </AnimationState>
+                <AnimationState x="300" y="120" animationId="0:62" id="0:72">
+                    <StateTransition stateToId="0:70" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyBoolean>
+                                <DataBindContext sourcePathIds="0:100-0:105" propertyKey="634"/>
+                            </BindablePropertyBoolean>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueBooleanComparator value="false"/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                </AnimationState>
+            </StateMachineLayer>
+
+            <StateMachineLayer name="Pop" id="0:9">
+                <AnyState x="200" y="-120"/>
+                <ExitState x="400" y="-120"/>
+                <EntryState><StateTransition stateToId="0:73" >
+                    
+                </StateTransition></EntryState>
+                <AnimationState x="200" y="0" animationId="0:63" id="0:73">
+                    <StateTransition stateToId="0:74" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyTrigger>
+                                <DataBindContext sourcePathIds="0:100-0:106" propertyKey="686"/>
+                            </BindablePropertyTrigger>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueTriggerComparator/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                </AnimationState>
+                <AnimationState x="400" y="0" animationId="0:64" reset="true" id="0:74">
+                    <StateTransition stateToId="0:73" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100">
+                    
+                </StateTransition>
+                </AnimationState>
+            </StateMachineLayer>
+
+            <StateMachineLayer name="Blink" id="0:10">
+                <AnyState x="200" y="-120"/>
+                <ExitState x="400" y="-120"/>
+                <EntryState><StateTransition stateToId="0:75" >
+                    
+                </StateTransition></EntryState>
+                <AnimationState x="200" y="0" animationId="0:65" id="0:75">
+                    <StateTransition stateToId="0:76" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyBoolean>
+                                <DataBindContext sourcePathIds="0:100-0:104" propertyKey="634"/>
+                            </BindablePropertyBoolean>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueBooleanComparator value="true"/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                </AnimationState>
+                <AnimationState x="400" y="0" animationId="0:66" reset="true" id="0:76">
+                    <StateTransition stateToId="0:75" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyBoolean>
+                                <DataBindContext sourcePathIds="0:100-0:104" propertyKey="634"/>
+                            </BindablePropertyBoolean>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueBooleanComparator value="false"/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                    <StateTransition stateToId="0:77" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100">
+                    
+                </StateTransition>
+                </AnimationState>
+                <AnimationState x="600" y="0" animationId="0:67" reset="true" id="0:77">
+                    <StateTransition stateToId="0:78" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100">
+                    
+                </StateTransition>
+                </AnimationState>
+                <AnimationState x="800" y="0" animationId="0:68" reset="true" id="0:78">
+                    <StateTransition stateToId="0:75" >
+                    <TransitionViewModelCondition>
+                        <TransitionPropertyViewModelComparator>
+                            <BindablePropertyBoolean>
+                                <DataBindContext sourcePathIds="0:100-0:104" propertyKey="634"/>
+                            </BindablePropertyBoolean>
+                        </TransitionPropertyViewModelComparator>
+                        <TransitionValueBooleanComparator value="false"/>
+                    </TransitionViewModelCondition>
+                </StateTransition>
+                    <StateTransition stateToId="0:77" enableExitTime="true" exitTimeIsPercetange="true" exitTime="100">
+                    
+                </StateTransition>
+                </AnimationState>
+            </StateMachineLayer>
+        </StateMachine>
+
+        <!-- sand: 6 s, then flip -->
+        <LinearAnimation duration="360" name="sand" id="0:60">
+            <KeyedObject objectId="0:26"><KeyedProperty propertyKey="21">
+                <KeyFrameDouble value="13" frame="0" interpolationType="linear"/>
+                <KeyFrameDouble value="0" frame="360"/>
+            </KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:27"><KeyedProperty propertyKey="21">
+                <KeyFrameDouble value="0" frame="0" interpolationType="linear"/>
+                <KeyFrameDouble value="22" frame="360"/>
+            </KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:28"><KeyedProperty propertyKey="21">
+                <KeyFrameDouble value="17.5" frame="0" interpolationType="linear"/>
+                <KeyFrameDouble value="6.5" frame="360"/>
+            </KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:22"><KeyedProperty propertyKey="18">
+                <KeyFrameDouble value="0" frame="0" interpolationType="linear"/>
+                <KeyFrameDouble value="1" frame="10"/>
+            </KeyedProperty></KeyedObject>
+        </LinearAnimation>
+
+        <!-- flip: 500 ms ease-out-quint half turn; sand fades out, sand timeline restarts after -->
+        <LinearAnimation duration="30" name="flip" id="0:61">
+            <KeyedObject objectId="0:20"><KeyedProperty propertyKey="15">
+                <KeyFrameDouble value="0" frame="0" interpolationType="cubic">
+                    <CubicEaseInterpolator x1="0.22" y1="1" x2="0.36" y2="1"/>
+                </KeyFrameDouble>
+                <KeyFrameDouble value="3.1415927" frame="30"/>
+            </KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:22"><KeyedProperty propertyKey="18">
+                <KeyFrameDouble value="1" frame="0" interpolationType="linear"/>
+                <KeyFrameDouble value="0" frame="8"/>
+            </KeyedProperty></KeyedObject>
+        </LinearAnimation>
+
+        <!-- reduced motion: one static frame -->
+        <LinearAnimation duration="1" name="rest" id="0:62">
+            <KeyedObject objectId="0:26"><KeyedProperty propertyKey="21"><KeyFrameDouble value="7" frame="0"/></KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:27"><KeyedProperty propertyKey="21"><KeyFrameDouble value="12" frame="0"/></KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:28"><KeyedProperty propertyKey="21"><KeyFrameDouble value="0" frame="0"/></KeyedProperty></KeyedObject>
+            <KeyedObject objectId="0:22"><KeyedProperty propertyKey="18"><KeyFrameDouble value="1" frame="0"/></KeyedProperty></KeyedObject>
+        </LinearAnimation>
+
+        <LinearAnimation duration="1" name="popRest" id="0:63">
+            <KeyedObject objectId="0:30">
+                <KeyedProperty propertyKey="16"><KeyFrameDouble value="1" frame="0"/></KeyedProperty>
+                <KeyedProperty propertyKey="17"><KeyFrameDouble value="1" frame="0"/></KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:40">
+                <KeyedProperty propertyKey="16"><KeyFrameDouble value="1" frame="0"/></KeyedProperty>
+                <KeyedProperty propertyKey="17"><KeyFrameDouble value="1" frame="0"/></KeyedProperty>
+            </KeyedObject>
+        </LinearAnimation>
+
+        <LinearAnimation duration="22" name="pop" id="0:64">
+            <KeyedObject objectId="0:30">
+                <KeyedProperty propertyKey="16">
+                    <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1.3" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1" frame="22"/>
+                </KeyedProperty>
+                <KeyedProperty propertyKey="17">
+                    <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1.3" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1" frame="22"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:40">
+                <KeyedProperty propertyKey="16">
+                    <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1.18" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1" frame="22"/>
+                </KeyedProperty>
+                <KeyedProperty propertyKey="17">
+                    <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1.18" frame="6" interpolationType="cubic"><CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                    <KeyFrameDouble value="1" frame="22"/>
+                </KeyedProperty>
+            </KeyedObject>
+        </LinearAnimation>
+
+        <LinearAnimation duration="1" name="eyeOpen" id="0:65">
+            <KeyedObject objectId="0:31"><KeyedProperty propertyKey="17"><KeyFrameDouble value="1" frame="0"/></KeyedProperty></KeyedObject>
+        </LinearAnimation>
+        <LinearAnimation duration="180" name="hold3s" id="0:66">
+            <KeyedObject objectId="0:31"><KeyedProperty propertyKey="17">
+                <KeyFrameDouble value="1" frame="0"/>
+                <KeyFrameDouble value="1" frame="180"/>
+            </KeyedProperty></KeyedObject>
+        </LinearAnimation>
+        <LinearAnimation duration="10" name="blink" id="0:67">
+            <KeyedObject objectId="0:31"><KeyedProperty propertyKey="17">
+                <KeyFrameDouble value="1" frame="0" interpolationType="cubic"><CubicEaseInterpolator x1="0.42" y1="0" x2="1" y2="1"/></KeyFrameDouble>
+                <KeyFrameDouble value="0.06" frame="4" interpolationType="cubic"><CubicEaseInterpolator x1="0" y1="0" x2="0.58" y2="1"/></KeyFrameDouble>
+                <KeyFrameDouble value="1" frame="10"/>
+            </KeyedProperty></KeyedObject>
+        </LinearAnimation>
+        <LinearAnimation duration="240" name="hold4s" id="0:68">
+            <KeyedObject objectId="0:31"><KeyedProperty propertyKey="17">
+                <KeyFrameDouble value="1" frame="0"/>
+                <KeyFrameDouble value="1" frame="240"/>
+            </KeyedProperty></KeyedObject>
+        </LinearAnimation>
+    </Artboard>
+
+    <ViewModel defaultInstanceId="0:110" name="Mark" id="0:100">
+        <ViewModelPropertyNumber name="lookX" id="0:101"/>
+        <ViewModelPropertyNumber name="lookY" id="0:102"/>
+        <ViewModelPropertyNumber name="badge" id="0:103"/>
+        <ViewModelPropertyBoolean name="hover" id="0:104"/>
+        <ViewModelPropertyBoolean name="reduced" id="0:105"/>
+        <ViewModelPropertyTrigger name="tick" id="0:106"/>
+        <ViewModelInstance exports="true" name="Default" id="0:110">
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:101"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:102"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:103"/>
+            <ViewModelInstanceBoolean propertyValue="false" viewModelPropertyId="0:104"/>
+            <ViewModelInstanceBoolean propertyValue="false" viewModelPropertyId="0:105"/>
+            <ViewModelInstanceTrigger viewModelPropertyId="0:106"/>
+        </ViewModelInstance>
+    </ViewModel>
+
+    <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="-4" maxOutput="4" clampLower="true" clampUpper="true" name="LookX to px" id="0:120"/>
+    <DataConverterRangeMapper minInput="-1" maxInput="1" minOutput="-3" maxOutput="3" clampLower="true" clampUpper="true" name="LookY to px" id="0:121"/>
+    <DataConverterRangeMapper minInput="0" maxInput="1" minOutput="0" maxOutput="1" clampLower="true" clampUpper="true" name="Badge to opacity" id="0:122"/>
+    <DataConverterToString decimals="0" round="true" name="Count text" id="0:123"/>
+
+    <FontAsset file="AlbertSans.ttf" name="Albert Sans" id="0:130"/>
+</Rive>

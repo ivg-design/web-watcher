@@ -26,11 +26,15 @@ WebWatcher's settings are few. This page lists what is there and where each opti
 - **Selector.** Under Advanced: the CSS selector or XPath, if you want to type it yourself.
 - **Notification.** Icon, title and body.
 
+![Settings, Gmail section: connected account and notification options](/shots/settings-gmail.png)
+
 ## Gmail
 
 - **Connected accounts.** Add, reconnect or remove a Google account.
 - **Notify for every new email.** A toggle per account.
 - **Advanced: use your own Google OAuth client.** Import a client JSON. See [Sign in with Google](/docs/sign-in-with-google).
+
+![Settings, Notifications section: delivery, icon and templates](/shots/settings-notifications.png)
 
 ## Notifications
 

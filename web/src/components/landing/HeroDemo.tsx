@@ -5,65 +5,74 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DEMO_DURATION, DEMO_VIDEO_SRC, DEMO_POSTER, asset } from "@/lib/config";
 import "@/styles/hero.css";
 
+const PLAY_EVENT = "hero-demo-play";
+
+/** Text link under the CTAs; starts the same in-place playback as the frame's play control. */
+export function HeroWatchLink({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <button type="button" className={className} style={style} data-testid="hv-link" onClick={() => window.dispatchEvent(new Event(PLAY_EVENT))}>
+      <Play size={13} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+      Watch the demo · {DEMO_DURATION}
+    </button>
+  );
+}
+
 /**
- * The demo plays in place. Before the click it is a muted loop (when allowed and on screen);
- * the play button restarts it from the top with sound, on the same frame. No dialog.
+ * The poster (the real app) is all the visitor sees until they press play; the demo then plays
+ * in place, with sound, on the same frame. No dialog, no muted autoplay.
  */
 export default function HeroDemo() {
   const frameRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const onScreen = useRef(false);
   const [near, setNear] = useState(false);
-  const [engaged, setEngaged] = useState(false); // user chose to watch with sound
+  const [engaged, setEngaged] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(true);
-  const [rolling, setRolling] = useState(false); // first frame is actually painting
-
-  const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  const sync = useCallback(() => {
-    const v = videoRef.current;
-    if (!v || !v.getAttribute("src")) return;
-    if (engaged) return; // the viewer is in control
-    if (onScreen.current && !document.hidden && !reduced()) void v.play().catch(() => {});
-    else v.pause();
-  }, [engaged]);
+  const [muted, setMuted] = useState(false);
+  const [rolling, setRolling] = useState(false); // first frame is painting
+  const engagedRef = useRef(false);
 
   useEffect(() => {
     const el = frameRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const nearObs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setNear(true); nearObs.disconnect(); } }, { rootMargin: "300px" });
+    if (!el || typeof IntersectionObserver === "undefined") { setNear(true); return; }
+    const nearObs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setNear(true); nearObs.disconnect(); } }, { rootMargin: "400px" });
+    // never keep sound running off screen
     const seenObs = new IntersectionObserver(([e]) => {
-      onScreen.current = e.isIntersecting;
       const v = videoRef.current;
-      if (engaged && v && !e.isIntersecting) { v.pause(); setPaused(true); } // never keep sound running off screen
-      else sync();
-    }, { threshold: 0.25 });
+      if (!e.isIntersecting && engagedRef.current && v && !v.paused) v.pause();
+    }, { threshold: 0.2 });
     nearObs.observe(el);
     seenObs.observe(el);
-    const onVis = () => sync();
+    const onVis = () => { const v = videoRef.current; if (document.hidden && engagedRef.current && v && !v.paused) v.pause(); };
     document.addEventListener("visibilitychange", onVis);
     return () => { nearObs.disconnect(); seenObs.disconnect(); document.removeEventListener("visibilitychange", onVis); };
-  }, [sync, engaged]);
+  }, []);
 
-  useEffect(() => { if (near) sync(); }, [near, sync]);
-
-  const playWithSound = () => {
+  const start = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
     if (!v.getAttribute("src")) v.src = asset(DEMO_VIDEO_SRC);
+    if (window.matchMedia("(max-width: 1099px)").matches) {
+      frameRef.current?.scrollIntoView({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
     v.currentTime = 0;
     v.muted = false;
     v.loop = false;
+    engagedRef.current = true;
     setMuted(false);
     setEngaged(true);
     setPaused(false);
     void v.play().catch(() => { v.muted = true; setMuted(true); void v.play().catch(() => {}); });
-  };
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener(PLAY_EVENT, start);
+    return () => window.removeEventListener(PLAY_EVENT, start);
+  }, [start]);
+
   const togglePause = () => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) { void v.play(); setPaused(false); } else { v.pause(); setPaused(true); }
+    if (v.paused) void v.play(); else v.pause();
   };
   const toggleMute = () => {
     const v = videoRef.current;
@@ -72,12 +81,14 @@ export default function HeroDemo() {
     setMuted(v.muted);
   };
   const onEnded = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = true; v.loop = true; setMuted(true);
+    engagedRef.current = false;
     setEngaged(false);
-    v.currentTime = 0;
-    if (onScreen.current && !reduced()) void v.play().catch(() => {});
+    setRolling(false);
+    setPaused(false);
+    frameRef.current?.style.setProperty("--p", "0");
+  };
+  const onTime = (v: HTMLVideoElement) => {
+    if (v.duration) frameRef.current?.style.setProperty("--p", String(v.currentTime / v.duration));
   };
 
   return (
@@ -93,28 +104,27 @@ export default function HeroDemo() {
           height={900}
           fetchPriority="high"
         />
-        <div className={`hv__win${rolling ? " is-on" : ""}`}>
+        <div className={`hv__win${rolling ? " is-on" : ""}`} onClick={engaged ? togglePause : undefined}>
           <video
             ref={videoRef}
             data-testid="hv-video"
             src={near ? asset(DEMO_VIDEO_SRC) : undefined}
-            muted
-            loop
             playsInline
-            preload="none"
+            preload="metadata"
             aria-label="WebWatcher demo: picking the Rive community bell and getting the first notification"
-            onPlaying={() => setRolling(true)}
-            onPause={() => { if (engaged) setPaused(true); }}
+            onPlaying={() => { if (engagedRef.current) setRolling(true); }}
+            onPause={(e) => { if (engagedRef.current && !(e.target as HTMLVideoElement).ended) setPaused(true); }}
             onPlay={() => setPaused(false)}
             onEnded={onEnded}
-            onVolumeChange={(e) => setMuted((e.target as HTMLVideoElement).muted)}
+            onTimeUpdate={(e) => onTime(e.target as HTMLVideoElement)}
           />
+          <i className="hv__progress" aria-hidden="true" />
         </div>
 
         {!engaged && (
-          <button type="button" className="hv__play" data-testid="hv-play" onClick={playWithSound}>
+          <button type="button" className="hv__play" data-testid="hv-play" onClick={start}>
             <span className="hv__play-btn"><Play size={28} fill="currentColor" strokeWidth={0} style={{ marginLeft: 3 }} /></span>
-            <span className="hv__play-label">Play with sound · {DEMO_DURATION}</span>
+            <span className="hv__play-label">Watch the demo · {DEMO_DURATION}</span>
           </button>
         )}
 

@@ -56,7 +56,7 @@ for (const w of [1920, 1440]) {
   await page.screenshot({ path: `.screenshots/docs-${w}.png` });
 }
 for (const w of [834, 390]) {
-  for (const p of ["/docs/install", "/docs", "/"]) {
+  for (const p of ["/docs/install", "/docs", "/changelog"]) {
     await go(p, w, 844);
     const o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     ok(o <= 0, `no h-overflow @${w} ${p} (${o})`);
@@ -64,5 +64,67 @@ for (const w of [834, 390]) {
   await go("/docs/install", w, 844);
   await page.screenshot({ path: `.screenshots/docs-${w}.png` });
 }
+
+// entities in <title>, breadcrumbs, prev/next, lede; shots; details TOC; rail highlight
+let shots = 0;
+for (const p of slugs) {
+  await go(p, 1440);
+  const t = await page.evaluate(() => ({
+    title: document.title,
+    txt: [...document.querySelectorAll(".crumbs, .docs-pager a, .doc-title, .doc-lede, .docs-article h2, .docs-article h3")].map((e) => e.textContent),
+    imgs: [...document.querySelectorAll('.docs-article img[src*="/shots/"]')].map((i) => ({ w: i.naturalWidth, ss: i.getAttribute("srcset"), wa: i.getAttribute("width"), ha: i.getAttribute("height"), alt: i.alt, src: i.getAttribute("src") })),
+  }));
+  ok(![t.title, ...t.txt].some((x) => ent.test(x)), `no entities in title/crumbs/pager/headings ${p}`);
+  shots += t.imgs.length;
+  await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((x) => (x.loading = "eager")));
+  await new Promise((r) => setTimeout(r, 300));
+  const im = await page.evaluate(() => [...document.querySelectorAll('.docs-article img[src*="/shots/"]')].map((i) => ({ w: i.naturalWidth, ss: i.getAttribute("srcset"), wa: i.getAttribute("width"), ha: i.getAttribute("height"), alt: i.alt, src: i.getAttribute("src") })));
+  ok(im.every((i) => i.w > 0 && /2x/.test(i.ss || "") && i.wa && i.ha && i.alt.length > 8), `shots load with srcset/size/alt ${p} (${im.length})`);
+}
+ok(shots >= 14, `docs embed ${shots} /shots images`);
+
+// rail highlight while scrolling
+await go("/docs/finding-the-element", 1440, 700);
+const ids = await page.$$eval(".toc a", (as) => as.map((a) => a.getAttribute("href").slice(1)));
+const last = ids[ids.length - 1];
+await page.evaluate((id) => document.getElementById(id).scrollIntoView(), last);
+await new Promise((r) => setTimeout(r, 500));
+const on = await page.$eval(".toc a.is-on", (a) => a.getAttribute("href").slice(1)).catch(() => null);
+ok(on && on !== ids[0], `rail highlights current heading while scrolling (${on})`);
+
+// narrow: details inline TOC
+await go("/docs/finding-the-element", 834, 844);
+const det = await page.evaluate(() => { const d = document.querySelector("details.toc-inline, .toc-inline"); return d ? { tag: d.tagName, vis: d.getBoundingClientRect().height > 0, rail: getComputedStyle(document.querySelector(".toc")).display } : null; });
+ok(det && det.tag === "DETAILS" && det.vis && det.rail === "none", `details inline TOC at 834, rail hidden ${JSON.stringify(det)}`);
+
+// drawer + search at 390
+await go("/docs/install", 390, 844);
+await page.click(".docs-menu-btn");
+await page.waitForSelector("#docs-drawer a");
+const dr = await page.evaluate(() => ({ n: document.querySelectorAll("#docs-drawer a").length, ov: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
+ok(dr.n > 15 && dr.ov <= 0, `drawer opens at 390 (${dr.n} links, overflow ${dr.ov})`);
+await Promise.all([page.waitForFunction(() => location.pathname.endsWith("/docs/permissions")), page.click('#docs-drawer a[href$="/docs/permissions"]')]);
+await new Promise((r) => setTimeout(r, 300));
+ok(!(await page.$("#docs-drawer")), "drawer closes after navigating");
+await page.click(".search-btn");
+await page.waitForSelector(".search__box input");
+await page.type(".search__box input", "gmail");
+const rs = await page.$$eval(".search__list li", (l) => l.map((x) => x.textContent));
+ok(rs.length > 0 && !rs.some((x) => ent.test(x)), `search opens by button and returns results (${rs.length})`);
+await page.keyboard.press("Escape");
+await page.waitForFunction(() => !document.querySelector(".search__box"));
+await page.keyboard.press("/");
+ok(!!(await page.waitForSelector(".search__box input", { timeout: 2000 }).catch(() => null)), "search opens with /");
+await page.keyboard.press("Escape");
+
+// changelog
+await go("/changelog", 1440);
+const cl = await page.evaluate(() => {
+  const es = [...document.querySelectorAll(".log__entry")];
+  return { n: es.length, ids: es.every((e) => /^v\d/.test(e.id)), mono: es.slice(0, 3).map((e) => [...e.querySelectorAll("*")].some((x) => /mono/i.test(getComputedStyle(x).fontFamily))) };
+});
+ok(cl.n >= 3 && cl.ids && cl.mono.every(Boolean), `changelog ${cl.n} entries with anchors and mono columns`);
+await go("/docs/finding-the-element", 1440, 900); await page.screenshot({ path: ".screenshots/docs-finding-1440.png" });
+await go("/docs/finding-the-element", 390, 844); await page.screenshot({ path: ".screenshots/docs-finding-390.png" });
 await b.close();
 process.exit(fail ? 1 : 0);

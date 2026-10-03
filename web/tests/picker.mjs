@@ -1,5 +1,7 @@
-import { open, T, txt, click, sleep, ok, done } from "./_h.mjs";
+import { open, T, txt, has, sleep, ok, done } from "./_h.mjs";
 const { browser, page } = await open();
+// instant scroll: the page uses smooth scrolling, which makes the stock click helper hit stale coordinates
+const click = async (pg, id) => { await pg.$eval(T(id), (e) => e.scrollIntoView({ block: "center", behavior: "instant" })); await pg.click(T(id)); };
 const lit = () => page.$eval(T("pd-outline"), (e) => e.dataset.lit).catch(() => null);
 const attr = (id, a) => page.$eval(T(id), (e, a) => e.getAttribute(a), a);
 const center = (sel) => page.$eval(sel, (e) => { const r = e.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
@@ -20,7 +22,7 @@ ok((await lit()) === "inbox", "selecting Inbox moves the outline to the inbox li
 ok((await txt(page, "pd-strategy")) === "Text change" && (await txt(page, "pd-value")) === "Inbox (12)", "panel updates to Text change / Inbox (12)");
 const ob = await page.$eval(T("pd-outline"), (e) => e.getBoundingClientRect().toJSON());
 const ib = await page.$eval('[data-node="inbox"]', (e) => e.getBoundingClientRect().toJSON());
-ok(Math.abs(ob.left + 3 - ib.left) < 2 && Math.abs(ob.top + 3 - ib.top) < 2, "outline geometry matches the inbox element");
+ok(Math.abs(ob.left - ib.left) < 2 && Math.abs(ob.top - ib.top) < 2 && Math.abs(ob.width - ib.width) < 2, "outline geometry matches the inbox element");
 await click(page, "pd-cand-title");
 await sleep(300);
 ok((await lit()) === "title" && (await txt(page, "pd-strategy")) === "Document title", "Page title candidate outlines the tab title");
@@ -35,8 +37,12 @@ ok((await txt(page, "pd-live")).includes("Reading"), "live read starts as 'Readi
 await sleep(1000);
 ok((await txt(page, "pd-live")) === "3", "live read resolves to the badge value");
 ok((await txt(page, "pd-newrow")).includes("Not saved yet"), "popover shows the pending watcher row");
+await sleep(700);
 await click(page, "pd-add");
+await sleep(100);
 ok((await txt(page, "pd-newrow")).includes("Watching") && (await txt(page, "pd-newrow")).includes("3"), "Add watcher: row becomes live in the popover");
+if (await has(page, "watch-badge")) ok((await txt(page, "watch-badge")) === "1", "Add watcher ticks the header badge to 1");
+else console.log("SKIP header badge assertion: [data-testid=watch-badge] not present");
 await click(page, "pd-step-2");
 ok((await attr("pd", "data-step")) === "2", "step pill navigates back to Element");
 await click(page, "pd-step-3");
@@ -47,6 +53,7 @@ await click(page, "pd-step-2");
 
 // In-page outline mode
 await click(page, "pd-pick");
+await sleep(800);
 ok((await attr("pd", "data-picking")) === "1", "Pick in Safari switches to the in-page outline mode");
 let c = await center('[data-node="inbox"]');
 await page.mouse.move(c.x, c.y);
@@ -74,13 +81,54 @@ ok((await lit()) === "brand", "ArrowDown walks to the first child");
 await page.keyboard.press("ArrowRight");
 await sleep(260);
 ok((await lit()) === "inbox", "ArrowRight walks to the next sibling");
+const TB = "\u2190 \u2192 siblings \u00b7 \u2191 parent \u00b7 \u2193 child \u00b7 \u23ce use \u00b7 \u238b cancel";
+ok((await txt(page, "pd-tb-text")) === TB, "toolbar text is exact");
+ok((await txt(page, "pd-tb-use")) === "Use this element" && (await txt(page, "pd-tb-cancel")) === "Cancel", "toolbar has Use this element and Cancel");
+const tb = await page.$eval(T("pd-toolbar"), (e) => e.getBoundingClientRect().toJSON());
+const sw = await page.$eval(T("pd-sketch"), (e) => e.getBoundingClientRect().toJSON());
+ok(tb.left >= sw.left && tb.right <= sw.right && tb.bottom <= sw.bottom && Math.abs((tb.left + tb.right) / 2 - (sw.left + sw.right) / 2) < 3, "toolbar sits bottom-centre inside the Safari window");
+const oc = await page.$eval(T("pd-outline"), (e) => { const s = getComputedStyle(e); return [s.outlineColor, s.backgroundColor, e.dataset.state]; });
+ok(oc[0] === "rgb(59, 116, 246)" && oc[1] === "rgba(59, 116, 246, 0.15)" && oc[2] === "hover", "hover outline uses the exact blue fill and outline");
+ok((await txt(page, "pd-tip")) === "a[href='/inbox']", "tip label shows the selector");
 await page.keyboard.press("Enter");
-await sleep(1100);
+await sleep(120);
+const gc = await page.$eval(T("pd-outline"), (e) => [getComputedStyle(e).outlineColor, e.dataset.state]);
+ok(gc[1] === "selected" && gc[0] === "rgb(34, 197, 94)", "Enter turns the outline green (selected) before confirming");
+ok((await attr("pd", "data-step")) === "2", "still on Element during the 300 ms green state");
+await sleep(1000);
 ok((await attr("pd", "data-step")) === "3" && (await txt(page, "pd-live")) === "Inbox (12)", "Enter confirms: Confirm step reads Inbox (12)");
+
+// Add watcher records to the header mark when it exists
+await sleep(700);
+await click(page, "pd-add");
+await sleep(100);
+ok((await txt(page, "pd-newrow")).includes("Watching"), "Add watcher (picked via keyboard): popover row is live");
+await sleep(300);
+if (await has(page, "watch-badge")) ok((await txt(page, "watch-badge")) === "2", "second Add watcher ticks the badge to 2 (once per add)");
+else console.log("SKIP header badge assertion: [data-testid=watch-badge] not present");
 
 // Escape cancels
 await click(page, "pd-step-2");
 await click(page, "pd-pick");
 await page.keyboard.press("Escape");
 ok((await attr("pd", "data-picking")) === "0", "Escape leaves the in-page mode");
+// 390-wide: no overflow, Safari first, toolbar inside window, touch targets
+await page.setViewport({ width: 390, height: 844 });
+await page.reload({ waitUntil: "networkidle2" });
+await page.$eval("#picker", (e) => e.scrollIntoView());
+// scoped to the picker section: other sections' off-canvas notices are not this demo's concern
+const ov = () => page.evaluate(() => { const w = document.documentElement.clientWidth; const sec = document.querySelector("#picker"); return Math.max(sec.scrollWidth - w, ...[...sec.querySelectorAll("*")].map((e) => Math.round(e.getBoundingClientRect().right - w))); });
+ok((await ov()) <= 0, "390: no horizontal overflow (step 1)");
+const order = await page.evaluate(() => { const a = document.querySelector(".pd__safari").getBoundingClientRect(), b = document.querySelector(".pd__sheet").getBoundingClientRect(); return [a.top < b.top, a.width, b.width]; });
+ok(order[0] && order[1] > 300, "390: Safari window first, full width");
+await click(page, "pd-scan");
+await sleep(1000);
+ok((await ov()) <= 0, "390: no horizontal overflow (step 2)");
+const small = await page.evaluate(() => [...document.querySelectorAll(".pd button")].filter((b) => !b.disabled && b.offsetParent && b.getBoundingClientRect().height < 43).map((b) => b.textContent.trim().slice(0, 20)));
+ok(small.length === 0, "390: all enabled controls >= 44px tall" + (small.length ? " (" + small.join(", ") + ")" : ""));
+await click(page, "pd-pick");
+await sleep(900);
+const m = await page.evaluate(() => { const t = document.querySelector('[data-testid="pd-toolbar"]').getBoundingClientRect(), w = document.querySelector('[data-testid="pd-sketch"]').getBoundingClientRect(); return t.left >= w.left && t.right <= w.right && t.bottom <= w.bottom && t.top >= w.top; });
+ok(m, "390: toolbar stays inside the Safari window");
+ok((await ov()) <= 0, "390: no horizontal overflow (picking)");
 await done(browser);

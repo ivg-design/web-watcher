@@ -31,12 +31,20 @@ export const NODES: Record<NodeId, PageNode> = {
   item3: n("item3", "Third post", "ul.feed › li:nth-child(3)", "Text change", "Mei: Luau pointer events", "feed"),
 };
 
-/** What Scan page finds, ranked. The badge is the best match. */
-export const CANDIDATES: { id: NodeId; title: string; chip: string; best?: boolean }[] = [
-  { id: "badge", title: "Notifications bell · badge “3”", chip: "badge count", best: true },
-  { id: "inbox", title: "Inbox link · “Inbox (12)”", chip: "text with number" },
-  { id: "title", title: "Page title · “(3) Feed — Rive”", chip: "document title" },
-  { id: "feed", title: "Feed list · 48 children", chip: "subtree change" },
+export type Group = "number" | "later" | "other";
+export const GROUPS: { id: Group; title: string }[] = [
+  { id: "number", title: "Showing a number now" },
+  { id: "later", title: "Could get a badge later" },
+  { id: "other", title: "Other" },
+];
+
+/** What Scan page finds, ranked and grouped like the real Add Watcher window. The badge is the best match. */
+export const CANDIDATES: { id: NodeId; group: Group; title: string; detail: string; chip: string; best?: boolean }[] = [
+  { id: "badge", group: "number", title: "3 · on the notifications bell", detail: "Small number on the bell icon in the page header, found by its unique name", chip: "3", best: true },
+  { id: "inbox", group: "number", title: "Inbox (12)", detail: "Link text with a number in it, found by its address", chip: "12" },
+  { id: "title", group: "number", title: "Tab title · (3) Feed — Rive", detail: "The page title carries the unread count", chip: "(3)" },
+  { id: "bell", group: "later", title: "Notifications bell", detail: "Icon with a counter inside. Keeps reading as soon as one appears", chip: "none yet" },
+  { id: "feed", group: "other", title: "Latest topics · feed list", detail: "The list of topics, 48 items. Notifies when anything inside changes", chip: "48 items" },
 ];
 
 /** Nodes that can be walked to in the in-page picker (everything inside the page DOM). */

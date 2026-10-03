@@ -1,3 +1,4 @@
+import "@/styles/download.css";
 import Link from "next/link";
 import { asset, FORGE_LINKS, REPO_URL } from "@/lib/config";
 
@@ -23,10 +24,10 @@ export default function Footer() {
     <footer className="footer">
       <div className="container footer__grid">
         <div className="footer__brand">
-          { }
           <img src={asset("/images/webwatcher-icon.png")} alt="" width={28} height={28} />
           <strong>WebWatcher</strong>
-          <p>A menu-bar page watcher for macOS by IVG Design. MIT license.</p>
+          <p>A menu-bar page watcher for macOS by IVG Design.</p>
+          <p className="footer__facts">macOS 13+ · Apple Silicon · MIT</p>
           <p style={{ marginTop: 8 }}>© 2026 IVG Design</p>
         </div>
         {col("Product", [

@@ -49,7 +49,10 @@ code, .mono { font-family: var(--font-mono); }
 ::selection { background: var(--soft); }
 
 .container { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
-.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.eyebrow { display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+/* Section numbering, editorial: "02 / Guided picker". Use <span className="eyebrow__n">02</span> as the first child. */
+.eyebrow__n { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.eyebrow__n::after { content: "/"; margin-left: 12px; color: var(--line); }
 .h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.035em; line-height: 1.04; font-size: clamp(32px, 5.2vw, 44px); margin-top: 12px; text-wrap: balance; }
 .lede { color: var(--muted); font-size: clamp(16px, 2vw, 18px); line-height: 1.6; max-width: 40em; margin-top: 16px; }
 .section { padding-block: clamp(64px, 9vw, 96px); position: relative; }

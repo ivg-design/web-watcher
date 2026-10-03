@@ -1,7 +1,7 @@
 import { Download } from "lucide-react";
 import type { LatestRelease } from "@/lib/release";
 import { REPO_URL } from "@/lib/config";
-import HeroDemo from "./HeroDemo";
+import HeroDemo, { HeroWatchLink } from "./HeroDemo";
 import "@/styles/sections-a.css";
 import "@/styles/hero.css";
 
@@ -30,7 +30,8 @@ export default function Hero({ release }: { release: LatestRelease }) {
             </a>
             <a className="btn btn--ghost" href={REPO_URL}>View on GitHub</a>
           </div>
-          <p className="hero__facts hero-in" style={{ "--i": 5 } as React.CSSProperties}>
+          <HeroWatchLink className="hero__watch hero-in" style={{ "--i": 5 } as React.CSSProperties} />
+          <p className="hero__facts hero-in" style={{ "--i": 6 } as React.CSSProperties}>
             Apple Silicon (arm64) only · macOS 13+ · Developer ID signed and notarized · MIT license · No account, no server, nothing leaves your Mac
           </p>
         </div>

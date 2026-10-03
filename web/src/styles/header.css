@@ -2,3 +2,5 @@
 .site-header .brand { gap: 12px; }
 .site-header .brand img { width: 66px; height: 66px; border-radius: 15px; flex: none; }
 @media (max-width: 480px) { .site-header .brand { gap: 10px; font-size: 17px; } }
+.site-header__end { gap: 12px; }
+@media (min-width: 1100px) { .site-header__end { gap: 20px; } }

@@ -1,7 +1,8 @@
 import "@/styles/sections-b.css";
+import "@/styles/gmail.css";
 import Reveal from "@/components/motion/Reveal";
 import { asset } from "@/lib/config";
-import GmailCard from "./b/GmailCard";
+import GmailDemo from "./gmail/GmailDemo";
 
 function GoogleG() {
   return (
@@ -19,7 +20,7 @@ export default function Gmail() {
     <section id="gmail" className="section">
       <div className="container gmail__grid">
         <Reveal>
-          <div className="eyebrow">Gmail sender watchers</div>
+          <p className="eyebrow"><span className="eyebrow__n">04</span>Gmail sender watchers</p>
           <h2 className="display">Watch a sender, not an inbox.</h2>
           <p className="gmail__p">
             Sign in with Google once. Then watch one address, several, or a whole domain. New mail from them becomes a
@@ -34,20 +35,19 @@ export default function Gmail() {
             Scope: gmail.modify only · tokens stay in your Keychain · the app ships its own OAuth client, nothing to
             configure
           </p>
-        </Reveal>
-        <Reveal delay={0.1}>
-          <div className="gshot">
+          <figure className="gmail__fig">
             <img
               src={asset("/shots/gmail-sender-editor.png")}
               srcSet={`${asset("/shots/gmail-sender-editor.png")} 1x, ${asset("/shots/gmail-sender-editor@2x.png")} 2x`}
               alt="The Gmail sender watcher editor in WebWatcher"
-              width={560}
-              height={732}
+              width={220}
+              height={288}
               loading="lazy"
             />
-          </div>
-          <GmailCard />
+            <figcaption>The sender watcher editor</figcaption>
+          </figure>
         </Reveal>
+        <GmailDemo />
       </div>
     </section>
   );

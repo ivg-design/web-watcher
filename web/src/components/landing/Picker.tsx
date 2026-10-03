@@ -5,7 +5,7 @@ export default function Picker() {
     <section id="picker" className="picker" aria-labelledby="picker-title">
       <div className="container">
         <div className="picker__head">
-          <p className="eyebrow">The guided picker</p>
+          <p className="eyebrow"><span className="eyebrow__n">02</span>Guided picker</p>
           <h2 id="picker-title" className="picker__h">It reads the page so you don’t have to.</h2>
           <p className="picker__p">
             This is the real flow, on a sketch of a community page. Scan the page, select a candidate to see exactly what

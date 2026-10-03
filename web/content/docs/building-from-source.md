@@ -1,5 +1,9 @@
 The source is MIT licensed on GitHub. A plain build works out of the box.
 
+## Requirements
+
+WebWatcher is an Apple Silicon (arm64) app for macOS 13 or later, so build on an Apple Silicon Mac with the Swift toolchain or Xcode installed.
+
 ## Build
 
 ```bash

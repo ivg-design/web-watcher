@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { asset, REPO_URL } from "@/lib/config";
+import WatchMark from "@/components/watch/WatchMark";
 import "@/styles/header.css";
 
 const LINKS = [
@@ -35,6 +36,7 @@ export default function SiteHeader() {
           <a className="gh-link" href={REPO_URL} target="_blank" rel="noopener noreferrer">
             GitHub <ArrowUpRight size={14} aria-hidden />
           </a>
+          <WatchMark />
           <Link className="btn btn--dark btn--sm" href={asset("/#download")}>Download for Mac</Link>
           <button
             className="menu-btn"
