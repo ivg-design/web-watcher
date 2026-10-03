@@ -1,20 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Albert_Sans, Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import StructuredData from "@/components/StructuredData";
 import { asset } from "@/lib/config";
 import { CANONICAL_HOST, SITE_DESCRIPTION, SITE_TITLE, toCanonicalUrl } from "@/lib/seo";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["600", "800"],
-  display: "swap",
-});
-const albert = Albert_Sans({
-  variable: "--font-albert",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  axes: ["wdth"],
   display: "swap",
 });
 const jetbrains = JetBrains_Mono({
@@ -49,11 +43,11 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large", "max-video-preview": -1 },
 };
 
-export const viewport: Viewport = { themeColor: "#F4F5FA", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#1A1C23", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${albert.variable} ${jetbrains.variable}`}>
+    <html lang="en" className={`${archivo.variable} ${jetbrains.variable}`}>
       <body>
         {children}
         <StructuredData />

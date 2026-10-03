@@ -20,16 +20,62 @@
   --ease-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --font-display: var(--font-bricolage), "Helvetica Neue", Arial, sans-serif;
-  --font-body: var(--font-albert), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+  --font-body: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
 }
 @media (min-width: 640px) { :root { --gutter: 40px; } }
 @media (min-width: 1024px) { :root { --gutter: 64px; } }
 @media (min-width: 1280px) { :root { --gutter: 80px; } }
 
+/* v3 night/paper tokens (see .reviews/v3-concept.md). Landing scopes: <main class="night">, sections with .paper. Docs keep the v2 tokens above. */
+:root {
+  --n-bg: oklch(0.205 0.012 255);
+  --n-bg-2: oklch(0.245 0.013 255);
+  --n-bg-3: oklch(0.285 0.013 255);
+  --n-line: oklch(0.34 0.012 255);
+  --n-line-2: oklch(0.42 0.012 255);
+  --n-ink: oklch(0.96 0.006 90);
+  --n-ink-2: oklch(0.8 0.008 90);
+  --n-muted: oklch(0.66 0.01 255);
+  --n-signal: oklch(0.63 0.22 27);
+  --n-signal-ink: oklch(0.72 0.2 27);
+  --p-bg: oklch(0.955 0.008 90);
+  --p-bg-2: oklch(0.985 0.005 90);
+  --p-ink: oklch(0.2 0.012 255);
+  --p-ink-2: oklch(0.36 0.012 255);
+  --p-line: oklch(0.86 0.01 90);
+  --p-muted: oklch(0.48 0.012 255);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  --ease-step: steps(1, end);
+}
+/* Night scope: remaps the v2 names so existing section CSS inherits the dark surface. */
+.night {
+  --bg: var(--n-bg); --surface: var(--n-bg-2); --ink: var(--n-ink); --muted: var(--n-muted); --line: var(--n-line);
+  --accent: var(--n-ink); --accent-ink: var(--n-ink-2); --soft: var(--n-bg-3); --dark: var(--n-bg-2); --dark-2: var(--n-bg-3);
+  --on-dark: var(--n-ink); --on-dark-muted: var(--n-ink-2);
+  background: var(--n-bg); color: var(--n-ink);
+}
+.paper {
+  --bg: var(--p-bg); --surface: var(--p-bg-2); --ink: var(--p-ink); --muted: var(--p-muted); --line: var(--p-line);
+  --accent: var(--p-ink); --accent-ink: var(--p-ink-2); --soft: oklch(0.92 0.01 90);
+  background: var(--p-bg); color: var(--p-ink);
+}
+/* Type: one family, two widths. */
+.t-cond { font-family: var(--font-display); font-stretch: 62%; font-weight: 800; letter-spacing: -0.02em; line-height: 0.92; }
+.t-wide { font-family: var(--font-display); font-stretch: 125%; font-weight: 200; letter-spacing: -0.06em; line-height: 1; }
+.t-num { font-variant-numeric: tabular-nums lining-nums; }
+.t-label { font-family: var(--font-mono); font-weight: 500; font-size: 12.5px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; color: var(--muted); }
+.h2-v3 { font-family: var(--font-display); font-stretch: 62%; font-weight: 800; letter-spacing: -0.02em; line-height: 0.94; font-size: clamp(40px, 5.6vw, 72px); text-wrap: balance; }
+/* Roll: a numeral steps to its next value (old up, new in from below). Markup: <span class="roll"><span key={v} class="roll__v">{v}</span></span> */
+.roll { display: inline-grid; overflow: hidden; vertical-align: baseline; }
+.roll__v { grid-area: 1 / 1; animation: roll-in 180ms var(--ease-expo) both; }
+.roll__v.is-out { animation: roll-out 180ms var(--ease-expo) both; pointer-events: none; }
+@keyframes roll-in { from { transform: translateY(0.6em); } to { transform: none; } }
+@keyframes roll-out { from { transform: none; } to { transform: translateY(-0.6em); } }
+
 @theme inline {
-  --font-sans: var(--font-albert);
+  --font-sans: var(--font-archivo);
   --color-accent: var(--accent);
 }
 
