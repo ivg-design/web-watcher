@@ -20,6 +20,8 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@fontsource/albert-sans": "^5.3.0",
+    "@fontsource/bricolage-grotesque": "^5.3.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

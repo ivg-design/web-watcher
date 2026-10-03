@@ -1,0 +1,13 @@
+# WebWatcher
+
+> WebWatcher is a free, open-source (MIT) macOS menu bar app that watches badges, counters, text and Gmail senders you would otherwise refresh by hand, and sends a native notification when they change. It reads your existing Safari sessions (no re-login), runs locally, and has no account or server.
+
+- Requires macOS 13+, Apple Silicon. Developer ID signed and notarized DMG, about 3 MB.
+- Watch any element via CSS selector or XPath, with a guided picker in Safari; notifies only on change; check interval 15 seconds to 30 minutes.
+- Gmail sender and domain watchers (OAuth, read-only), custom notification icon, title and body, optional Herald delivery.
+
+## Links
+- Home: https://forge.mograph.life/apps/webwatcher/
+- Docs: https://forge.mograph.life/apps/webwatcher/docs
+- Changelog: https://forge.mograph.life/apps/webwatcher/changelog
+- Source and releases: https://github.com/ivg-design/web-watcher
