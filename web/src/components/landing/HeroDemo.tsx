@@ -12,7 +12,7 @@ export function HeroWatchLink({ className, style }: { className?: string; style?
   return (
     <button type="button" className={className} style={style} data-testid="hv-link" onClick={() => window.dispatchEvent(new Event(PLAY_EVENT))}>
       <Play size={13} fill="currentColor" strokeWidth={0} aria-hidden="true" />
-      Watch the demo · {DEMO_DURATION}
+      Watch the demo, {DEMO_DURATION}
     </button>
   );
 }
@@ -127,9 +127,9 @@ export default function HeroDemo() {
         {!engaged && (
           <>
             <div className="hv__hit" onClick={start} aria-hidden="true" />
-            <button type="button" className="hv__play" data-testid="hv-play" aria-label={`Watch the demo · ${DEMO_DURATION}`} onClick={start}>
+            <button type="button" className="hv__play" data-testid="hv-play" aria-label={`Watch the demo, ${DEMO_DURATION}`} onClick={start}>
               <span className="hv__play-btn"><Play size={14} fill="currentColor" strokeWidth={0} style={{ marginLeft: 1 }} /></span>
-              <span className="hv__play-label">Watch the demo · {DEMO_DURATION}</span>
+              <span className="hv__play-label">Watch the demo, {DEMO_DURATION}</span>
             </button>
           </>
         )}

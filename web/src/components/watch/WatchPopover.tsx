@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Info, Mail, Plus, Power, RefreshCw, Settings } from "lucide-react";
-import type { WatchChange } from "./WatchContext";
+import { useWatch, type WatchChange } from "./WatchContext";
 import { asset } from "@/lib/config";
 import { CHECK_EVENT, WINK_EVENT } from "./events";
-import { relTime } from "./relTime";
+import { intervalLabel, relTime } from "./relTime";
 import "@/styles/watch.css";
 
 export interface Anchor { top: number; right: number; sheet: boolean }
@@ -63,6 +63,7 @@ function Row({ w, now }: { w: Watcher; now: number }) {
 export default function WatchPopover({ anchor, changes, lastCheck, onClose, triggerRef }: Props) {
   const panel = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  const { interval } = useWatch();
   const [now, setNow] = useState(() => Date.now());
   const open = !!anchor;
 
@@ -70,7 +71,7 @@ export default function WatchPopover({ anchor, changes, lastCheck, onClose, trig
     if (!open) return;
     panel.current?.focus({ preventScroll: true });
     const t0 = window.setTimeout(() => setNow(Date.now()), 0);
-    const iv = window.setInterval(() => setNow(Date.now()), 5000);
+    const iv = window.setInterval(() => setNow(Date.now()), 1000);
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); onClose(); } };
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
@@ -88,7 +89,7 @@ export default function WatchPopover({ anchor, changes, lastCheck, onClose, trig
   const mail = rows.filter((w) => w.c.source === "gmail");
   const sheet = anchor?.sheet ?? false;
   
-  const ago = Math.max(1, Math.round((now - lastCheck) / 1000));
+  const ago = Math.max(0, Math.round((now - lastCheck) / 1000));
 
   return createPortal(
     <AnimatePresence>
@@ -143,7 +144,8 @@ export default function WatchPopover({ anchor, changes, lastCheck, onClose, trig
           <button type="button" className="ww-pop__item" data-testid="watch-check" onClick={() => window.dispatchEvent(new Event(CHECK_EVENT))}>
             <RefreshCw size={16} aria-hidden /> Check All Now
           </button>
-          <p className="ww-pop__last">Last check: {ago} second{ago === 1 ? "" : "s"} ago</p>
+          <p className="ww-pop__last" data-testid="watch-interval">Checks every {intervalLabel(interval)}</p>
+          <p className="ww-pop__last" data-testid="watch-last">Last check: {ago < 2 ? "just now" : `${ago} seconds ago`}</p>
           <hr />
           <a className="ww-pop__item" data-testid="watch-settings" href={asset("/docs/settings")} onClick={() => onClose(false)}><Settings size={16} aria-hidden /> Settings…</a>
           <button type="button" className="ww-pop__item" data-testid="watch-quit" onClick={() => { onClose(); window.dispatchEvent(new Event(WINK_EVENT)); }}><Power size={16} aria-hidden /> Quit</button>

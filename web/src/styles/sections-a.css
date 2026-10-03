@@ -1,20 +1,3 @@
-/* Hero */
-.hero { padding-block: clamp(40px, 7vw, 64px) clamp(56px, 8vw, 128px); overflow-x: clip; }
-.badge { display: inline-flex; align-items: center; gap: 8px; background: var(--soft); color: var(--accent); font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; line-height: 1.3; }
-.badge i { width: 8px; height: 8px; border: 1.5px solid var(--accent); border-radius: 50%; display: inline-block; flex: none; }
-.hero__title { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.05em; line-height: 1.08; font-size: clamp(44px, 12.4vw, 92px); margin-top: 28px; }
-.hero__title span { display: block; padding-bottom: 0.02em; }
-.hero__title .accent { color: var(--accent); }
-.hero__lede { color: var(--muted); font-size: clamp(17px, 2.2vw, 20px); line-height: 1.6; max-width: 680px; margin-top: 32px; overflow-wrap: break-word; }
-.hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
-.hero__facts { color: var(--muted); font-size: 13px; margin-top: 24px; line-height: 1.6; overflow-wrap: break-word; }
-
-/* Hero entrance: one staggered reveal on load (CSS only, SSR-safe) */
-.hero-in { animation: hero-in 800ms var(--ease-expo) both; animation-delay: calc(var(--i, 0) * 70ms); }
-@keyframes hero-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-.hero__copy { min-width: 0; }
-@media (max-width: 420px) { .hero__cta .btn { width: 100%; } }
-@media (prefers-reduced-motion: reduce) {
-  .hero-in { animation: none; }
-}
+/* Hero (layout lives in hero.css and moment.css) */
+.hero { padding-block: clamp(32px, 5vw, 56px) clamp(56px, 8vw, 128px); overflow-x: clip; }
 #watch-types .lede { max-width: 46em; }

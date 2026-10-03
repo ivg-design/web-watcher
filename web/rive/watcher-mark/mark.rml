@@ -12,7 +12,7 @@
                         <CubicMirroredVertex x="0" y="7" rotation="3.1415927" distance="5"/>
                     </PointsPath>
                     <Stroke thickness="1.5" join="round" transformAffectsStroke="false" name="Ink">
-                        <SolidColor colorValue="FF14161C" name="C"/>
+                        <SolidColor colorValue="FFF3F1EC" name="C"/>
                     </Stroke>
                 </Shape>
                 <Node name="Iris" id="0:32">
@@ -20,7 +20,7 @@
                     <DataBindContext sourcePathIds="0:100-0:102" propertyKey="14" converterId="0:121"/>
                     <Shape name="Pupil">
                         <Ellipse width="6.4" height="6.4" name="Path"/>
-                        <Fill name="Fill"><SolidColor colorValue="FF14161C" name="C"/></Fill>
+                        <Fill name="Fill"><SolidColor colorValue="FF1A1C23" name="C"/></Fill>
                         <ClippingShape sourceId="0:33" name="Clip"/>
                     </Shape>
                     <Shape x="-1" y="-1.1" name="Glint">
@@ -55,8 +55,8 @@
             </Text>
             <Shape name="Pill">
                 <Rectangle width="18" height="14" cornerRadiusTL="7" name="Path"/>
-                <Stroke thickness="2" name="Keyline"><SolidColor colorValue="FFFFFFFF" name="C"/></Stroke>
-                <Fill name="Fill"><SolidColor colorValue="FF1F5EFF" name="C"/></Fill>
+                <Stroke thickness="2" name="Keyline"><SolidColor colorValue="FF1A1C23" name="C"/></Stroke>
+                <Fill name="Fill"><SolidColor colorValue="FFFF3B30" name="C"/></Fill>
             </Shape>
         </Node>
 
@@ -64,11 +64,11 @@
         <Node x="20" y="25" name="Glass" id="0:20">
             <Shape name="CapTop">
                 <Rectangle y="-16.5" width="22" height="3" cornerRadiusTL="1.5" name="Path"/>
-                <Fill name="Fill"><SolidColor colorValue="FF14161C" name="C"/></Fill>
+                <Fill name="Fill"><SolidColor colorValue="FFF3F1EC" name="C"/></Fill>
             </Shape>
             <Shape name="CapBottom">
                 <Rectangle y="16.5" width="22" height="3" cornerRadiusTL="1.5" name="Path"/>
-                <Fill name="Fill"><SolidColor colorValue="FF14161C" name="C"/></Fill>
+                <Fill name="Fill"><SolidColor colorValue="FFF3F1EC" name="C"/></Fill>
             </Shape>
             <Shape name="Body" id="0:21">
                 <PointsPath isClosed="true" name="Path">
@@ -86,7 +86,7 @@
                     <StraightVertex x="-8" y="-11" radius="1"/>
                 </PointsPath>
                 <Stroke thickness="2" join="round" name="Ink">
-                    <SolidColor colorValue="FF14161C" name="C"/>
+                    <SolidColor colorValue="FFF3F1EC" name="C"/>
                 </Stroke>
             </Shape>
         </Node>
@@ -111,17 +111,17 @@
             </Shape>
             <Shape name="Stream">
                 <Rectangle y="-1.5" width="1.4" height="17.5" originY="0" name="Path" id="0:28"/>
-                <Fill name="Fill"><SolidColor colorValue="FF1F5EFF" name="C"/></Fill>
+                <Fill name="Fill"><SolidColor colorValue="FFF3F1EC" name="C"/></Fill>
                 <ClippingShape sourceId="0:24" name="Clip"/>
             </Shape>
             <Shape name="Pile">
                 <Ellipse y="16" width="24" height="0" name="Path" id="0:27"/>
-                <Fill name="Fill"><SolidColor colorValue="FF1F5EFF" name="C"/></Fill>
+                <Fill name="Fill"><SolidColor colorValue="FFF3F1EC" name="C"/></Fill>
                 <ClippingShape sourceId="0:24" name="Clip"/>
             </Shape>
             <Shape name="Upper">
                 <Rectangle y="-1.2" width="18" height="13" originY="1" name="Path" id="0:26"/>
-                <Fill name="Fill"><SolidColor colorValue="FF1F5EFF" name="C"/></Fill>
+                <Fill name="Fill"><SolidColor colorValue="FFF3F1EC" name="C"/></Fill>
                 <ClippingShape sourceId="0:24" name="Clip"/>
             </Shape>
         </Node>

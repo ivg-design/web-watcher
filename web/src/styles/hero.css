@@ -1,13 +1,30 @@
-/* Hero: copy in the container; at >=1100 the frame bleeds off the right edge (section clips overflow-x) */
-.hero__grid { display: grid; gap: 40px; align-items: center; }
+/* Hero v3: the fold (headline + the moment) and the recording row. Entrances are hard cuts, never tweens. */
+.cut { animation: cut 1ms steps(1, end) both; animation-delay: calc(var(--i, 0) * 60ms); }
+@keyframes cut { from { visibility: hidden; } to { visibility: visible; } }
+@media (prefers-reduced-motion: reduce) { .cut, .mo__num, .mo__strip, .mo__meta { animation: none !important; } }
+
+.hero__fold { display: grid; gap: clamp(28px, 5vw, 40px) 0; grid-template-areas: "title" "moment" "copy"; grid-template-columns: minmax(0, 1fr); }
+.hero__title { grid-area: title; font-size: clamp(56px, 15.5vw, 72px); }
+.hero__title span { display: block; }
+.hero__title [data-lit] { color: var(--n-muted); }
+.hero__title [data-lit="1"] { color: var(--n-ink); }
+.hero__moment { grid-area: moment; min-width: 0; }
+.hero__copy { grid-area: copy; min-width: 0; align-self: start; }
+.hero__lede { color: var(--n-ink-2); font-size: 20px; line-height: 1.45; max-width: 34em; overflow-wrap: break-word; }
+.hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.hero__ver { font-family: var(--font-mono); font-weight: 500; font-size: 13px; opacity: 0.7; }
+.hero__facts { font-size: 13px; line-height: 1.6; margin-top: 24px; max-width: 40em; color: var(--n-muted); }
+.hero .hero__watch { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 6px 0; min-height: 44px; background: none; border: 0; color: var(--n-ink); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; text-decoration: underline; text-decoration-color: var(--n-line-2); text-underline-offset: 5px; text-decoration-thickness: 1px; }
+.hero .hero__watch:hover { text-decoration-color: var(--n-ink); }
+@media (max-width: 480px) { .hero__cta .btn { width: 100%; } .hero__lede { font-size: 18px; } }
+@media (min-width: 640px) { .hero__title { font-size: clamp(72px, 9.6vw, 148px); } }
+
+.hero__rec { margin-top: clamp(56px, 8vw, 112px); }
+.hero__rec-label { margin: 0 0 12px; }
 .hero__media { min-width: 0; --bleed: 0px; }
-.hero .hero__watch { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 6px 0; min-height: 44px; background: none; border: 0; color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 5px; text-decoration-thickness: 2px; }
-.hero .hero__watch svg { color: var(--accent); }
-.hero .hero__watch:hover { color: var(--accent); }
-.hero .hero__watch:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
 @media (min-width: 1100px) {
-  .hero__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 56px; }
-  .hero .hero__title { font-size: clamp(60px, 5.4vw, 82px); }
+  .hero__fold { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: 48px; grid-template-rows: auto 1fr; grid-template-areas: "title moment" "copy moment"; align-items: start; }
+  .hero__copy { margin-top: 8px; }
   /* cqw (the hero's own width) instead of vw: 100vw includes the scrollbar gutter and pushed the frame past the edge. */
   .hero { container-type: inline-size; }
   .hero .hero__watch { display: none; } /* the on-frame play control carries the label here */

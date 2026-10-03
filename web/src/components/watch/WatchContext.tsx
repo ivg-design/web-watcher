@@ -8,8 +8,13 @@
  *
  * Demos call `record(...)`. The header/HUD owns the rendering of badge, notice and popover.
  */
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import WatchNotices from "./WatchNotices";
+import { CHECK_EVENT } from "./events";
+
+declare global {
+  interface Window { __ww_setInterval?: (seconds: number) => void }
+}
 
 export type WatchSource = "hero" | "steps" | "picker" | "types" | "gmail" | "herald" | "download";
 
@@ -60,10 +65,25 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
   const record = useCallback((c: WatchInput) => {
     const change: WatchChange = { ...c, id: nextId.current++, at: Date.now() };
     setChanges((cur) => [change, ...cur].slice(0, 50));
+    // The change is seen on the next check, which is now.
+    queueMicrotask(() => window.dispatchEvent(new Event(CHECK_EVENT)));
     return change;
   }, []);
   const markSeen = useCallback(() => setSeenUpTo(nextId.current - 1), []);
   const clear = useCallback(() => { setChanges([]); setSeenUpTo(nextId.current - 1); }, []);
+
+  // The page keeps time: a check every `interval` seconds while visible (end state only under reduced motion).
+  useEffect(() => {
+    window.__ww_setInterval = setInterval;
+    return () => { delete window.__ww_setInterval; };
+  }, [setInterval]);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setInterval(() => {
+      if (!document.hidden) window.dispatchEvent(new Event(CHECK_EVENT));
+    }, interval * 1000);
+    return () => window.clearInterval(id);
+  }, [interval]);
 
   const value = useMemo<WatchCtx>(() => ({
     changes,

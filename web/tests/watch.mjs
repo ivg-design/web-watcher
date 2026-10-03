@@ -84,7 +84,7 @@ for (const w of [1280, 390]) {
   const box = await page.$eval(T("watch-mark"), (e) => { const r = e.getBoundingClientRect(); return [r.width, r.height, r.right <= innerWidth]; });
   chk(box[0] === 36 && box[1] === 36 && box[2], "36px and inside viewport");
   const hh = await page.$eval("header.site-header", (e) => e.getBoundingClientRect().height);
-  chk(hh <= 77, `header height ${hh}`);
+  chk(Math.round(hh) === 64 || Math.round(hh) === 65, `header height ${hh}`);
   const riveUp = await page.evaluate(async () => { try { const r = await fetch("/rive/watcher-mark.riv", { method: "HEAD" }); return r.ok && !(r.headers.get("content-type") || "").includes("text/html"); } catch { return false; } });
   const gated = await page.evaluate(() => matchMedia("(pointer: coarse)").matches && innerWidth < 640);
   if (riveUp && !gated) {

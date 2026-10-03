@@ -7,6 +7,9 @@ import Stage from "./Stage";
 
 type Key = "down" | "right" | "enter" | null;
 
+const STARTS = DURATION.reduce<number[]>((a, d, i) => { a.push(i === 0 ? 0 : a[i - 1] + DURATION[i - 1]); return a; }, []);
+const stamp = (ms: number) => `t+${(ms / 1000).toFixed(1)} s`;
+
 export default function StepsDemo() {
   const { record } = useWatch();
   const [beat, setBeat] = useState(0);
@@ -103,7 +106,7 @@ export default function StepsDemo() {
 
   return (
     <div className="hw" ref={root}>
-      <ol className="hw-steps">
+      <ol className="hw-steps" aria-label="Three steps on a time ruler">
         {STEPS.map((s, i) => {
           const on = i === beat;
           return (
@@ -115,10 +118,10 @@ export default function StepsDemo() {
                 aria-current={on ? "step" : undefined}
                 onClick={() => go(i)}
               >
-                <span className="hw-step__n">0{i + 1}</span>
+                <span className="hw-tick" aria-hidden="true" />
+                <span className="hw-step__n t-label" data-testid={`hw-time-${i + 1}`}>{stamp(STARTS[i])}</span>
                 <span className="hw-step__t">{s.title}</span>
-                <span className="hw-step__s">{s.short}</span>
-                <span className="hw-step__c">{s.copy}</span>
+                                <span className="hw-step__c">{s.copy}</span>
                 <span className="hw-bar" aria-hidden="true">
                   {on && (
                     <i
@@ -133,7 +136,9 @@ export default function StepsDemo() {
           );
         })}
       </ol>
-      <Stage beat={beat} sub={sub} pressed={pressed} />
+      <div className="hw-frame">
+        <Stage beat={beat} sub={sub} pressed={pressed} />
+      </div>
     </div>
   );
 }

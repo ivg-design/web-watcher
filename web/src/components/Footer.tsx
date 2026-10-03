@@ -21,7 +21,7 @@ const col = (title: string, items: { label: string; href: string; ext?: boolean 
 
 export default function Footer() {
   return (
-    <footer className="footer">
+    <footer className="footer paper">
       <div className="container footer__grid">
         <div className="footer__brand">
           <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={28} height={28} />

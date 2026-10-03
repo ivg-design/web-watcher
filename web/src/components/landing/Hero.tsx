@@ -2,41 +2,48 @@ import { Download } from "lucide-react";
 import type { LatestRelease } from "@/lib/release";
 import { REPO_URL } from "@/lib/config";
 import HeroDemo, { HeroWatchLink } from "./HeroDemo";
+import Moment from "./hero/Moment";
 import "@/styles/sections-a.css";
 import "@/styles/hero.css";
+
+const cut = (i: number) => ({ "--i": i } as React.CSSProperties);
 
 export default function Hero({ release }: { release: LatestRelease }) {
   return (
     <section id="hero" className="hero" aria-labelledby="hero-title">
-      <div className="container hero__grid">
-        <div className="hero__copy">
-          <p className="badge hero-in" style={{ "--i": 0 } as React.CSSProperties}>
-            <i aria-hidden="true" />
-            Free · Open source · Notarized
-          </p>
-          <h1 id="hero-title" className="hero__title">
-            <span className="hero-in" style={{ "--i": 1 } as React.CSSProperties}>Stop refreshing.</span>
-            <span className="accent hero-in" style={{ "--i": 2 } as React.CSSProperties}>Start knowing.</span>
+      <div className="container">
+        <div className="hero__fold">
+          <h1 id="hero-title" className="hero__title t-cond">
+            <span className="cut" style={cut(0)}>Stop refreshing.</span>
+            <span className="cut" style={cut(1)} id="hero-line2" data-testid="hero-line2" data-lit="0">Start knowing.</span>
           </h1>
-          <p className="hero__lede hero-in" style={{ "--i": 3 } as React.CSSProperties}>
-            WebWatcher sits in your menu bar and watches the badges, counters and inboxes you keep
-            checking by hand — the Rive community bell, a Gmail sender, a forum thread — and tells
-            you the moment they change.
-          </p>
-          <div className="hero__cta hero-in" style={{ "--i": 4 } as React.CSSProperties}>
-            <a className="btn btn--primary" href={release.dmgUrl} data-forge-action="download_intent">
-              <Download size={20} aria-hidden="true" />
-              Download for Mac · {release.version}
-            </a>
-            <a className="btn btn--ghost" href={REPO_URL}>View on GitHub</a>
+          <div className="hero__moment">
+            <Moment />
           </div>
-          <HeroWatchLink className="hero__watch hero-in" style={{ "--i": 5 } as React.CSSProperties} />
-          <p className="hero__facts hero-in" style={{ "--i": 6 } as React.CSSProperties}>
-            <span className="nw">Apple Silicon</span> (arm64) only · <span className="nw">macOS 13+</span> · <span className="nw">Developer ID</span> signed and notarized · MIT license · No account, no server, nothing leaves your Mac
-          </p>
+          <div className="hero__copy">
+            <p className="hero__lede cut" style={cut(4)}>
+              <span className="nw">WebWatcher</span> sits in your menu bar and watches the badges, counters and inboxes you keep
+              checking by hand, the Rive community bell, a Gmail sender, a forum thread, and tells
+              you the moment they change.
+            </p>
+            <div className="hero__cta cut" style={cut(4)}>
+              <a className="btn btn--primary" href={release.dmgUrl} data-forge-action="download_intent" data-testid="hero-download">
+                <Download size={20} aria-hidden="true" />
+                Download for Mac <span className="hero__ver t-num">{release.version}</span>
+              </a>
+              <a className="btn btn--ghost" href={REPO_URL} data-testid="hero-github">View on GitHub</a>
+            </div>
+            <HeroWatchLink className="hero__watch cut" style={cut(4)} />
+            <p className="hero__facts t-label cut" style={cut(4)}>
+              <span className="nw">Apple Silicon</span> only. <span className="nw">macOS 13</span> or later. <span className="nw">Developer ID</span> signed and notarized. MIT. Nothing leaves your Mac.
+            </p>
+          </div>
         </div>
-        <div className="hero__media">
-          <HeroDemo />
+        <div className="hero__rec">
+          <p className="t-label hero__rec-label">The real app, 41 s</p>
+          <div className="hero__media">
+            <HeroDemo />
+          </div>
         </div>
       </div>
     </section>

@@ -32,7 +32,7 @@ const LOOK_Y = 2.1;
 const clamp = (v: number) => Math.max(-1, Math.min(1, v));
 
 export default function WatchMark() {
-  const { unseen, count, changes, markSeen } = useWatch();
+  const { unseen, count, changes, markSeen, interval } = useWatch();
   const uid = useId().replace(/:/g, "");
   const btnRef = useRef<HTMLButtonElement>(null);
   const irisRef = useRef<SVGGElement>(null);
@@ -253,6 +253,7 @@ export default function WatchMark() {
         data-testid="watch-mark"
         data-renderer={renderer}
         data-reduced={reduced ? "1" : "0"}
+        style={{ "--ww-period": interval <= 60 ? `${interval}s` : "6.5s" } as React.CSSProperties}
         aria-label={label}
         aria-haspopup="dialog"
         aria-expanded={!!anchor}
@@ -268,20 +269,20 @@ export default function WatchMark() {
           </defs>
           <g ref={flipRef} className="ww-flip">
             <g ref={glassRef} className={`ww-glass${reduced ? " is-still" : ""}`}>
-              <g clipPath={`url(#${clipTop})`}><rect className="ww-sand ww-sand--top" x="8" y="8.3" width="14.4" height="10.4" fill="#1F5EFF" /></g>
-              <g clipPath={`url(#${clipBot})`}><rect className="ww-sand ww-sand--bot" x="8" y="18.7" width="14.4" height="10.4" fill="#1F5EFF" /></g>
-              <rect className="ww-stream" x="14.7" y="18" width="1" height="11" fill="#1F5EFF" />
-              <path d={TOP} fill="none" stroke="#14161C" strokeWidth="1.25" strokeLinejoin="round" />
-              <path d={BOT} fill="none" stroke="#14161C" strokeWidth="1.25" strokeLinejoin="round" />
-              <rect x="7.7" y="6.3" width="15" height="2" rx="1" fill="#14161C" />
-              <rect x="7.7" y="29.1" width="15" height="2" rx="1" fill="#14161C" />
+              <g clipPath={`url(#${clipTop})`}><rect className="ww-sand ww-sand--top" x="8" y="8.3" width="14.4" height="10.4" fill="#F3F1EC" /></g>
+              <g clipPath={`url(#${clipBot})`}><rect className="ww-sand ww-sand--bot" x="8" y="18.7" width="14.4" height="10.4" fill="#F3F1EC" /></g>
+              <rect className="ww-stream" x="14.7" y="18" width="1" height="11" fill="#F3F1EC" />
+              <path d={TOP} fill="none" stroke="#F3F1EC" strokeWidth="1.25" strokeLinejoin="round" />
+              <path d={BOT} fill="none" stroke="#F3F1EC" strokeWidth="1.25" strokeLinejoin="round" />
+              <rect x="7.7" y="6.3" width="15" height="2" rx="1" fill="#F3F1EC" />
+              <rect x="7.7" y="29.1" width="15" height="2" rx="1" fill="#F3F1EC" />
             </g>
           </g>
           <g ref={eyeRef} className="ww-eye">
-            <path d={EYE} fill="#fff" stroke="#14161C" strokeWidth="1.25" strokeLinejoin="round" />
+            <path d={EYE} fill="#fff" stroke="#F3F1EC" strokeWidth="1.25" strokeLinejoin="round" />
             <g clipPath={`url(#${clipEye})`}>
               <g ref={irisRef} className="ww-iris" data-testid="watch-iris">
-                <circle cx="28" cy="28" r="2.1" fill="#14161C" />
+                <circle cx="28" cy="28" r="2.1" fill="#1A1C23" />
               </g>
             </g>
           </g>
