@@ -4,7 +4,7 @@ const BASE = process.env.BASE || "http://localhost:3101";
 const T = (id) => `[data-testid="${id}"]`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const defects = [];
-const res = {};
+const _res = {};
 const report = (name, pass, detail = []) => {
   console.log((pass ? "PASS " : "FAIL ") + name);
   for (const d of detail) console.log("   - " + d);
