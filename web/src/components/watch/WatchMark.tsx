@@ -293,7 +293,8 @@ export default function WatchMark() {
         {mountRive && RiveComp && (
           <RiveComp
             sinkRef={sinkRef}
-            unseen={unseen}
+            // The count is the DOM badge above the canvas; the file's own capsule would show as a red sliver beside it.
+            unseen={0}
             hover={hover}
             reduced={reduced}
             tickSignal={tickSignal}

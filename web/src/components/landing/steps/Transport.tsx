@@ -10,6 +10,8 @@ const fmt = (ms: number) => {
 };
 
 interface Props {
+  /** Shown under the clock on wide screens (the section lede). */
+  aside?: React.ReactNode;
   beat: number;
   epoch: number;
   active: boolean;
@@ -19,7 +21,7 @@ interface Props {
 }
 
 /** The transport: the running time, the ruler of the whole run, and the chapters under it. Owns the 10 Hz state. */
-export default function Transport({ beat, epoch, active, reduce, notified, children }: Props) {
+export default function Transport({ beat, epoch, active, reduce, notified, aside, children }: Props) {
   const key = `${beat}-${epoch}-${active ? 1 : 0}`;
   const [seg, setSeg] = useState({ key, ms: 0 });
 
@@ -34,12 +36,15 @@ export default function Transport({ beat, epoch, active, reduce, notified, child
 
   return (
     <div className="hw-transport">
+      <div className="hw-aside">
       <div className="hw-clock" role="timer" aria-label="Seconds into the demo">
         <div className="hw-clock__row">
           <span className="hw-clock__n t-wide t-num" data-testid="hw-clock" aria-hidden="true">{fmt(now)}</span>
           <span className="hw-clock__s t-label" aria-hidden="true">s</span>
         </div>
         <span className="hw-clock__l t-label">seconds into the demo</span>
+      </div>
+      {aside}
       </div>
       <div className="hw-track">
         <Ruler now={now} notified={notified} />

@@ -171,3 +171,13 @@
   .hw-badge.is-tick::before { content: none; }
   .hw-outline { transition: none; }
 }
+
+/* Round 3, second pass: the title stands alone at a larger scale; the lede closes the clock's column. */
+.hw-aside { display: grid; gap: 28px; align-content: start; }
+.hw-lede--aside { display: none; }
+@media (min-width: 1100px) {
+  .hw-head { grid-template-columns: minmax(0, 1fr); }
+  .hw-head .h2-v3 { font-size: clamp(64px, 7.4vw, 108px); white-space: nowrap; }
+  .hw-lede--head { display: none; }
+  .hw-lede--aside { display: block; font-size: 17px; line-height: 1.5; max-width: 30ch; padding: 20px 0 0; border-top: 1px solid var(--n-line); }
+}

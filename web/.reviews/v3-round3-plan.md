@@ -129,3 +129,60 @@ Plan (this file), before screenshots, five workers with disjoint files (one sect
 its demo, its stylesheet, its test), the lead on the Rive mark and the leftovers, then a critique of the
 whole page by eye at four widths, one more iteration on the weakest section, all suites, tsc, lint,
 build, Lighthouse desktop and mobile, and an After section appended here.
+
+## After
+
+Measured on the final production build (:3285) after the last change: 15 suites, all exit 0 (docs 96,
+download 18, gmail-mock 179, herald 247, hero-moment 35, hero-video 31, interval 36, layout 12, picker 69,
+privacy 37, qa 11, steps 32, time 24, watch-types 427, watch 108 assertions); `tsc` clean; lint 0 errors
+(2 unused-variable warnings in tests/gmail-mock.mjs); Lighthouse desktop 100 / 100 / 100 / 100 (LCP 0.7 s,
+CLS 0, TBT 0); mobile 90 / 100 / 100 / 100 (FCP 1.2 s, LCP 3.6 s simulated, CLS 0, TBT 10 ms). No
+horizontal overflow at 1440, 1280, 834, 390. Screenshots: scratchpad `r3/after/` (viewport shots per
+section and whole-section clips, `tests/v3clips.mjs`).
+
+| Section | Built as |
+|---|---|
+| How it works | The title alone at up to 108 px. The stage at the full content width. Under it the transport: the demo's running time (`04.5`) in the light numeral at 136 px stepping tenths, the lede under it, and a 112-tick ruler of the 11.2 s run with the three steps as chapters whose widths are their durations. The tick at 8.5 s cuts to red with `t+8.5 s notified` when the notification lands. |
+| Picker | Full-bleed band on the panel tone, demo first, claim after (title back on top under 1100). Third column is the readout: the value under the outline at up to 240 px (`3`), text values smaller, strategy and selector in mono, the menu popover under it. The scan runs by itself once when the sketch scrolls into view (five candidate outlines cut in, the readout rolls); "Start over" returns to the manual Scan page. The sheet is a fixed-height window whose list scrolls, so the band never changes height. Keyboard focus survives the scan. |
+| Watch types | A board of six ruled rows: countdown to the row's own next check at 80 px (15 s, 30 s, 1, 2, 5 and 10 min, out of phase, from the wall clock), the type in the condensed face, the specimen, the reading at 44 px with the time it was last read. A click changes the page and checks it: old value muted, new value rolls, red hairline, the notification lands in the row. |
+| Gmail | One `h2` split over two columns and a hairline: "Watch a sender," lit over the single notification and the paragraph; "not an inbox." at 40 % over an inbox on the night surface where only the watched sender's rows are bone. Second row: the real editor capture, three ruled facts in the capture's own words, Sign in with Google. |
+| Herald | The section is the screen: a menu-bar line, the banners hanging top right, logo and title bottom left at 128 px, and across the bottom a ruler whose ticks are the real waveform of the Kokoro sample (peaks from the mp3s by `scripts/herald-peaks.mjs`, 40 ms windows). Pressing a banner's speaker lights the ticks to the playhead with a running time. The in-banner meter uses the same peaks. |
+
+Second iteration (after looking at the first results): the picker's dead column and "nothing yet"
+opening (fixed sheet height, automatic scan); the board's small readings and tall rows (44 px readings,
+80 px countdowns, 220 px rows, no red hint); Gmail's empty lit column and thin second row (paragraph
+moved under the notification, ruled facts, stacked order on phones, arrivals start when the notification
+slot is in view); How it works' empty space under the clock and its head row, which matched the board's
+(title alone, lede under the clock).
+
+Rive mark: done. `sand` (0..1) is bound through three range mappers to the upper sand, the pile and the
+stream; `turn` flips the glass without the pop. The page writes the progress of the current check ten
+times a second, so the Rive mark is the renderer at the default 30 s and at every other interval (at
+60 s or less the glass drains over the interval; above it, the 6.5 s idle loop as before). Built with
+`rive . --once`, no Luau (unsigned scripts are rejected by web runtimes), nothing pushed. Tested: the
+canvas's upper bulb loses bone pixels over 6 s at 15 s, and `data-sand` advances at the right rate at 15 s
+and 30 s. The file's own badge capsule is kept at 0 because it showed as a red sliver beside the DOM badge.
+
+Leftovers: Element Count's label sits under the last list row before and after the click (asserted).
+The first-change chip is one line (37 px) from 1100 up and ends 23 px above the numeral's ink (asserted
+by pixels). Mobile LCP: the element is the hero lede; it was held back 240 ms by the staged cut, so the
+observed LCP was 364 ms after the first paint. It now paints in the first frame (observed LCP = FCP).
+The simulated figure moved from 3.8 s to 3.6 s and the score from 88 to 90.
+
+### Still weak or unverified
+
+- Mobile performance is 90, not 95+. The simulated LCP is now the model's cost of 122 KB of fonts and
+  the framework's JavaScript on slow 4G, not a late paint. Dropping a font axis or the mono preload would
+  be the next step and would cost the identity.
+- The board is long on phones (about 3,980 px at 390) because each row reserves its notification's height.
+- How it works at 1100 to 1280: the first chapter is 190 to 224 px wide and its copy runs six lines.
+- Picker: the sheet shows about two candidates at a time (the list scrolls); the Pick-mode selector
+  tip can sit over the "Latest topics" label (as before).
+- Gmail: the dim half of the headline is about 3:1 against the ground. It is the second half of one
+  `h2`, readable, but below 4.5:1 by design. With eight rows and three arrivals the last seed row leaves.
+- Herald's waveform ticks are 40 ms peaks, about 105 ticks for a 4.2 s sample; on a 1440 screen they are
+  12 px apart, sparser than the interval ruler.
+- The countdowns on the board and the hour ruler are arithmetic on the wall clock, not a log of real
+  checks by this page.
+- Not verified: real Safari, real touch devices, audio output by ear (the test asserts playback state
+  and time, not sound), the Rive mark on a real retina display, the forge deploy path.

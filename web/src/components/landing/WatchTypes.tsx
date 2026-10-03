@@ -127,7 +127,7 @@ export default function WatchTypes() {
               const next = reduced ? everyLabel(r.every) : fmt(live ? remaining : r.every);
               return (
                 <li key={r.slug} className={`wt-panel${on ? " is-changed" : ""}${flash === r.slug ? " is-flash" : ""}${lands ? " has-notif" : ""}`} data-s={r.slug}>
-                  <button type="button" className="wt-btn" aria-pressed={on} aria-labelledby={`wt-n-${r.slug}`} aria-describedby={`wt-d-${r.slug}`} data-testid={`wt-row-${r.slug}`} onClick={() => play(r)}>
+                  <button type="button" className="wt-btn" aria-pressed={on} data-testid={`wt-row-${r.slug}`} onClick={() => play(r)}>
                     <span className="wt-next" aria-hidden="true">
                       <span className={`t-wide t-num wt-next__n${reduced ? " is-static" : ""}`} data-testid={`wt-next-${r.slug}`}>{next}</span>
                       <span className="t-label wt-tick">

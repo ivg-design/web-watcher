@@ -11,7 +11,7 @@ type Key = "down" | "right" | "enter" | null;
 const STARTS = DURATION.reduce<number[]>((a, d, i) => { a.push(i === 0 ? 0 : a[i - 1] + DURATION[i - 1]); return a; }, []);
 const stamp = (ms: number) => `t+${(ms / 1000).toFixed(1)} s`;
 
-export default function StepsDemo() {
+export default function StepsDemo({ lede }: { lede?: React.ReactNode }) {
   const { record } = useWatch();
   const [beat, setBeat] = useState(0);
   const [sub, setSub] = useState(0);
@@ -135,7 +135,7 @@ export default function StepsDemo() {
       <div className="hw-frame">
         <Stage beat={beat} sub={sub} pressed={pressed} />
       </div>
-      <Transport beat={beat} epoch={epoch} active={active} reduce={reduce} notified={notified}>{chapters}</Transport>
+      <Transport beat={beat} epoch={epoch} active={active} reduce={reduce} notified={notified} aside={lede}>{chapters}</Transport>
     </div>
   );
 }
