@@ -48,7 +48,7 @@ for (const w of [1920, 1440]) {
     const hr = document.querySelector(".docs-header__in").getBoundingClientRect();
     const a = document.querySelector(".docs-article").getBoundingClientRect();
     const mn = document.querySelector(".docs-main").getBoundingClientRect();
-    return { l: r.left, r: innerWidth - r.right, hl: hr.left, hw: hr.width, w: r.width, al: a.left - mn.left, ar: mn.right - a.right, cw: document.documentElement.clientWidth };
+    return { l: r.left, r: innerWidth - r.right, hl: hr.left, hw: hr.width, w: r.width, al: a.left - mn.left, ar: mn.right - a.right, cw: document.documentElement.getBoundingClientRect().width };
   });
   ok(Math.abs(g.l - (g.cw - (g.l + g.w))) <= 1, `shell centred @${w} (left ${g.l}, width ${g.w}, cw ${g.cw})`);
   ok(Math.abs(g.hl - g.l) <= 1 && Math.abs(g.hw - g.w) <= 1, `header aligns with shell @${w}`);

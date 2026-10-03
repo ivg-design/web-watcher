@@ -117,6 +117,14 @@ class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Send a notification for a watcher update
     func notify(watcher: Watcher, newValue: String, oldValue: String?) {
         let text = Self.watcherContent(watcher: watcher, newValue: newValue, oldValue: oldValue)
+        #if DEBUG
+        if DemoMode.isActive {
+            // Demo: rendered by the demo stage itself; nothing reaches Notification Center or Herald.
+            let t = text
+            Task { @MainActor in DemoMode.onNotify?(t.title, t.subtitle, t.body) }
+            return
+        }
+        #endif
         let herald = HeraldBridge.webWatcher(
             watcher: watcher, content: text, newValue: newValue, oldValue: oldValue,
             id: HeraldBridge.webWatcherNotificationId(watcher.id)

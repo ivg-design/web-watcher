@@ -3,6 +3,35 @@ import { BASE, T, sleep, ok } from "./_h.mjs";
 const browser = await puppeteer.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: "new" });
 let fails = 0;
 const chk = (c, m) => { ok(c, m); if (!c) fails++; };
+// deferred Rive + scroll glance (fresh page, no mouse moves, touch viewport)
+{
+  console.log("--- deferred rive + scroll glance (390)");
+  const page = await browser.newPage();
+  await page.setViewport({ width: 390, height: 900, hasTouch: true });
+  const t0 = [];
+  page.on("request", (r) => { if (/rive/i.test(r.url())) t0.push([r.url(), Date.now()]); });
+  await page.goto(BASE + "/", { waitUntil: "load", timeout: 90000 });
+  await page.waitForSelector(T("watch-mark"), { timeout: 30000 });
+  await page.waitForFunction(() => document.querySelector('[data-testid="watch-mark"]')?.dataset.renderer === "rive", { timeout: 5000 }).catch(() => {});
+  chk((await page.$eval(T("watch-mark"), (e) => e.dataset.renderer)) === "rive", "renderer reaches rive within 5 s");
+  // In-page clock (same timeline for both): resource startTime vs the navigation's loadEventStart.
+  const tl = await page.evaluate(() => { const n = performance.getEntriesByType("navigation")[0]; return { load: n.loadEventStart, rive: performance.getEntriesByType("resource").filter((r) => /rive/i.test(r.name) && !/WatchMarkRive/.test(r.name)).map((r) => [r.name, r.startTime]) }; });
+  const early = tl.rive.filter(([, t]) => t < tl.load);
+  chk(t0.length > 0 && tl.rive.length > 0 && early.length === 0, `rive runtime/wasm/.riv requests start after load (load at ${Math.round(tl.load)} ms; ${tl.rive.map(([u, t]) => u.split("/").pop().slice(0, 28) + "@" + Math.round(t)).join(", ")})`);
+  await page.waitForFunction(() => document.documentElement.scrollHeight > innerHeight + 700);
+  await sleep(800);
+  const ly = () => page.$eval(T("watch-mark"), (e) => parseFloat(e.dataset.lookY));
+  const y0 = await ly();
+  await page.evaluate(() => { window.__ly = []; const m = document.querySelector('[data-testid="watch-mark"]'); const t = performance.now(); const iv = setInterval(() => { window.__ly.push([Math.round(performance.now() - t), parseFloat(m.dataset.lookY), Math.round(scrollY)]); if (performance.now() - t > 1000) clearInterval(iv); }, 16); scrollTo(0, 600); });
+  await sleep(300);
+  const y1 = await page.evaluate(() => Math.max(...window.__ly.filter((s) => s[0] <= 300).map((s) => s[1])));
+  console.log("  samples", JSON.stringify(await page.evaluate(() => window.__ly.filter((_, i) => i % 6 === 0).slice(0, 12))));
+  chk(y1 > 0.3, `scroll down glances down within 300 ms (look-y ${y0} -> ${y1})`);
+  await sleep(1200);
+  const y2 = await ly();
+  chk(Math.abs(y2) < 0.1, `look-y back under 0.1 after 1.2 s (${y2})`);
+  await page.close();
+}
 for (const w of [1280, 390]) {
   console.log(`--- ${w}px`);
   const page = await browser.newPage();
@@ -49,7 +78,7 @@ for (const w of [1280, 390]) {
     const m = await page.evaluate(() => { const n = document.querySelector('[data-testid="watch-notice"]').getBoundingClientRect(); return [n.top, n.width, document.documentElement.scrollWidth, document.documentElement.clientWidth]; });
     chk(m[0] >= 83.5 && m[0] <= 90, `mobile notice top ${m[0]} (76 header + 8 gap)`);
     chk(m[1] <= w - 32 + 0.5, `mobile notice width ${m[1]} <= ${w - 32}`);
-    chk(m[2] === m[3], `no horizontal overflow with notice visible (${m[2]}/${m[3]})`);
+    chk(m[2] <= m[3], `no horizontal overflow with notice visible (${m[2]}/${m[3]})`);
   }
   await sleep(5300);
   chk(!(await page.$(T("watch-notice"))), "notice auto-dismissed");

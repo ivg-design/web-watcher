@@ -6,7 +6,7 @@ import Combine
 /// so there's no hot path to protect from over-saving.
 @MainActor
 final class EmailWatcherStore: ObservableObject {
-    static let shared = ScreenshotMode.isActive
+    static let shared = ScreenshotMode.isolated
         ? EmailWatcherStore(fileURL: ScreenshotMode.scratchFile("email_watchers.json"))
         : EmailWatcherStore()
 

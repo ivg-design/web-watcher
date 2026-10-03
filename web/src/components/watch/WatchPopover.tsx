@@ -84,7 +84,7 @@ export default function WatchPopover({ anchor, changes, lastCheck, onClose, trig
           exit={{ opacity: 0, y: reduce ? 0 : sheet ? 36 : -6, transition: { duration: 0.18, ease: EASE } }}
         >
           <div className="ww-pop__head">
-            <b>Web Watcher</b><span>v1.10.9 (34)</span>
+            <b className="nw">Web Watcher</b><span className="nw">v1.10.9 (34)</span>
             <Info size={14} aria-hidden className="ww-pop__info" />
             <i className="ww-pop__dot" aria-hidden />
           </div>

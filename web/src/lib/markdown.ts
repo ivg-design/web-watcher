@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Marked, type Tokens } from "marked";
+import { nowrapHtml } from "./nowrap";
 
 export interface Heading { id: string; text: string; level: number }
 
@@ -85,7 +86,7 @@ export function renderMarkdown(src: string, basePath = ""): { html: string; head
       },
     },
   });
-  return { html: marked.parse(src) as string, headings };
+  return { html: nowrapHtml(marked.parse(src) as string), headings };
 }
 
 /** Renders a single line of trusted Markdown (code spans, bold, links) without a wrapping paragraph. */
@@ -100,5 +101,5 @@ export function renderInline(src: string): string {
       },
     },
   });
-  return marked.parseInline(src) as string;
+  return nowrapHtml(marked.parseInline(src) as string);
 }

@@ -5,15 +5,14 @@
  * works); the Rive renderer swaps in once /rive/watcher-mark.riv exists and loads.
  * Eye = watching (follows the cursor), sand = interval, flip = check, badge = unseen changes.
  */
-import { useCallback, useEffect, useId, useRef, useState } from "react";
-import dynamic from "next/dynamic";
+import { useCallback, useEffect, useId, useRef, useState, type ComponentType } from "react";
 import { asset } from "@/lib/config";
 import { useWatch } from "./WatchContext";
 import WatchPopover, { type Anchor } from "./WatchPopover";
 import { OPEN_EVENT, CHECK_EVENT, OPENED_EVENT, CLOSED_EVENT, WINK_EVENT } from "./events";
 import "@/styles/watch.css";
 
-const WatchMarkRive = dynamic(() => import("./WatchMarkRive"), { ssr: false });
+type RiveComp = ComponentType<import("./WatchMarkRive").RiveProps>;
 
 const RIVE_SRC = "/rive/watcher-mark.riv";
 let riveProbe: Promise<boolean> | null = null;
@@ -24,7 +23,12 @@ function probeRive(): Promise<boolean> {
   return riveProbe;
 }
 
-const MAX_LOOK = 4;
+// Geometry measured off the Rive mark (36px box, artboard 48 at 0.69): SVG phase must match within ~1px.
+const TOP = "M9.8 8.3H20.6V11.4L16.4 18.7H14L9.8 11.4Z";
+const BOT = "M9.8 29.1H20.6V26L16.4 18.7H14L9.8 26Z";
+const EYE = "M22.6 28C24.6 24.8 26.2 23.4 28 23.4C29.8 23.4 31.4 24.8 33.4 28C31.4 31.2 29.8 32.6 28 32.6C26.2 32.6 24.6 31.2 22.6 28Z";
+const LOOK_X = 2.8; // Rive: +-4 px of 48 -> 0.69 scale
+const LOOK_Y = 2.1;
 const clamp = (v: number) => Math.max(-1, Math.min(1, v));
 
 export default function WatchMark() {
@@ -45,11 +49,46 @@ export default function WatchMark() {
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const [lastCheck, setLastCheck] = useState(() => Date.now());
 
-  // Rive file guard: HEAD check once, cached.
+  // Rive is deferred: after idle (fallback 1200 ms), only while the mark is in the viewport.
+  // Probe the file, then import the runtime chunk.
+  const [RiveComp, setRiveComp] = useState<RiveComp | null>(null);
   useEffect(() => {
     let live = true;
-    probeRive().then((ok) => { if (live && ok) setMountRive(true); });
-    return () => { live = false; };
+    let started = false;
+    let idleId = 0;
+    let timer = 0;
+    let io: IntersectionObserver | null = null;
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number; cancelIdleCallback?: (id: number) => void };
+    const go = async () => {
+      if (started) return;
+      started = true;
+      io?.disconnect();
+      if (!(await probeRive()) || !live) return;
+      const mod = await import("./WatchMarkRive").catch(() => null);
+      if (live && mod) { setRiveComp(() => mod.default); setMountRive(true); }
+    };
+    const whenVisible = () => {
+      const b = btnRef.current;
+      if (!b || typeof IntersectionObserver === "undefined") { void go(); return; }
+      io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) void go(); });
+      io.observe(b);
+    };
+    const schedule = () => {
+      if (!live) return;
+      if (w.requestIdleCallback) idleId = w.requestIdleCallback(whenVisible);
+      else timer = window.setTimeout(whenVisible, 1200);
+    };
+    // Never compete with the page load: start only once `load` has fired.
+    const afterLoad = document.readyState === "complete";
+    if (afterLoad) schedule();
+    else window.addEventListener("load", schedule, { once: true });
+    return () => {
+      live = false;
+      window.removeEventListener("load", schedule);
+      io?.disconnect();
+      if (idleId) w.cancelIdleCallback?.(idleId);
+      window.clearTimeout(timer);
+    };
   }, []);
 
   // Reduced motion (loop off, eye still follows).
@@ -64,10 +103,13 @@ export default function WatchMark() {
   // Cursor-following eye: normalised -1..1 relative to the mark centre, damped with rAF.
   useEffect(() => {
     const target = { x: 0, y: 0 };
+    const ptr = { x: 0, y: 0, t: -1e9 };
+    let lastScroll = window.scrollY;
+    let settle = 0;
     const cur = { x: 0, y: 0 };
     let raf = 0;
     const apply = () => {
-      irisRef.current?.style.setProperty("transform", `translate(${(cur.x * MAX_LOOK).toFixed(2)}px, ${(cur.y * MAX_LOOK).toFixed(2)}px)`);
+      irisRef.current?.style.setProperty("transform", `translate(${(cur.x * LOOK_X).toFixed(2)}px, ${(cur.y * LOOK_Y).toFixed(2)}px)`);
       const b = btnRef.current;
       if (b) { b.dataset.lookX = cur.x.toFixed(3); b.dataset.lookY = cur.y.toFixed(3); }
       sinkRef.current?.(cur.x, cur.y);
@@ -78,18 +120,36 @@ export default function WatchMark() {
       apply();
       raf = Math.abs(target.x - cur.x) + Math.abs(target.y - cur.y) > 0.002 ? requestAnimationFrame(loop) : 0;
     };
+    const pointerActive = () => performance.now() - ptr.t < 1500;
+    const onScroll = () => {
+      const d = window.scrollY - lastScroll;
+      lastScroll = window.scrollY;
+      if (!d || pointerActive()) return;
+      target.y = clamp(d / 40);
+      if (!raf) raf = requestAnimationFrame(loop);
+      window.clearTimeout(settle);
+      settle = window.setTimeout(() => {
+        target.y = pointerActive() ? ptr.y : 0;
+        if (!raf) raf = requestAnimationFrame(loop);
+      }, 120);
+    };
     const onMove = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
       const r = btnRef.current?.getBoundingClientRect();
       if (!r) return;
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
-      target.x = clamp((e.clientX - cx) / Math.max(cx, window.innerWidth - cx, 1));
-      target.y = clamp((e.clientY - cy) / Math.max(cy, window.innerHeight - cy, 1));
+      ptr.x = clamp((e.clientX - cx) / Math.max(cx, window.innerWidth - cx, 1));
+      ptr.y = clamp((e.clientY - cy) / Math.max(cy, window.innerHeight - cy, 1));
+      ptr.t = performance.now();
+      target.x = ptr.x;
+      target.y = ptr.y;
       if (!raf) raf = requestAnimationFrame(loop);
     };
     apply();
     window.addEventListener("pointermove", onMove, { passive: true });
-    return () => { window.removeEventListener("pointermove", onMove); cancelAnimationFrame(raf); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("scroll", onScroll); window.clearTimeout(settle); cancelAnimationFrame(raf); };
   }, []);
 
   // Blink: hover >= 3 s, then every ~4 s while hovered.
@@ -182,35 +242,32 @@ export default function WatchMark() {
       >
         <svg className="ww-mark__svg" viewBox="0 0 36 36" width="36" height="36" aria-hidden focusable="false" data-hidden={renderer === "rive" ? "1" : "0"}>
           <defs>
-            <clipPath id={clipTop}><path d="M11.5 6.4H24.5C24.5 12 20 14.5 18 18C16 14.5 11.5 12 11.5 6.4Z" /></clipPath>
-            <clipPath id={clipBot}><path d="M11.5 29.6H24.5C24.5 24 20 21.5 18 18C16 21.5 11.5 24 11.5 29.6Z" /></clipPath>
-            <clipPath id={clipEye}><circle cx="26" cy="26" r="6" /></clipPath>
+            <clipPath id={clipTop}><path d={TOP} /></clipPath>
+            <clipPath id={clipBot}><path d={BOT} /></clipPath>
+            <clipPath id={clipEye}><path d={EYE} /></clipPath>
           </defs>
           <g ref={flipRef} className="ww-flip">
             <g ref={glassRef} className={`ww-glass${reduced ? " is-still" : ""}`}>
-              <path d="M11.5 6.4H24.5C24.5 12 20 14.5 18 18C16 14.5 11.5 12 11.5 6.4Z" fill="#fff" />
-              <path d="M11.5 29.6H24.5C24.5 24 20 21.5 18 18C16 21.5 11.5 24 11.5 29.6Z" fill="#fff" />
-              <g clipPath={`url(#${clipTop})`}><rect className="ww-sand ww-sand--top" x="10" y="6" width="16" height="12" fill="#1F5EFF" /></g>
-              <g clipPath={`url(#${clipBot})`}><rect className="ww-sand ww-sand--bot" x="10" y="18" width="16" height="12" fill="#1F5EFF" /></g>
-              <rect className="ww-stream" x="17.4" y="17" width="1.2" height="12" fill="#1F5EFF" />
-              <path d="M11.5 6.4H24.5C24.5 12 20 14.5 18 18C16 14.5 11.5 12 11.5 6.4Z" fill="none" stroke="#14161C" strokeWidth="2" strokeLinejoin="round" />
-              <path d="M11.5 29.6H24.5C24.5 24 20 21.5 18 18C16 21.5 11.5 24 11.5 29.6Z" fill="none" stroke="#14161C" strokeWidth="2" strokeLinejoin="round" />
-              <rect x="8" y="3.6" width="20" height="2.8" rx="1.2" fill="#14161C" />
-              <rect x="8" y="29.6" width="20" height="2.8" rx="1.2" fill="#14161C" />
+              <g clipPath={`url(#${clipTop})`}><rect className="ww-sand ww-sand--top" x="8" y="8.3" width="14.4" height="10.4" fill="#1F5EFF" /></g>
+              <g clipPath={`url(#${clipBot})`}><rect className="ww-sand ww-sand--bot" x="8" y="18.7" width="14.4" height="10.4" fill="#1F5EFF" /></g>
+              <rect className="ww-stream" x="14.7" y="18" width="1" height="11" fill="#1F5EFF" />
+              <path d={TOP} fill="none" stroke="#14161C" strokeWidth="1.25" strokeLinejoin="round" />
+              <path d={BOT} fill="none" stroke="#14161C" strokeWidth="1.25" strokeLinejoin="round" />
+              <rect x="7.7" y="6.3" width="15" height="2" rx="1" fill="#14161C" />
+              <rect x="7.7" y="29.1" width="15" height="2" rx="1" fill="#14161C" />
             </g>
           </g>
           <g ref={eyeRef} className="ww-eye">
-            <circle cx="26" cy="26" r="7" fill="#fff" stroke="#14161C" strokeWidth="1.6" />
+            <path d={EYE} fill="#fff" stroke="#14161C" strokeWidth="1.25" strokeLinejoin="round" />
             <g clipPath={`url(#${clipEye})`}>
               <g ref={irisRef} className="ww-iris" data-testid="watch-iris">
-                <circle cx="26" cy="26" r="2.4" fill="#14161C" />
-                <circle cx="25.2" cy="25.2" r="0.7" fill="#fff" />
+                <circle cx="28" cy="28" r="2.1" fill="#14161C" />
               </g>
             </g>
           </g>
         </svg>
-        {mountRive && (
-          <WatchMarkRive
+        {mountRive && RiveComp && (
+          <RiveComp
             sinkRef={sinkRef}
             unseen={unseen}
             hover={hover}

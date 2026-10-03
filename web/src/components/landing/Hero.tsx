@@ -32,7 +32,7 @@ export default function Hero({ release }: { release: LatestRelease }) {
           </div>
           <HeroWatchLink className="hero__watch hero-in" style={{ "--i": 5 } as React.CSSProperties} />
           <p className="hero__facts hero-in" style={{ "--i": 6 } as React.CSSProperties}>
-            Apple Silicon (arm64) only · macOS 13+ · Developer ID signed and notarized · MIT license · No account, no server, nothing leaves your Mac
+            <span className="nw">Apple Silicon</span> (arm64) only · <span className="nw">macOS 13+</span> · <span className="nw">Developer ID</span> signed and notarized · MIT license · No account, no server, nothing leaves your Mac
           </p>
         </div>
         <div className="hero__media">

@@ -2,7 +2,9 @@
 
 A macOS menu bar app that monitors websites for changes and sends native notifications.
 
-https://github.com/user-attachments/assets/8adbf24e-0b20-4d1a-8bc1-d2593f2a02f7
+[![WebWatcher demo: adding a watcher for a community bell and getting the first notification](web/public/video/poster.jpg)](web/public/video/demo.mp4)
+
+*41-second demo, recorded from WebWatcher 1.10.9 (`web/public/video/demo.mp4`; also [on the site](https://forge.mograph.life/apps/webwatcher/)).*
 
 ## The problem
 

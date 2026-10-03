@@ -2,7 +2,7 @@
 
 import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DEMO_DURATION, DEMO_VIDEO_SRC, DEMO_POSTER, asset } from "@/lib/config";
+import { DEMO_DURATION, DEMO_VIDEO_SRC, DEMO_POSTER, DEMO_POSTER_2X, asset } from "@/lib/config";
 import "@/styles/hero.css";
 
 const PLAY_EVENT = "hero-demo-play";
@@ -98,7 +98,7 @@ export default function HeroDemo() {
         <img
           className={`hv__poster${rolling ? " is-hidden" : ""}`}
           src={asset(DEMO_POSTER)}
-          srcSet={`${asset(DEMO_POSTER)} 1x, ${asset(DEMO_POSTER.replace(".png", "@2x.png"))} 2x`}
+          srcSet={`${asset(DEMO_POSTER)} 1x, ${asset(DEMO_POSTER_2X)} 2x`}
           alt="The WebWatcher menu bar popover listing three watchers"
           width={1200}
           height={900}
@@ -122,10 +122,13 @@ export default function HeroDemo() {
         </div>
 
         {!engaged && (
-          <button type="button" className="hv__play" data-testid="hv-play" onClick={start}>
-            <span className="hv__play-btn"><Play size={28} fill="currentColor" strokeWidth={0} style={{ marginLeft: 3 }} /></span>
-            <span className="hv__play-label">Watch the demo · {DEMO_DURATION}</span>
-          </button>
+          <>
+            <div className="hv__hit" onClick={start} aria-hidden="true" />
+            <button type="button" className="hv__play" data-testid="hv-play" aria-label={`Watch the demo · ${DEMO_DURATION}`} onClick={start}>
+              <span className="hv__play-btn"><Play size={14} fill="currentColor" strokeWidth={0} style={{ marginLeft: 1 }} /></span>
+              <span className="hv__play-label">Watch the demo · {DEMO_DURATION}</span>
+            </button>
+          </>
         )}
 
         {engaged && (
@@ -139,7 +142,7 @@ export default function HeroDemo() {
           </div>
         )}
       </div>
-      <p className="hv__cap">Picking the Rive community bell and getting the first notification.</p>
+      <p className="hv__cap">Adding a watcher for a community bell and getting the first notification. Recorded from WebWatcher 1.10.9.</p>
     </div>
   );
 }

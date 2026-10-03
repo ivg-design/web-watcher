@@ -45,19 +45,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             ScreenshotRunner.shared.start()
             return
         }
+        let demo = DemoMode.isActive
+        #else
+        let demo = false
         #endif
-        guard shouldContinueAsPrimaryInstance() else {
-            NSApp.terminate(nil)
-            return
-        }
+        if !demo {
+            guard shouldContinueAsPrimaryInstance() else {
+                NSApp.terminate(nil)
+                return
+            }
 
-        // Ensure launch-at-login registration points at the installed app location.
-        if Bundle.main.bundleURL.path.hasPrefix("/Applications/") {
-            AppSettings.shared.refreshLaunchAtLoginRegistrationIfNeeded()
+            // Ensure launch-at-login registration points at the installed app location.
+            if Bundle.main.bundleURL.path.hasPrefix("/Applications/") {
+                AppSettings.shared.refreshLaunchAtLoginRegistrationIfNeeded()
+            }
         }
 
         // Initialize store and service
+        #if DEBUG
+        if demo {
+            store = WatcherStore(appFolder: ScreenshotMode.scratch.appendingPathComponent("watchers", isDirectory: true))
+            DemoMode.seed(store: store)
+            AppSettings.shared.notificationDelivery = .heraldWhenAvailable
+        } else {
+            store = WatcherStore()
+        }
+        #else
         store = WatcherStore()
+        #endif
         watcherService = WatcherService(store: store)
         gmailStore = GmailAccountStore.shared
         emailWatcherStore = EmailWatcherStore.shared
@@ -85,11 +100,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         updatePopoverContent()
 
-        // Start watching
-        watcherService.start()
+        // Start watching (demo: no background timers, only the scripted check)
+        if !demo {
+            watcherService.start()
 
-        // Start Gmail polling
-        gmailPollingService.start()
+            // Start Gmail polling
+            gmailPollingService.start()
+        }
 
         // Hide dock icon (menu bar app only)
         NSApp.setActivationPolicy(.accessory)
@@ -104,13 +121,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Request notification permission
         Task {
             let granted = await NotificationService.shared.requestPermission()
-            if !granted {
+            if !granted && !demo {
                 await MainActor.run {
                     showNotificationPermissionAlert()
                 }
             }
         }
+
+        #if DEBUG
+        if demo {
+            DemoRunner.shared.start(delegate: self)
+        }
+        #endif
     }
+
+    #if DEBUG
+    // Demo-mode accessors (Debug only).
+    var demoWatcherService: WatcherService { watcherService }
+    var demoStore: WatcherStore { store }
+    var demoAddWatcherWindow: NSWindow? { addWatcherWindow }
+    var demoPopoverShown: Bool { popover.isShown }
+    /// Demo: show the popover anchored to a view of our own staged window instead of the real status item.
+    func showPopover(anchoredTo view: NSView) {
+        guard !popover.isShown else { return }
+        updatePopoverContent()
+        popover.show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
+    }
+    func closePopover() { if popover.isShown { popover.performClose(nil) } }
+    var demoStatusItemFrame: NSRect? {
+        guard let b = statusItem.button, let w = b.window else { return nil }
+        return w.convertToScreen(b.convert(b.bounds, to: nil))
+    }
+    #endif
 
     private func showNotificationPermissionAlert() {
         let alert = NSAlert()
@@ -219,7 +261,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentViewController = NSHostingController(rootView: contentView)
     }
 
-    private func showAddWatcher() {
+    func showAddWatcher() {
         popover.performClose(nil)
 
         let editorView = AddWatcherView(
@@ -367,7 +409,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        if ScreenshotMode.isActive {
+        if ScreenshotMode.isActive || DemoMode.isActive {
             ScreenshotMode.cleanUp()
             return
         }
@@ -501,11 +543,21 @@ enum ScreenshotMode {
 
     static var isActive: Bool { outputDir != nil }
 
+    /// True for both the screenshot mode and the scripted demo mode: scratch stores and a
+    /// throwaway defaults suite, never the user's real data.
+    static var isolated: Bool {
+        #if DEBUG
+        return isActive || DemoMode.isActive
+        #else
+        return false
+        #endif
+    }
+
     private static let suiteName = "com.webwatcher.screenshots-run"
 
     /// Throwaway settings domain, removed again on exit — the user's real defaults are never touched.
     static var defaults: UserDefaults {
-        isActive ? (UserDefaults(suiteName: suiteName) ?? .standard) : .standard
+        isolated ? (UserDefaults(suiteName: suiteName) ?? .standard) : .standard
     }
 
     /// Temp folder holding every store file of a screenshot run.
@@ -531,8 +583,13 @@ enum ScreenshotMode {
 
     static func prefillNewWatcher(name: inout String, url: inout String, markProgrammatic: () -> Void) {
         markProgrammatic()
-        name = "iPhone 17 Pro price"
-        url = CannedProbe.pageURL
+        if DemoMode.isActive {
+            name = "Rive Community bell"
+            url = DemoMode.pageURL
+        } else {
+            name = "iPhone 17 Pro price"
+            url = CannedProbe.pageURL
+        }
     }
     #else
     static let probe: (any ElementProbing)? = nil
@@ -762,6 +819,667 @@ final class ScreenshotRunner {
         p.arguments = ["-l", String(window.windowNumber), "-o", "-x", path]
         do { try p.run(); p.waitUntilExit() } catch { failures.append(name) }
         if p.terminationStatus != 0 { failures.append(name) }
+    }
+}
+#endif
+
+// MARK: - Hidden scripted demo mode (Debug builds only)
+
+/// `WW_DEMO=<dir>` (env) or `--demo <dir>` in a Debug build: the app launches normally (real
+/// status item, popover, Add Watcher window, real Safari probe) on scratch stores and drives
+/// a ~40 s human-paced walkthrough while an external `screencapture -V` records the screen.
+/// Release builds compile this down to `isActive == false`.
+enum DemoMode {
+    static let outputDir: String? = {
+        #if DEBUG
+        let args = CommandLine.arguments
+        if let i = args.firstIndex(of: "--demo"), i + 1 < args.count { return args[i + 1] }
+        if let env = ProcessInfo.processInfo.environment["WW_DEMO"], !env.isEmpty { return env }
+        #endif
+        return nil
+    }()
+
+    static var isActive: Bool {
+        #if DEBUG
+        return outputDir != nil
+        #else
+        return false
+        #endif
+    }
+
+    #if DEBUG
+    static var pageURL: String {
+        let env = ProcessInfo.processInfo.environment["WW_DEMO_URL"] ?? ""
+        return env.isEmpty ? "http://localhost:8765/?bumpAfter=29" : env
+    }
+
+    /// Set by the Add Watcher editor: runs the real `saveWatcher()` then closes the window.
+    @MainActor static var saveHook: (() -> Void)?
+
+    /// Set by the runner: receives the notification the service would have posted (title, subtitle, body).
+    /// In demo mode the service never touches Notification Center or Herald.
+    @MainActor static var onNotify: ((String, String, String) -> Void)?
+
+    @MainActor static func seed(store: WatcherStore) {
+        var w = Watcher(name: "WebWatcher releases", url: "https://github.com/ivg-design/web-watcher/releases",
+                        selector: "a.Link--primary[href*='/releases/tag/']", watchType: .textChange, interval: .minutes10)
+        w.lastValue = "v1.10.9"; w.lastConclusiveValue = "v1.10.9"
+        w.lastCheck = Date().addingTimeInterval(-120)
+        w.everMatched = true
+        store.watchers = [w]
+    }
+    #endif
+}
+
+#if DEBUG
+import WebKit
+
+// MARK: - Demo stage (Debug only): every pixel of the recorded region belongs to a window this app owns.
+
+private final class DemoStageWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
+/// The site's hero poster gradient (150deg: #f6b25c, #ef7a6b 35%, #e0508a 70%, #b44fd0).
+private final class DemoGradientView: NSView {
+    override func draw(_ dirtyRect: NSRect) {
+        let g = NSGradient(colorsAndLocations:
+            (NSColor(srgbRed: 0xf6/255, green: 0xb2/255, blue: 0x5c/255, alpha: 1), 0),
+            (NSColor(srgbRed: 0xef/255, green: 0x7a/255, blue: 0x6b/255, alpha: 1), 0.35),
+            (NSColor(srgbRed: 0xe0/255, green: 0x50/255, blue: 0x8a/255, alpha: 1), 0.70),
+            (NSColor(srgbRed: 0xb4/255, green: 0x4f/255, blue: 0xd0/255, alpha: 1), 1))
+        // CSS 150deg points down and slightly right; in an unflipped view that is -60 degrees.
+        g?.draw(in: bounds, angle: -60)
+    }
+}
+
+private final class DemoFlippedView: NSView { override var isFlipped: Bool { true } }
+
+/// Hand-drawn Safari chrome: 52 px toolbar + 30 px tab strip.
+private final class DemoSafariChrome: NSView {
+    static let barHeight: CGFloat = 52
+    static let tabHeight: CGFloat = 30
+    static var totalHeight: CGFloat { barHeight + tabHeight }
+    var tabTitle = "(3) Feed \u{2014} Community" { didSet { needsDisplay = true } }
+    override var isFlipped: Bool { true }
+
+    private func symbol(_ name: String, _ pt: CGFloat, _ weight: NSFont.Weight = .regular) -> NSImage? {
+        NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+            .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: pt, weight: weight))
+    }
+
+    private func tinted(_ img: NSImage?, _ color: NSColor, in rect: NSRect) {
+        guard let img else { return }
+        let t = NSImage(size: img.size, flipped: false) { r in
+            img.draw(in: r); color.set(); r.fill(using: .sourceAtop); return true
+        }
+        let s = img.size
+        t.draw(in: NSRect(x: rect.midX - s.width / 2, y: rect.midY - s.height / 2, width: s.width, height: s.height),
+               from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let w = bounds.width
+        NSColor(srgbRed: 0.925, green: 0.925, blue: 0.93, alpha: 1).setFill()
+        NSRect(x: 0, y: 0, width: w, height: Self.barHeight).fill()
+        NSColor(srgbRed: 0.88, green: 0.88, blue: 0.89, alpha: 1).setFill()
+        NSRect(x: 0, y: Self.barHeight, width: w, height: Self.tabHeight).fill()
+        // Traffic lights, 12 px.
+        let lights: [NSColor] = [NSColor(srgbRed: 1, green: 0.37, blue: 0.34, alpha: 1),
+                                 NSColor(srgbRed: 1, green: 0.74, blue: 0.18, alpha: 1),
+                                 NSColor(srgbRed: 0.16, green: 0.79, blue: 0.25, alpha: 1)]
+        for (i, c) in lights.enumerated() {
+            let r = NSRect(x: 18 + CGFloat(i) * 20, y: 20, width: 12, height: 12)
+            c.setFill(); NSBezierPath(ovalIn: r).fill()
+            NSColor.black.withAlphaComponent(0.15).setStroke()
+            let p = NSBezierPath(ovalIn: r.insetBy(dx: 0.25, dy: 0.25)); p.lineWidth = 0.5; p.stroke()
+        }
+        // Back / forward.
+        tinted(symbol("chevron.left", 14, .semibold), NSColor.black.withAlphaComponent(0.55), in: NSRect(x: 100, y: 14, width: 24, height: 24))
+        tinted(symbol("chevron.right", 14, .semibold), NSColor.black.withAlphaComponent(0.28), in: NSRect(x: 128, y: 14, width: 24, height: 24))
+        // Address field.
+        let field = NSRect(x: (w - 380) / 2, y: 11, width: 380, height: 30)
+        NSColor.black.withAlphaComponent(0.07).setFill()
+        NSBezierPath(roundedRect: field, xRadius: 8, yRadius: 8).fill()
+        let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 13), .foregroundColor: NSColor.black.withAlphaComponent(0.85)]
+        let str = NSAttributedString(string: "localhost:8765", attributes: attrs)
+        let ts = str.size()
+        let lockW: CGFloat = 14, gap: CGFloat = 5
+        let startX = field.midX - (lockW + gap + ts.width) / 2
+        tinted(symbol("lock.fill", 10, .medium), NSColor.black.withAlphaComponent(0.5), in: NSRect(x: startX, y: field.midY - 7, width: lockW, height: 14))
+        str.draw(at: NSPoint(x: startX + lockW + gap, y: field.midY - ts.height / 2))
+        // Bar bottom hairline + active tab.
+        NSColor.black.withAlphaComponent(0.12).setFill()
+        NSRect(x: 0, y: Self.barHeight - 0.5, width: w, height: 0.5).fill()
+        let tab = NSRect(x: (w - 320) / 2, y: Self.barHeight + 3, width: 320, height: Self.tabHeight - 3)
+        NSColor(srgbRed: 0.97, green: 0.97, blue: 0.975, alpha: 1).setFill()
+        NSBezierPath(roundedRect: tab, xRadius: 6, yRadius: 6).fill()
+        let tAttrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 12), .foregroundColor: NSColor.black.withAlphaComponent(0.85)]
+        let tStr = NSAttributedString(string: tabTitle, attributes: tAttrs)
+        let tSize = tStr.size()
+        tStr.draw(at: NSPoint(x: tab.midX - tSize.width / 2, y: tab.midY - tSize.height / 2))
+        NSColor.black.withAlphaComponent(0.18).setFill()
+        NSRect(x: 0, y: bounds.height - 0.5, width: w, height: 0.5).fill()
+    }
+}
+
+private final class DemoNavDelegate: NSObject, WKNavigationDelegate {
+    var onEvent: ((String) -> Void)?
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { onEvent?("demo webview loaded: \(webView.url?.absoluteString ?? "?")") }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { onEvent?("FAIL demo webview: \(error.localizedDescription)") }
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { onEvent?("FAIL demo webview: \(error.localizedDescription)") }
+}
+
+@MainActor
+final class DemoRunner {
+    static let shared = DemoRunner()
+
+    private weak var delegate: AppDelegate?
+    private var t0 = Date()
+    private var logLines: [String] = []
+    private var failures = 0
+    private let env = ProcessInfo.processInfo.environment
+
+    private var recorder: Process?
+    private var recorderExit: Int32?
+    private var recordSeconds: Double = 46
+
+    // Stage
+    private var region = NSRect(x: 1120, y: 28, width: 1440, height: 900)   // top-left screen points
+    private var regionString = "1120,28,1440,900"
+    private var stage: NSWindow?
+    private var pageWindow: NSWindow?
+    private var bannerWindow: NSWindow?
+    private var markButton: NSButton?
+    private var chrome: DemoSafariChrome?
+    private var demoWebView: WKWebView?
+    private let navDelegate = DemoNavDelegate()
+    private var safariWinID: String?
+    private var notified: (String, String, String)?
+
+    func start(delegate: AppDelegate) {
+        self.delegate = delegate
+        t0 = Date()
+        Task { @MainActor in
+            await self.run()
+            await self.finish()
+        }
+    }
+
+    // MARK: Geometry
+
+    private var screenH: CGFloat { (NSScreen.screens.first ?? NSScreen.main)?.frame.height ?? 0 }
+
+    /// Region-relative top-left rectangle -> Cocoa screen frame.
+    private func screenFrame(_ ox: CGFloat, _ oy: CGFloat, _ w: CGFloat, _ h: CGFloat) -> NSRect {
+        NSRect(x: region.minX + ox, y: screenH - (region.minY + oy) - h, width: w, height: h)
+    }
+
+    private func parseRegion() {
+        regionString = (env["WW_DEMO_REGION"]?.isEmpty == false) ? env["WW_DEMO_REGION"]! : "1120,28,1440,900"
+        let p = regionString.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+        if p.count == 4 { region = NSRect(x: p[0], y: p[1], width: p[2], height: p[3]) }
+    }
+
+    // MARK: Stage
+
+    private func buildStage(_ d: AppDelegate) {
+        parseRegion()
+        let frame = screenFrame(0, 0, region.width, region.height)
+        let w = DemoStageWindow(contentRect: frame, styleMask: .borderless, backing: .buffered, defer: false)
+        w.isReleasedWhenClosed = false
+        w.level = .floating // above every other app's normal windows, whatever is active
+        w.hasShadow = false
+        w.isOpaque = true
+        w.backgroundColor = .black
+        let content = DemoGradientView(frame: NSRect(origin: .zero, size: frame.size))
+        w.contentView = content
+        w.setFrame(frame, display: true)
+
+        // Menu-bar strip.
+        let strip = NSView(frame: NSRect(x: 0, y: frame.height - 28, width: frame.width, height: 28))
+        strip.wantsLayer = true
+        strip.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.8).cgColor
+        let hair = CALayer()
+        hair.frame = CGRect(x: 0, y: 0, width: frame.width, height: 0.5)
+        hair.backgroundColor = NSColor.black.withAlphaComponent(0.2).cgColor
+        strip.layer?.addSublayer(hair)
+        let clock = NSTextField(labelWithString: "Thu 8:14 PM")
+        clock.font = .systemFont(ofSize: 13)
+        clock.textColor = .black
+        clock.sizeToFit()
+        clock.setFrameOrigin(NSPoint(x: frame.width - 14 - clock.frame.width, y: (28 - clock.frame.height) / 2))
+        strip.addSubview(clock)
+        // Two ordinary status glyphs sit between the mark and the clock, so the popover (300 pt wide,
+        // centred on the mark) stays inside the stage instead of clipping at the region's right edge.
+        var cursorX = clock.frame.minX - 12
+        for name in ["battery.75percent", "wifi"] {
+            let glyph = NSImageView(frame: NSRect(x: 0, y: 2, width: 26, height: 24))
+            glyph.image = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 15, weight: .medium))
+            glyph.contentTintColor = .black
+            glyph.imageScaling = .scaleProportionallyDown
+            cursorX -= 26
+            glyph.setFrameOrigin(NSPoint(x: cursorX, y: 2))
+            strip.addSubview(glyph)
+            cursorX -= 8
+        }
+        let button = NSButton(frame: NSRect(x: cursorX - 28 - 60, y: 2, width: 28, height: 24))
+        button.title = ""
+        button.isBordered = false
+        button.image = AppDelegate.menuBarImage()
+        button.imagePosition = .imageOnly
+        button.imageScaling = .scaleNone
+        button.contentTintColor = .black
+        strip.addSubview(button)
+        content.addSubview(strip)
+        markButton = button
+        stage = w
+
+        // Fake Safari window (child, above the stage).
+        let pw = NSWindow(contentRect: screenFrame(20, 70, 900, 760), styleMask: .borderless, backing: .buffered, defer: false)
+        pw.isReleasedWhenClosed = false
+        pw.isOpaque = false
+        pw.backgroundColor = .clear
+        pw.hasShadow = true
+        pw.level = .floating
+        let container = DemoFlippedView(frame: NSRect(x: 0, y: 0, width: 900, height: 760))
+        container.wantsLayer = true
+        container.layer?.cornerRadius = 10
+        container.layer?.masksToBounds = true
+        container.layer?.backgroundColor = NSColor.white.cgColor
+        let ch = DemoSafariChrome(frame: NSRect(x: 0, y: 0, width: 900, height: DemoSafariChrome.totalHeight))
+        container.addSubview(ch)
+        chrome = ch
+        let wv = WKWebView(frame: NSRect(x: 0, y: DemoSafariChrome.totalHeight, width: 900, height: 760 - DemoSafariChrome.totalHeight),
+                           configuration: WKWebViewConfiguration())
+        navDelegate.onEvent = { [weak self] m in Task { @MainActor in
+            if m.hasPrefix("FAIL") { self?.fail(String(m.dropFirst(5))) } else { self?.log(m) } } }
+        wv.navigationDelegate = navDelegate
+        container.addSubview(wv)
+        demoWebView = wv
+        pw.contentView = container
+        pw.setFrame(screenFrame(20, 70, 900, 760), display: true)
+        w.addChildWindow(pw, ordered: .above)
+        pageWindow = pw
+
+        w.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true); NSCursor.hide(); CGWarpMouseCursorPosition(CGPoint(x: 24, y: 1400)) // cursor out of the region
+        w.makeKeyAndOrderFront(nil)
+        pw.invalidateShadow()
+        if let url = URL(string: DemoMode.pageURL) { wv.load(URLRequest(url: url)) }
+        log("stage up: region \(regionString)")
+    }
+
+    private func screenRect(of v: NSView) -> NSRect? {
+        guard let w = v.window else { return nil }
+        return w.convertToScreen(v.convert(v.bounds, to: nil))
+    }
+
+    // MARK: Safari (real tab, kept off the stage)
+
+    nonisolated private static func osa(_ source: String) async -> (result: String?, error: String?) {
+        await Task.detached {
+            var err: NSDictionary?
+            let r = NSAppleScript(source: source)?.executeAndReturnError(&err)
+            if let err { return (nil, (err[NSAppleScript.errorMessage] as? String) ?? "\(err)") }
+            return (r?.stringValue, nil)
+        }.value
+    }
+
+    private func openSafariTab() async {
+        let url = DemoMode.pageURL
+        let script = """
+        tell application "Safari"
+            set beforeIDs to id of every window
+            make new document with properties {URL:"\(url)"}
+            set newID to missing value
+            repeat 40 times
+                repeat with w in windows
+                    if (id of w) is not in beforeIDs then set newID to id of w
+                end repeat
+                if newID is not missing value then exit repeat
+                delay 0.25
+            end repeat
+            if newID is missing value then error "new Safari window not found"
+            set bounds of window id newID to {40, 1000, 940, 1400}
+            return (newID as text) & "|" & (name of current tab of window id newID)
+        end tell
+        """
+        let (res, err) = await Self.osa(script)
+        if let err { fail("safari open: \(err)"); return }
+        let parts = (res ?? "").split(separator: "|", maxSplits: 1).map(String.init)
+        safariWinID = parts.first
+        log("safari demo window id \(safariWinID ?? "?") created off-stage (bounds 40,1000,940,1400); tab name at creation: \(parts.count > 1 ? parts[1] : "?")")
+    }
+
+    private func verifySafariTab() async {
+        guard let id = safariWinID else { fail("no safari window id"); return }
+        let (res, err) = await Self.osa("tell application \"Safari\" to return name of current tab of window id \(id)")
+        if let err { fail("safari verify: \(err)") } else { log("safari tab verified: \(res ?? "?")") }
+    }
+
+    // MARK: Recording
+
+    private var rawURL: URL {
+        URL(fileURLWithPath: DemoMode.outputDir ?? "/tmp", isDirectory: true).appendingPathComponent("raw.mov")
+    }
+
+    /// Spawned from this process so TCC attributes the screen recording to WebWatcher.app.
+    private func startRecording() {
+        recordSeconds = Double(env["WW_DEMO_SECONDS"] ?? "") ?? 46
+        try? FileManager.default.createDirectory(at: rawURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? FileManager.default.removeItem(at: rawURL)
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        p.arguments = ["-V", String(Int(recordSeconds.rounded(.up))), "-R", regionString, "-x", rawURL.path]
+        p.terminationHandler = { [weak self] proc in
+            let status = proc.terminationStatus
+            Task { @MainActor in
+                self?.recorderExit = status
+                if status != 0 || !FileManager.default.fileExists(atPath: self?.rawURL.path ?? "") {
+                    self?.log("RECORDING FAILED (screencapture exited \(status) at t=\(String(format: "%.1f", self?.elapsed() ?? 0)))")
+                }
+            }
+        }
+        do {
+            try p.run()
+            recorder = p
+            log("recording started: region \(regionString), \(Int(recordSeconds)) s -> \(rawURL.path)")
+        } catch {
+            log("RECORDING FAILED (could not launch screencapture: \(error.localizedDescription))")
+        }
+    }
+
+    /// Waits for screencapture to exit (hard cap seconds + 5 after it started), logs status and file size.
+    private func finishRecording(startedAt: Double) async {
+        guard recorder != nil else { return }
+        let cap = startedAt + recordSeconds + 5
+        if await poll(max(0, cap - elapsed()), { self.recorderExit != nil }) == false {
+            recorder?.terminate()
+            _ = await poll(3, { self.recorderExit != nil })
+            log("recording did not finish within cap; terminated")
+        }
+        let size = (try? FileManager.default.attributesOfItem(atPath: rawURL.path)[.size] as? Int) ?? nil
+        log("recording exit status \(recorderExit.map(String.init) ?? "nil"), raw.mov size \(size.map(String.init) ?? "missing") bytes")
+    }
+
+    private func logFrame(_ name: String, _ r: NSRect?) {
+        guard let r else { log("frame \(name): unavailable"); return }
+        log("frame \(name): x=\(Int(r.minX)) y=\(Int(screenH - r.maxY)) w=\(Int(r.width)) h=\(Int(r.height))")
+    }
+
+    // MARK: Banner (our own macOS-style notification)
+
+    private func showBanner(title: String, subtitle: String, body: String) {
+        guard let stage else { return }
+        let size = NSSize(width: 360, height: 76)
+        let final = screenFrame(region.width - 16 - 360, 40, 360, 76)
+        let w = NSWindow(contentRect: final, styleMask: .borderless, backing: .buffered, defer: false)
+        w.isReleasedWhenClosed = false
+        w.isOpaque = false
+        w.backgroundColor = .clear
+        w.hasShadow = true
+        w.level = .floating
+        let v = NSView(frame: NSRect(origin: .zero, size: size))
+        v.wantsLayer = true
+        v.layer?.cornerRadius = 14
+        v.layer?.masksToBounds = true
+        v.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.96).cgColor
+        v.layer?.borderWidth = 0.5
+        v.layer?.borderColor = NSColor.black.withAlphaComponent(0.12).cgColor
+        let icon = NSImageView(frame: NSRect(x: 14, y: 20, width: 36, height: 36))
+        icon.image = NSApp.applicationIconImage
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        v.addSubview(icon)
+        let t = NSTextField(labelWithString: title)
+        t.font = .boldSystemFont(ofSize: 13)
+        t.textColor = .black
+        t.lineBreakMode = .byTruncatingTail
+        t.frame = NSRect(x: 60, y: 50, width: 360 - 60 - 56, height: 17)
+        v.addSubview(t)
+        let msg = subtitle.isEmpty ? body : "\(subtitle)\n\(body)"
+        let b = NSTextField(wrappingLabelWithString: msg)
+        b.font = .systemFont(ofSize: 12)
+        b.textColor = NSColor.black.withAlphaComponent(0.8)
+        b.maximumNumberOfLines = 2
+        b.lineBreakMode = .byTruncatingTail
+        b.frame = NSRect(x: 60, y: 10, width: 360 - 60 - 14, height: 36)
+        v.addSubview(b)
+        let now = NSTextField(labelWithString: "now")
+        now.font = .systemFont(ofSize: 11)
+        now.textColor = .systemGray
+        now.sizeToFit()
+        now.setFrameOrigin(NSPoint(x: 360 - 14 - now.frame.width, y: 52))
+        v.addSubview(now)
+        w.contentView = v
+        var start = final; start.origin.x += 40
+        w.setFrame(start, display: true)
+        w.alphaValue = 0
+        stage.addChildWindow(w, ordered: .above)
+        w.orderFront(nil)
+        bannerWindow = w
+        NSAnimationContext.beginGrouping()
+        NSAnimationContext.current.duration = 0.32
+        NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        w.animator().setFrame(final, display: true)
+        w.animator().alphaValue = 1
+        NSAnimationContext.endGrouping()
+        log("banner shown")
+    }
+
+    private func clickBanner() async {
+        guard let w = bannerWindow, let stage else { fail("banner missing at click beat"); return }
+        log("banner click")
+        w.alphaValue = 0.85
+        await settle(0.12)
+        var out = w.frame; out.origin.x += 360 + 16
+        NSAnimationContext.beginGrouping()
+        NSAnimationContext.current.duration = 0.24
+        NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeIn)
+        w.animator().setFrame(out, display: true)
+        w.animator().alphaValue = 0
+        NSAnimationContext.endGrouping()
+        pageWindow?.orderFront(nil)
+        demoWebView?.evaluateJavaScript("""
+        (function(){var b=document.getElementById('badge'); if(!b) return;
+        b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+        b.style.transition='box-shadow 300ms'; b.style.boxShadow='0 0 0 8px rgba(229,72,77,.5)';
+        setTimeout(function(){b.style.boxShadow='0 0 0 0 rgba(229,72,77,0)';},700);})()
+        """, completionHandler: nil)
+        await settle(0.3)
+        stage.removeChildWindow(w)
+        w.orderOut(nil)
+        bannerWindow = nil
+    }
+
+    // MARK: Script
+
+    private func run() async {
+        guard let d = delegate else { return }
+        DemoMode.onNotify = { [weak self] title, subtitle, body in
+            guard let self else { return }
+            self.notified = (title, subtitle, body)
+            self.log("service notification: title=\"\(title)\" subtitle=\"\(subtitle)\" body=\"\(body)\"")
+            self.showBanner(title: title, subtitle: subtitle, body: body)
+        }
+
+        buildStage(d)
+        let safariTask = Task { @MainActor in await self.openSafariTab() }
+
+        await until(0.3)
+        let recStart = elapsed()
+        startRecording()
+
+        await until(1.5)
+        logFrame("stage", stage?.frame)
+        logFrame("pageWindow", pageWindow?.frame)
+        logFrame("markButton", markButton.flatMap { screenRect(of: $0) })
+        await safariTask.value
+        await verifySafariTab()
+
+        await until(4)
+        log("open popover (anchored to staged mark)")
+        stage?.makeKey()
+        if let b = markButton { d.showPopover(anchoredTo: b) } else { fail("markButton missing") }
+        await settle(3)
+        d.closePopover()
+
+        await until(7.5)
+        log("show Add Watcher")
+        d.showAddWatcher()
+        await settle(0.3)
+        var editor: NSWindow?
+        if let w = d.demoAddWatcherWindow {
+            editor = w
+            let h = min(w.frame.height, 820)
+            stage?.addChildWindow(w, ordered: .above); w.level = .floating
+            w.setFrame(screenFrame(940, 60, 480, h), display: true)
+            w.makeKeyAndOrderFront(nil)
+            logFrame("add watcher window", w.frame)
+        } else { fail("add watcher window missing") }
+        await settle(1.7)
+
+        if let model = ScreenshotMode.pickerModel {
+            await editorSteps(model)
+        } else { fail("pickerModel not set; skipping editor steps") }
+
+        await tail(d, editor: editor)
+        await finishRecording(startedAt: recStart)
+    }
+
+    private func editorSteps(_ model: ElementPickerModel) async {
+        await until(10)
+        log("locate tab")
+        model.locate()
+        if await poll(6, { if case .found = model.tab { return true } else { return model.scannedTitle != nil } }) {
+            log("tab found: \(model.scannedTitle ?? "?")")
+        } else { fail("locate timed out (tab=\(model.tab))") }
+        await settle(2)
+
+        await until(13)
+        log("scan page")
+        model.scan()
+        if await poll(8, { !model.candidates.isEmpty }) {
+            log("scan found \(model.candidates.count) candidates: \(model.candidates.map { "\($0.strategy.rawValue):\($0.selector)" })")
+        } else { fail("scan produced no candidates (status=\(model.statusLine ?? "nil"))") }
+        await settle(3)
+
+        await until(18)
+        if let c = model.candidates.first(where: { $0.strategy == .badgeText })
+            ?? model.candidates.first(where: { $0.selector.localizedCaseInsensitiveContains("badge") })
+            ?? model.candidates.first {
+            log("pick candidate \(c.strategy.rawValue) \(c.selector) value=\(c.value ?? "nil")")
+            model.useCandidate(c)
+            if model.pendingChoice != nil,
+               let ch = model.choices.first(where: { $0.recommended }) ?? model.choices.first {
+                log("choose strategy \(ch.id.rawValue)")
+                model.chooseStrategy(ch.id)
+            }
+            if await poll(6, { model.step == .confirm || model.diagnosisSummary != nil }) {
+                log("confirm step reached: \(model.diagnosisSummary ?? "no diagnosis yet")")
+            } else { fail("confirm step not reached (step=\(model.step))") }
+        } else { fail("no candidate to pick") }
+        await settle(3)
+    }
+
+    /// Save, popover, bump, check, banner, click.
+    private func tail(_ d: AppDelegate, editor: NSWindow?) async {
+        await until(24)
+        log("save watcher")
+        if let hook = DemoMode.saveHook { hook() } else { fail("saveHook not set") }
+        if let editor { stage?.removeChildWindow(editor); editor.close(); log("add watcher window closed") }
+        NSApp.activate(ignoringOtherApps: true); stage?.orderFrontRegardless()
+        stage?.makeKeyAndOrderFront(nil)
+        let pageURL = DemoMode.pageURL
+        let saved: () -> Watcher? = {
+            d.demoStore.watchers.first(where: { $0.name == "Rive Community bell" })
+                ?? d.demoStore.watchers.first(where: { $0.url == pageURL })
+        }
+        _ = await poll(2, { saved() != nil })
+        // First conclusive reading is a baseline, never an alert: take it now (page still reads 3).
+        if let w = saved() { log("baseline check"); d.demoWatcherService.checkNow(w) } else { fail("new watcher not in store after save") }
+        await settle(1.5)
+        log("popover with new row")
+        if let b = markButton { d.showPopover(anchoredTo: b) }
+        await settle(3)
+        d.closePopover()
+
+        await until(30)
+        log("bump page (real Safari tab + staged web view)")
+        if let id = safariWinID {
+            let (_, err) = await Self.osa("tell application \"Safari\" to do JavaScript \"window.bump()\" in current tab of window id \(id)")
+            if let err { fail("bump in Safari: \(err)") }
+        }
+        demoWebView?.evaluateJavaScript("window.bump()", completionHandler: nil)
+        await settle(0.3)
+        demoWebView?.evaluateJavaScript("document.title") { [weak self] res, _ in
+            Task { @MainActor in self?.chrome?.tabTitle = (res as? String) ?? "(4) Feed \u{2014} Community" }
+        }
+
+        await until(32)
+        notified = nil
+        if let w = saved() {
+            log("check now (baseline was \(w.lastValue ?? "nil"))")
+            d.demoWatcherService.checkNow(w)
+        } else { fail("new watcher missing at check time") }
+        if await poll(5, { self.notified != nil }) == false { fail("notification hook did not fire within 5 s") }
+
+        await until(37)
+        await clickBanner()
+        await until(41)
+    }
+
+    private func finish() async {
+        if env["WW_DEMO_CLOSE_TAB"] != "0", let id = safariWinID {
+            let (_, err) = await Self.osa("tell application \"Safari\" to close window id \(id)")
+            if let err { fail("close Safari tab: \(err)") } else { log("closed demo Safari window") }
+        }
+        DemoMode.onNotify = nil
+        if let s = stage { pageWindow.map { s.removeChildWindow($0) }; bannerWindow?.close(); pageWindow?.close(); s.close() }
+        log(failures == 0 ? "done, no failures" : "done, \(failures) failure(s)")
+        if let dir = DemoMode.outputDir {
+            let url = URL(fileURLWithPath: dir, isDirectory: true)
+            try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            try? logLines.joined(separator: "\n").appending("\n").write(to: url.appendingPathComponent("demo.log"), atomically: true, encoding: .utf8)
+        }
+        ScreenshotMode.cleanUp()
+        NSCursor.unhide(); NSApp.terminate(nil)
+    }
+
+    // MARK: Helpers
+
+    private func elapsed() -> Double { Date().timeIntervalSince(t0) }
+
+    private func log(_ message: String) {
+        let line = String(format: "[t=%5.1f] ", elapsed()) + message
+        logLines.append(line)
+        print("demo: \(line)")
+    }
+
+    private func fail(_ message: String) {
+        failures += 1
+        log("FAIL " + message)
+    }
+
+    /// Sleep until `t` seconds after launch; returns immediately when already past.
+    private func until(_ t: Double) async {
+        let remaining = t - elapsed()
+        if remaining > 0 { await settle(remaining) }
+    }
+
+    private func settle(_ seconds: Double) async {
+        try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+    }
+
+    private func poll(_ timeout: Double, _ condition: () -> Bool) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if condition() { return true }
+            await settle(0.2)
+        }
+        return condition()
     }
 }
 #endif

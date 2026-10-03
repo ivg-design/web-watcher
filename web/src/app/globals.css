@@ -33,7 +33,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
+html { scrollbar-gutter: stable; scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: var(--font-body); font-size: 16px; line-height: 1.55;
@@ -117,3 +117,5 @@ code, .mono { font-family: var(--font-mono); }
   .btn:active, .pill:active, .gbtn:active { transform: none; }
 }
 
+
+.nw { white-space: nowrap; }

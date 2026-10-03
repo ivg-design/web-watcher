@@ -624,9 +624,12 @@ struct WatcherEditorView: View {
 
     private func setUp() {
         #if DEBUG
-        if ScreenshotMode.isActive, existingWatcher == nil {
+        if ScreenshotMode.isActive || DemoMode.isActive, existingWatcher == nil {
             ScreenshotMode.prefillNewWatcher(name: &name, url: &url, markProgrammatic: { isProgrammaticURLChange = true })
             ScreenshotMode.pickerModel = pickerModel
+            if DemoMode.isActive {
+                DemoMode.saveHook = { saveWatcher(); dismiss() }
+            }
         }
         #endif
         if let watcher = existingWatcher {

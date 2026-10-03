@@ -89,23 +89,25 @@ export default function GmailDemo() {
   useEffect(() => {
     const el = stage.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      (es) => {
-        if (started.current || !es.some((e) => e.isIntersecting)) return;
-        started.current = true;
-        io.disconnect();
-        if (reduced()) {
-          for (let i = 0; i < 3; i++) deliver();
-        } else {
-          for (let i = 0; i < 3; i++) later(deliver, 350 + i * 900);
-        }
-      },
-      { threshold: 0.5 },
-    );
+    // Keyboard users reach the section before it is half in view: focus entering it starts the arrivals too.
+    const begin = () => {
+      if (started.current) return;
+      started.current = true;
+      io.disconnect();
+      el.removeEventListener("focusin", begin);
+      if (reduced()) {
+        for (let i = 0; i < 3; i++) deliver();
+      } else {
+        for (let i = 0; i < 3; i++) later(deliver, 350 + i * 900);
+      }
+    };
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) begin(); }, { threshold: 0.5 });
     io.observe(el);
+    el.addEventListener("focusin", begin);
     const t = timers.current;
     return () => {
       io.disconnect();
+      el.removeEventListener("focusin", begin);
       t.forEach(window.clearTimeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

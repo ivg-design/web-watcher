@@ -25,10 +25,10 @@ export default function Footer() {
       <div className="container footer__grid">
         <div className="footer__brand">
           <img src={asset("/images/webwatcher-icon.png")} alt="" width={28} height={28} />
-          <strong>WebWatcher</strong>
-          <p>A menu-bar page watcher for macOS by IVG Design.</p>
-          <p className="footer__facts">macOS 13+ · Apple Silicon · MIT</p>
-          <p style={{ marginTop: 8 }}>© 2026 IVG Design</p>
+          <strong className="nw">WebWatcher</strong>
+          <p>A menu-bar page watcher for macOS by <span className="nw">IVG Design</span>.</p>
+          <p className="footer__facts"><span className="nw">macOS 13+</span> · <span className="nw">Apple Silicon</span> · MIT</p>
+          <p style={{ marginTop: 8 }}>© 2026 <span className="nw">IVG Design</span></p>
         </div>
         {col("Product", [
           { label: "How it works", href: "/#how-it-works" },

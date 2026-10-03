@@ -1,7 +1,7 @@
 /* Hero: copy in the container; at >=1100 the frame bleeds off the right edge (section clips overflow-x) */
 .hero__grid { display: grid; gap: 40px; align-items: center; }
 .hero__media { min-width: 0; --bleed: 0px; }
-.hero .hero__watch { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; padding: 6px 0; background: none; border: 0; color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 5px; text-decoration-thickness: 2px; }
+.hero .hero__watch { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 6px 0; min-height: 44px; background: none; border: 0; color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 5px; text-decoration-thickness: 2px; }
 .hero .hero__watch svg { color: var(--accent); }
 .hero .hero__watch:hover { color: var(--accent); }
 .hero .hero__watch:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
@@ -14,26 +14,29 @@
 }
 
 .hv { width: 100%; }
-.hv__frame { position: relative; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden; isolation: isolate; background: linear-gradient(150deg, #f6b25c, #ef7a6b 35%, #e0508a 70%, #b44fd0); box-shadow: 0 30px 60px -28px rgb(20 22 28 / 0.45); }
+.hv__frame { position: relative; aspect-ratio: 1440 / 896; border-radius: 20px; overflow: hidden; isolation: isolate; background: linear-gradient(150deg, #f6b25c, #ef7a6b 35%, #e0508a 70%, #b44fd0); box-shadow: 0 30px 60px -28px rgb(20 22 28 / 0.45); }
 .hv__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 300ms var(--ease-quart); }
 .hv__poster.is-hidden { opacity: 0; }
-.hv__win { position: absolute; z-index: 1; left: 50%; top: 50%; width: 90%; aspect-ratio: 3106 / 1362; transform: translate(-50%, -50%); border-radius: 12px; overflow: hidden; background: #14161c; box-shadow: 0 24px 48px -16px rgb(20 22 28 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.12); opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease-quart); }
+.hv__win { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; overflow: hidden; background: #14161c; opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease-quart); }
 .hv__win.is-on { opacity: 1; pointer-events: auto; cursor: pointer; }
 .hv__win video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .hv__progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgb(255 255 255 / 0.25); }
 .hv__progress::after { content: ""; position: absolute; inset: 0; background: #fff; transform-origin: left; transform: scaleX(var(--p, 0)); transition: transform 250ms linear; }
-.hv__play { position: absolute; inset: 0; z-index: 3; display: grid; place-content: center; justify-items: center; gap: 12px; background: none; border: 0; color: #fff; cursor: pointer; }
-.hv__play-btn { width: 80px; height: 80px; border-radius: 50%; background: #fff; color: var(--accent); display: grid; place-items: center; box-shadow: 0 10px 30px rgb(20 22 28 / 0.35); transition: transform 200ms var(--ease-quart); }
-.hv__play:hover .hv__play-btn { transform: scale(1.06); }
-.hv__play-label { font-weight: 600; font-size: 15px; padding: 7px 14px; border-radius: 999px; background: rgb(20 22 28 / 0.78); }
-.hv__play:focus-visible { outline: 3px solid #fff; outline-offset: -8px; border-radius: 20px; }
+.hv__hit { position: absolute; inset: 0; z-index: 2; cursor: pointer; }
+.hv__play { position: absolute; z-index: 3; right: 16px; bottom: 16px; height: 44px; display: inline-flex; align-items: center; gap: 10px; padding: 0 18px 0 6px; border: 0; border-radius: 999px; background: rgb(20 22 28 / 0.78); color: #fff; font: inherit; cursor: pointer; box-shadow: 0 8px 24px rgb(20 22 28 / 0.3); transition: transform 200ms var(--ease-quart); }
+.hv__play-btn { width: 32px; height: 32px; border-radius: 50%; background: #fff; color: var(--accent); display: grid; place-items: center; flex: none; }
+.hv__play-label { font-weight: 600; font-size: 15px; white-space: nowrap; }
+.hv:not(.is-engaged) .hv__frame:hover .hv__play { transform: translateY(-2px); }
+.hv:not(.is-engaged) .hv__frame:hover .hv__poster { filter: brightness(1.03); }
+.hv__play:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .hv__bar { position: absolute; z-index: 3; left: 50%; bottom: 3.5%; transform: translateX(-50%); display: inline-flex; gap: 6px; padding: 6px; border-radius: 999px; background: rgb(20 22 28 / 0.78); }
 .hv__bar button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: #fff; display: grid; place-items: center; cursor: pointer; }
 .hv__bar button:focus-visible { outline: 2px solid #fff; outline-offset: 0; }
 .hv__bar button[aria-pressed="true"] { color: #ffb4b4; }
 .hv__cap { color: var(--muted); font-size: 13.5px; margin-top: 12px; }
-@media (max-width: 520px) { .hv__play-btn { width: 64px; height: 64px; } .hv__play-btn svg { width: 24px; height: 24px; } .hv .hv__frame { border-radius: 14px; } .hv__play-label { font-size: 14px; } }
-@media (prefers-reduced-motion: reduce) { .hv__poster, .hv__win, .hv__play-btn, .hv__progress::after { transition-duration: 1ms; } }
+/* Phones: the free gradient right of the page window is narrow, so the control is the disc alone (the text link above the frame carries the label). */
+@media (max-width: 520px) { .hv .hv__frame { border-radius: 14px; } .hv__play { right: 12px; bottom: 12px; padding: 0 6px; gap: 0; } .hv__play-label { display: none; } }
+@media (prefers-reduced-motion: reduce) { .hv__poster, .hv__win, .hv__play, .hv__progress::after { transition-duration: 1ms; } }
 
 /* How it works: real captures instead of mocks */
 .step__shot { height: 300px; border-radius: 12px; overflow: hidden; position: relative; }

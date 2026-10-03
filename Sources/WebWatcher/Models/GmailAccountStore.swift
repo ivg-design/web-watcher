@@ -4,7 +4,7 @@ import Combine
 /// Manages the collection of Gmail accounts and persists them.
 @MainActor
 class GmailAccountStore: ObservableObject {
-    static let shared = ScreenshotMode.isActive
+    static let shared = ScreenshotMode.isolated
         ? GmailAccountStore(fileURL: ScreenshotMode.scratchFile("gmail_accounts.json"), keychain: nil)
         : GmailAccountStore()
 

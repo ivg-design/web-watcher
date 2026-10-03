@@ -1,5 +1,3 @@
-"use client";
-
 /** Rive renderer for the mark. Contract: view model `Mark` (lookX, lookY, badge, hover, reduced, tick), state machine `Mark`. */
 import { useEffect, useRef } from "react";
 import {
@@ -10,7 +8,7 @@ import {
 } from "@rive-app/react-canvas";
 import { asset } from "@/lib/config";
 
-interface Props {
+export interface RiveProps {
   sinkRef: React.MutableRefObject<((x: number, y: number) => void) | null>;
   unseen: number;
   hover: boolean;
@@ -20,7 +18,7 @@ interface Props {
   onError: () => void;
 }
 
-export default function WatchMarkRive({ sinkRef, unseen, hover, reduced, tickSignal, onReady, onError }: Props) {
+export default function WatchMarkRive({ sinkRef, unseen, hover, reduced, tickSignal, onReady, onError }: RiveProps) {
   const { rive, RiveComponent } = useRive({
     src: asset("/rive/watcher-mark.riv"),
     stateMachines: "Mark",

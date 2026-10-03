@@ -75,3 +75,4 @@ Sources/WebWatcher/Resources/google-oauth-client.json
 
 # Notarized DMGs built by mac-notarize (published as GitHub release assets, not tracked)
 release/
+web/.demo/

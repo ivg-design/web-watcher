@@ -5,15 +5,15 @@
 .ww-mark__svg { overflow: visible; }
 .ww-mark__svg[data-hidden="1"] { opacity: 0; }
 .ww-mark__rive { position: absolute; inset: 0; transform: scale(0.92); }
-.ww-flip { transform-box: view-box; transform-origin: 18px 18px; }
-.ww-glass { transform-box: view-box; transform-origin: 18px 18px; animation: ww-flip 6.5s infinite; }
+.ww-flip { transform-box: view-box; transform-origin: 15.2px 18.7px; }
+.ww-glass { transform-box: view-box; transform-origin: 15.2px 18.7px; animation: ww-flip 6.5s infinite; }
 .ww-sand, .ww-stream { transform-box: fill-box; transform-origin: 50% 100%; }
 .ww-sand--top { animation: ww-drain 6.5s linear infinite; }
 .ww-sand--bot { animation: ww-fill 6.5s linear infinite; }
 .ww-stream { animation: ww-stream 6.5s linear infinite; }
 .ww-glass.is-still, .ww-glass.is-still .ww-sand, .ww-glass.is-still .ww-stream { animation: none; }
-.ww-glass.is-still .ww-sand--top { transform: scaleY(0.6); }
-.ww-glass.is-still .ww-sand--bot { transform: scaleY(0.4); }
+.ww-glass.is-still .ww-sand--top { transform: scaleY(0.52); }
+.ww-glass.is-still .ww-sand--bot { transform: scaleY(0.33); }
 .ww-glass.is-still .ww-stream { opacity: 0; }
 @keyframes ww-flip { 0%, 92.3% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); } 100% { transform: rotate(180deg); } }
 @keyframes ww-drain { 0% { transform: scaleY(1); } 92.3%, 100% { transform: scaleY(0); } }
@@ -62,8 +62,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ww-glass, .ww-sand, .ww-stream { animation: none; }
-  .ww-sand--top { transform: scaleY(0.6); }
-  .ww-sand--bot { transform: scaleY(0.4); }
+  .ww-sand--top { transform: scaleY(0.52); }
+  .ww-sand--bot { transform: scaleY(0.33); }
   .ww-stream { opacity: 0; }
   .ww-badge__n { animation: none; }
 }

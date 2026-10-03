@@ -5,7 +5,7 @@ import type { LatestRelease } from "@/lib/release";
 import DownloadBox from "./b/DownloadBox";
 
 const REQS = [
-  "macOS 13 Ventura or later · Apple Silicon only (arm64 build)",
+  <><span className="nw">macOS 13</span> Ventura or later · <span className="nw">Apple Silicon</span> only (arm64 build)</>,
   "Safari (the page you watch stays open in a tab)",
   "Optional: a Google account for Gmail · Herald for persistent banners",
 ];
@@ -22,10 +22,10 @@ export default function DownloadSection({ release }: { release: LatestRelease })
             minute.
           </p>
           <ul className="dlx__list">
-            {REQS.map((r) => (
-              <li key={r}>
+            {REQS.map((r, i) => (
+              <li key={i}>
                 <Check size={14} aria-hidden="true" />
-                {r}
+                <span>{r}</span>
               </li>
             ))}
           </ul>

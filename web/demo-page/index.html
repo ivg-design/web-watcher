@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>(3) Feed — Community</title>
+<style>
+  :root { color-scheme: light; --ink: #14161c; --muted: #646a78; --line: #e4e6ee; --accent: #1f5eff; --bg: #f7f8fb; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  header.topbar { position: sticky; top: 0; display: flex; align-items: center; gap: 28px; height: 60px; padding: 0 28px; background: #fff; border-bottom: 1px solid var(--line); }
+  a.brand { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
+  a.brand i { width: 24px; height: 24px; border-radius: 7px; background: var(--accent); display: inline-block; }
+  nav.links { display: flex; gap: 22px; margin-left: 8px; color: var(--muted); font-size: 14px; }
+  nav.links a { color: inherit; text-decoration: none; }
+  nav.links a.on { color: var(--ink); font-weight: 600; }
+  .spacer { flex: 1; }
+  a.inbox { color: var(--muted); text-decoration: none; font-size: 14px; }
+  button.nav-bell { position: relative; width: 40px; height: 40px; border: 0; border-radius: 10px; background: #f0f2f8; display: grid; place-items: center; cursor: pointer; }
+  button.nav-bell svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  span.badge { position: absolute; top: 4px; right: 4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #e5484d; color: #fff; font-size: 11.5px; font-weight: 700; line-height: 18px; text-align: center; }
+  span.badge.bump { animation: pop 420ms cubic-bezier(.22,1,.36,1); }
+  @keyframes pop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: #d9dbe6; display: grid; place-items: center; font-weight: 600; font-size: 13px; color: #fff; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 28px 80px; }
+  h1 { font-size: 24px; letter-spacing: -0.02em; margin: 0 0 6px; }
+  p.sub { color: var(--muted); margin: 0 0 24px; }
+  ul.feed { list-style: none; margin: 0; padding: 0; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
+  ul.feed li { display: grid; grid-template-columns: 34px 1fr auto; gap: 14px; align-items: center; padding: 16px 18px; border-top: 1px solid var(--line); }
+  ul.feed li:first-child { border-top: 0; }
+  ul.feed strong { display: block; font-weight: 600; }
+  ul.feed small { color: var(--muted); font-size: 12.5px; }
+  .replies { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .new { display: inline-block; font-size: 11px; font-weight: 700; color: var(--accent); background: #e3ebff; border-radius: 999px; padding: 2px 8px; margin-left: 8px; vertical-align: 1px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#"><i></i>Community</a>
+  <nav class="links"><a class="on" href="#">Feed</a><a href="#">Showcase</a><a href="#">Help</a><a href="#">Jobs</a></nav>
+  <span class="spacer"></span>
+  <a class="inbox" href="#">Inbox (12)</a>
+  <button class="nav-bell" aria-label="Notifications">
+    <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>
+    <span class="badge" id="badge">3</span>
+  </button>
+  <span class="avatar">IG</span>
+</header>
+<main>
+  <h1>Latest in the community</h1>
+  <p class="sub">48 topics this week · 3 replies waiting for you</p>
+  <ul class="feed" id="feed">
+    <li><span class="avatar" style="background:#7c5cff">A</span><span><strong>Bones in nested artboards?</strong><small>Ana · Help · 14 min ago</small></span><span class="replies">14 replies</span></li>
+    <li><span class="avatar" style="background:#ff8a4c">K</span><span><strong>Data binding lists</strong><small>Kofi · Data binding · 1 h ago</small></span><span class="replies">9 replies</span></li>
+    <li><span class="avatar" style="background:#2ec6d6">M</span><span><strong>Luau pointer events</strong><small>Mei · Scripting · 3 h ago</small></span><span class="replies">31 replies</span></li>
+    <li><span class="avatar" style="background:#4cc98a">S</span><span><strong>Feathering on strokes</strong><small>Sam · Showcase · yesterday</small></span><span class="replies">6 replies</span></li>
+    <li><span class="avatar" style="background:#e0508a">J</span><span><strong>Grid layout breakpoints</strong><small>Jo · Help · yesterday</small></span><span class="replies">22 replies</span></li>
+  </ul>
+</main>
+<script>
+  // Demo page for the recorded WebWatcher demo. The badge value persists in localStorage so a reload (WebWatcher
+  // refreshes background tabs before a check) shows the same number. window.bump() raises it by one and
+  // prepends a "new reply" row; ?badge=N sets the start value; ?bumpAfter=N auto-bumps N seconds after load.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var key = "ww-demo-badge";
+    var start = parseInt(q.get("badge") || "3", 10);
+    // ?badge=N seeds the value once per tab (a reload of the same tab keeps the bumped value).
+    if ((q.has("badge") && sessionStorage.getItem("ww-demo-seeded") !== "1") || !localStorage.getItem(key)) {
+      localStorage.setItem(key, String(start)); sessionStorage.setItem("ww-demo-seeded", "1");
+    }
+    var n = parseInt(localStorage.getItem(key) || String(start), 10);
+    var badge = document.getElementById("badge");
+    var feed = document.getElementById("feed");
+    function row() {
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="avatar" style="background:#1f5eff">R</span><span><strong>Reply to your topic<span class="new">new</span></strong><small>Rae · Help · just now</small></span><span class="replies">1 reply</span>';
+      return li;
+    }
+    function render(animate) {
+      badge.textContent = String(n);
+      document.title = "(" + n + ") Feed — Community";
+      if (animate) { badge.classList.remove("bump"); void badge.offsetWidth; badge.classList.add("bump"); }
+    }
+    render(false);
+    for (var i = start; i < n; i++) feed.prepend(row());
+    window.bump = function () { n += 1; localStorage.setItem(key, String(n)); feed.prepend(row()); render(true); };
+    var after = parseFloat(q.get("bumpAfter") || "0");
+    if (after > 0) setTimeout(window.bump, after * 1000);
+  })();
+</script>
+</body>
+</html>

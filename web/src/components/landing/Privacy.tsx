@@ -53,7 +53,7 @@ export default function Privacy() {
             <p className="pvx__p">
               Checks run in the Safari tab you are already signed into, nothing is proxied or logged, and your config
               lives in <code>~/Library/Application Support/WebWatcher/</code>. Gmail tokens stay in the macOS Keychain
-              with the <code>gmail.modify</code> scope only. The app is Developer ID signed and notarized, MIT licensed,
+              with the <code>gmail.modify</code> scope only. The app is <span className="nw">Developer ID</span> signed and notarized, MIT licensed,
               with the source on GitHub.
             </p>
           </Reveal>
