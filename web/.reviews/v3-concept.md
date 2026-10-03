@@ -28,7 +28,7 @@ beside it ("Logged in your menu bar — click it."). The second line of the head
 at 40 %, goes to full. That is the product in 2.4 s: anxiety is a loop; knowing is a tick. A small
 Replay re-runs it. Reduced motion renders the end state.
 
-Below the fold the hero continues with the real app: the 41 s recording at container width (a 1280 px
+Below the fold the hero continues with the real app: the 15 s recording at container width (a 1280 px
 frame at 1440, bleeding at ≥ 1100), poster = the real popover, plays in place with sound control.
 
 **The page keeps time.** The header is the menu bar: a 64 px graphite strip with the app icon

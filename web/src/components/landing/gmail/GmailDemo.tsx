@@ -217,7 +217,7 @@ export default function GmailDemo() {
         <div className="gx__nwin">
           <div className="gx__notif" data-testid="gm-notif" role="group" aria-label="Grouped notification from WebWatcher">
             <button type="button" className="gx__nhead" data-testid="gm-open" aria-label="Open the newest message" onClick={open}>
-              <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={36} height={36} />
+              <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={36} height={36} />
               <span className="gx__nt">
                 <strong>{`${count} new from Rive team`}</strong>
                 {count > 0 ? (

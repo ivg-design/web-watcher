@@ -108,11 +108,17 @@ for (const w of [1280, 390]) {
   chk(a !== b && ta !== tb, `iris moved ${a} (${ta}) -> ${b} (${tb})`);
 
   // The hero moment is the page's first recorded change: its chip is the one-time callout.
-  await page.waitForSelector(T("watch-notice"), { timeout: 8000 });
+  // Phones: the hero's record only ticks the badge (the chip would cover the headline); the first demo record brings the chip.
+  await page.waitForSelector(T("watch-badge"), { timeout: 8000 });
   chk((await page.$eval(T("watch-badge"), (e) => e.textContent.trim())) === "1", "badge shows 1 (hero moment)");
+  if (w < 1100) {
+    chk(!(await page.$(T("watch-notice"))), "no chip over the stacked hero");
+    await page.evaluate(() => window.__ww_record({ source: "steps", name: "Contra Inbox", title: "Contra Inbox", body: "You have 1 new message", value: "1" }));
+  }
+  await page.waitForSelector(T("watch-notice"), { timeout: 8000 });
   const ntxt = await page.$eval(T("watch-notice"), (e) => e.textContent);
   chk(ntxt.includes("Contra Inbox"), "callout appears with the change title");
-  chk(ntxt.includes("Logged in your menu bar — click it."), "callout carries the menu-bar line");
+  chk(ntxt.includes("Logged in your menu bar. Click it."), "callout carries the menu-bar line");
   const hs = await page.$eval(".ww-notice__hint--l", (e) => getComputedStyle(e).fontSize);
   chk(hs === "12.5px", `hint is 12.5px (${hs})`);
   const g = await page.evaluate(() => {

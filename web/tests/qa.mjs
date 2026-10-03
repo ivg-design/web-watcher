@@ -78,7 +78,7 @@ for (const [w, h] of want_(2) ? VPS : []) {
   if (!hb) d.push("herald banner not visible");
   await jsclick(page, T("wt-row-badge")); await sleep(1000);
   if (!(await page.$(T("wt-notif")))) d.push("watch-type row click: no notification");
-  if (!(await page.$(T("watch-notice")))) d.push("watch-type row click: global notice (watch-notice) absent");
+  if (!(await page.$(T("watch-badge")))) d.push("watch-type row click: header badge absent");
   await jsclick(page, T("pd-scan")); await sleep(1000);
   const step = await page.$eval(T("pd"), (e) => e.dataset.step).catch(() => null);
   if (step !== "2") d.push(`picker Scan page did not advance (step=${step})`);
@@ -98,6 +98,8 @@ for (const [w, h] of want_(3) ? VPS : []) {
   const seq = [];
   for (let i = 0; i < 400; i++) {
     await page.keyboard.press("Tab"); await sleep(250);
+    // The Herald banner enters once its stage is in view: give it its entrance before tabbing on (a stacked phone layout reaches the copy first).
+    if (await page.evaluate(() => !!document.activeElement?.closest("#herald") && !document.querySelector('[data-testid="hb-banner"]'))) await sleep(1800);
     const info = await page.evaluate(() => {
       const e = document.activeElement; if (!e || e === document.body) return null;
       const cs = getComputedStyle(e);
@@ -161,6 +163,7 @@ for (const [w, h] of want_(5) ? VPS : []) {
 if (want_(6) || want_(7)) {
   const page = await mk(1440, 900);
   await go(page, "/"); await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 120)); } scrollTo(0, 0); }); await sleep(1500);
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete), { timeout: 15000 }).catch(() => {});
   const imgs = await page.evaluate(() => [...document.images].map((i) => ({ s: (i.currentSrc || i.src).replace(location.origin, "").slice(0, 60), alt: i.getAttribute("alt"), hid: i.getAttribute("aria-hidden") === "true" || ["presentation", "none"].includes(i.getAttribute("role")), w: i.getAttribute("width"), h: i.getAttribute("height"), nw: i.naturalWidth, cls: i.className })));
   const d = [];
   for (const i of imgs) {

@@ -138,7 +138,7 @@ export default function Stage({ beat, sub, pressed }: Props) {
       <div className={"hw-sheet" + (beat === 2 ? " is-pop" : "")} data-testid="hw-sheet">
         <div className="hw-sheet__in" key={`${beat}-${beat === 1 && sub >= 3 ? "l" : "p"}-${beat === 2 && sub >= 2 ? "n" : "m"}`}>
           {beat !== 2 && (
-            <p className="hw-sheet__h"><img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={16} height={16} />Add Watcher</p>
+            <p className="hw-sheet__h"><img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={16} height={16} />Add Watcher</p>
           )}
           {beat === 0 && (
             <>
@@ -164,7 +164,7 @@ export default function Stage({ beat, sub, pressed }: Props) {
       </div>
 
       <div className={"hw-notif" + (notif ? " is-on" : "")} data-testid="hw-notif" aria-hidden={!notif}>
-        <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={36} height={36} />
+        <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={36} height={36} />
         <div>
           <p className="t">Contra</p>
           <p className="b">You have 3 new messages</p>

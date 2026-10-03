@@ -23,6 +23,8 @@
 .hero .hero__watch:hover { text-decoration-color: var(--n-ink); }
 @media (max-width: 480px) { .hero__cta .btn { width: 100%; } .hero__lede { font-size: 18px; } }
 @media (min-width: 640px) { .hero__title { font-size: clamp(72px, 9.6vw, 148px); } }
+@media (min-width: 1100px) and (max-width: 1279px) { .hero__title { font-size: 8.4vw; } }
+@media (min-width: 1100px) { .hero__title span { white-space: nowrap; } }
 
 .hero__rec { margin-top: clamp(48px, 6vw, 88px); }
 .hero__rec-label { margin: 0 0 12px; }

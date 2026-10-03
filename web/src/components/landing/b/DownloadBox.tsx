@@ -42,7 +42,7 @@ export default function DownloadBox({ release }: { release: LatestRelease }) {
     <div className="dlx__frame">
       <div className="dlx__box">
         <div className="dlx__head">
-          <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={56} height={56} />
+          <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={56} height={56} />
           <div className="dlx__ver">
             <b><span className="nw">WebWatcher</span> <span className="nw">{release.version}</span></b>
             <span><span className="nw">Build {release.build}</span>, {release.monthYear}, DMG, {release.sizeMb}</span>

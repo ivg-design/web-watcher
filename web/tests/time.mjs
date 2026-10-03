@@ -26,7 +26,7 @@ for (const w of [1440, 390]) {
     await p2.setViewport({ width: w, height: 900, hasTouch: w < 500 });
     await p2.goto(BASE + "/", { waitUntil: "networkidle2", timeout: 90000 });
     await p2.waitForSelector(T("watch-mark"), { timeout: 30000 });
-    await p2.evaluate(() => window.__ww_record({ source: "hero", name: "Chip", title: "Chip", body: "b" }));
+    await p2.evaluate(() => window.__ww_record({ source: "types", name: "Chip", title: "Chip", body: "b" }));
     await p2.waitForSelector(T("watch-notice"), { timeout: 5000 });
     const g = await p2.evaluate(() => { const n = document.querySelector('[data-testid="watch-notice"]').getBoundingClientRect(); const h = document.querySelector("header.site-header").getBoundingClientRect(); const m = document.querySelector('[data-testid="watch-mark"]').getBoundingClientRect(); return { nt: n.top, hb: h.bottom, nr: n.right, mr: m.right, nl: n.left, w: innerWidth }; });
     chk(g.nt >= g.hb, `chip below header (top ${g.nt} >= ${g.hb})`);

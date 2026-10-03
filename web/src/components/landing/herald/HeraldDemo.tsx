@@ -327,7 +327,7 @@ export default function HeraldDemo() {
           {note1 === "snoozed" ? <span data-testid="hb-returns">Snoozed · returns at 9:00</span> : null}
           {note1 === "done" ? (
             <span>
-              Done — Herald told WebWatcher, which told Gmail ·{" "}
+              Done. Herald told WebWatcher, which told Gmail.{" "}
               <button type="button" className="hx__link" data-testid="hb-show" onClick={showBoth}>Show again</button>
             </span>
           ) : null}
@@ -338,7 +338,7 @@ export default function HeraldDemo() {
           {count >= 4 ? "Delivered from Rive team" : "Deliver another from Rive team"}
         </button>
         <p className="hx__caption">Banners stay until you act on them, stacked per sender or site.</p>
-        <p className="hx__caption">Herald can read a banner aloud — this is how it sounds.</p>
+        <p className="hx__caption">Herald can read a banner aloud. This is how it sounds.</p>
       </div>
     </div>
   );

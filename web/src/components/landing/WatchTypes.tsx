@@ -88,7 +88,7 @@ export default function WatchTypes() {
                 <div className="wt-live" aria-live="polite">
                   {lands && notif && (
                     <div className="wt-notif" data-testid="wt-notif" role="group" aria-label="Notification as WebWatcher posts it">
-                      <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={36} height={36} />
+                      <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={36} height={36} />
                       <div className="wt-notif__t">
                         <strong data-testid="wt-notif-title">{notif.watcher}</strong>
                         {notif.sub && <b className="wt-notif__sub" data-testid="wt-notif-sub">{notif.sub}</b>}

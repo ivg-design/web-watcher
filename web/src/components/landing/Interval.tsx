@@ -83,11 +83,16 @@ export default function Interval() {
     <section id="interval" className="section ivl night" aria-labelledby="ivl-title">
       <div className="container">
         <div className="ivl__band" ref={band}>
+          <div className="ivl__main">
           <h2 id="ivl-title" className="t-cond ivl__title">
             Every <Roll value={label} testId="ivl-every" /> it looks.{" "}
             <Roll value={fmt(day)} testId="ivl-day" innerRef={dayEl} /> looks a day,{" "}
             <Roll value={fmt(week)} testId="ivl-week" innerRef={weekEl} /> a week. You make none of them.
           </h2>
+          <p className="ivl__copy">
+            Each watcher has its own timer, set to the interval you pick for it. A check reads the page from a Safari tab, and opens one in the background if there is none. A change posts one notification.
+          </p>
+          </div>
           <div className="ivl__ctl">
             <div role="radiogroup" aria-label="Check interval" className="ivl__chips">
               {OPTIONS.map((o) => (
@@ -112,9 +117,6 @@ export default function Interval() {
             </p>
           </div>
         </div>
-        <p className="ivl__copy">
-          Each watcher has its own timer, set to the interval you pick for it. A check reads the page from a Safari tab, and opens one in the background if there is none. A change posts one notification.
-        </p>
       </div>
     </section>
   );

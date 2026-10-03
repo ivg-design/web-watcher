@@ -144,7 +144,9 @@ code, .mono { font-family: var(--font-mono); }
 .menu-btn { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--n-line); background: transparent; color: var(--n-ink); border-radius: 8px; }
 .mobile-nav { border-top: 1px solid var(--n-line); background: var(--n-bg); color: var(--n-ink); padding: 8px var(--gutter) 20px; display: grid; }
 .mobile-nav a { padding: 14px 0; border-bottom: 1px solid var(--n-line); font-weight: 500; }
-@media (min-width: 1100px) { .nav { display: flex; } .gh-link { display: inline-flex; } .menu-btn { display: none; } .site-header__end { margin-left: 0; } }
+@media (min-width: 1100px) { .nav { display: flex; gap: 22px; } .nav a { white-space: nowrap; } .menu-btn { display: none; } .site-header__end { margin-left: 0; } }
+@media (min-width: 1360px) { .nav { gap: 28px; } .gh-link { display: inline-flex; } }
+@media (max-width: 1359px) { .menubar-clock { display: none !important; } }
 @media (max-width: 480px) { .site-header__end .btn, .menubar-clock { display: none !important; } }
 
 /* Footer (paper) */

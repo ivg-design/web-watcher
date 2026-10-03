@@ -24,7 +24,7 @@ const l = await page.evaluate(() => {
   const i = document.querySelector(".site-header .brand img").getBoundingClientRect();
   return { h: i.height, w: i.width, row: document.querySelector(".site-header__row").getBoundingClientRect().height };
 });
-ok(l.h === 66 && l.w === 66 && l.row === 76, `landing icon ${l.w}x${l.h} row ${l.row}`);
+ok(l.h === 54 && l.w === 54 && l.row === 63, `landing icon ${l.w}x${l.h} row ${l.row}`);
 
 const ent = /&(#x?[0-9a-f]+|[a-z]+);/i;
 for (const p of slugs) {

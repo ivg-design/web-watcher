@@ -71,6 +71,8 @@ export default function WatchNotices() {
     if (!latest || latest.id === lastId.current) return;
     lastId.current = latest.id;
     if (used.current) return;
+    // Stacked layouts: the hero's own moment sits right under the header, so its record only ticks the badge; the chip waits for the first demo.
+    if (latest.source === "hero" && window.innerWidth < 1100) return;
     used.current = true;
     if (popOpen.current) return;
     // Anchor to the live mark position (header is sticky, so this is stable).
@@ -103,7 +105,7 @@ export default function WatchNotices() {
           <span className="ww-notice__arrow" aria-hidden="true">↑</span>
           <span className="ww-notice__txt">
             <b className="ww-notice__title">{shown.title}</b>
-            <small className="ww-notice__hint ww-notice__hint--l">Logged in your menu bar — click it.</small>
+            <small className="ww-notice__hint ww-notice__hint--l">Logged in your menu bar. Click it.</small>
           </span>
         </button>
       )}

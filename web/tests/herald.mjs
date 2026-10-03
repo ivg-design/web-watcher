@@ -103,7 +103,7 @@ async function run(w, h) {
   for (const b of ["hb-read", "hb-archive", "hb-delete", "hb-spam", "hb-close"]) {
     await click(page, b); await sleep(500);
     ok(!(await has(page, "hb-banner")) && (await has(page, "hb-show")), `${b} dismisses`);
-    if (b !== "hb-close") ok((await page.$eval(".hx__note", (e) => e.textContent)).includes("Done — Herald told WebWatcher, which told Gmail"), "done line");
+    if (b !== "hb-close") ok((await page.$eval(".hx__note", (e) => e.textContent)).includes("Done. Herald told WebWatcher, which told Gmail"), "done line");
     await click(page, "hb-show"); await sleep(400);
     ok(await has(page, "hb-banner"), "show again");
   }
@@ -122,7 +122,7 @@ async function run(w, h) {
   ok(!(await has(page, "hb-banner")) && Math.abs(q.b.top - q.s.top - top1) < 1.5, "banner 2 moved up into first slot");
   // deliver another: email re-enters with 4 + Beta invite
   ok(await page.$eval(T("hb-more"), (e) => e.textContent.includes("Deliver another from Rive team") && !e.disabled), "deliver control");
-  ok((await page.$$eval(".hx__caption", (e) => e.map((x) => x.textContent))).join("|") === "Banners stay until you act on them, stacked per sender or site.|Herald can read a banner aloud — this is how it sounds.", "captions");
+  ok((await page.$$eval(".hx__caption", (e) => e.map((x) => x.textContent))).join("|") === "Banners stay until you act on them, stacked per sender or site.|Herald can read a banner aloud. This is how it sounds.", "captions");
   await click(page, "hb-more"); await sleep(1000);
   ok(await has(page, "hb-banner"), "email banner re-enters");
   const t4 = await page.$eval(T("hb-banner"), (e) => e.textContent);
