@@ -1,5 +1,7 @@
 WebWatcher needs three permissions. macOS prompts for most of them on first run; the Safari one you switch on yourself. Together they are the whole trust model: the app talks to Safari and to Notification Center, and to nothing else.
 
+![The Permissions dashboard](/shots/permissions.png)
+
 ## 1. Safari: Allow JavaScript from Apple Events
 
 This is the most important one. Without it WebWatcher cannot read page content.

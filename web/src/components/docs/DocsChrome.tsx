@@ -47,7 +47,8 @@ export default function DocsChrome({
   const [drawer, setDrawer] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  useEffect(() => { setDrawer(false); }, [pathname]);
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (seenPath !== pathname) { setSeenPath(pathname); setDrawer(false); }
 
   useEffect(() => {
     if (!drawer) return;
@@ -97,7 +98,7 @@ export default function DocsChrome({
         </button>
         <div className="docs-brand">
           <Link href={asset("/")} className="brand" aria-label="WebWatcher home">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            { }
             <img src={asset("/images/webwatcher-icon.png")} alt="" width={54} height={54} />
             WebWatcher
           </Link>

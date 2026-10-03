@@ -3,13 +3,6 @@ import Reveal from "@/components/motion/Reveal";
 import { asset } from "@/lib/config";
 import GmailCard from "./b/GmailCard";
 
-const FIELDS: [string, string][] = [
-  ["Account", "ilya@… ▾"],
-  ["Senders", "hello@rive.app, @rive.app"],
-  ["Name", "Rive team"],
-  ["Notification", "Custom icon · “{count} new from {sender}”"],
-];
-
 function GoogleG() {
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -43,14 +36,15 @@ export default function Gmail() {
           </p>
         </Reveal>
         <Reveal delay={0.1}>
-          <div className="editor" aria-label="Example sender watcher editor">
-            <h4>Gmail sender watcher</h4>
-            {FIELDS.map(([k, v]) => (
-              <div className="editor__row" key={k}>
-                <span>{k}</span>
-                <div className="editor__field">{v}</div>
-              </div>
-            ))}
+          <div className="gshot">
+            <img
+              src={asset("/shots/gmail-sender-editor.png")}
+              srcSet={`${asset("/shots/gmail-sender-editor.png")} 1x, ${asset("/shots/gmail-sender-editor@2x.png")} 2x`}
+              alt="The Gmail sender watcher editor in WebWatcher"
+              width={560}
+              height={732}
+              loading="lazy"
+            />
           </div>
           <GmailCard />
         </Reveal>

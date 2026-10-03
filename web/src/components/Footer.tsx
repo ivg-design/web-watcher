@@ -23,7 +23,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="container footer__grid">
         <div className="footer__brand">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <img src={asset("/images/webwatcher-icon.png")} alt="" width={28} height={28} />
           <strong>WebWatcher</strong>
           <p>A menu-bar page watcher for macOS by IVG Design. MIT license.</p>

@@ -1,6 +1,6 @@
 WebWatcher's settings are few. This page lists what is there and where each option lives.
 
-![The Settings window](/shots/settings.png)
+![The Settings window, General section](/shots/settings-general.png)
 
 ## General
 

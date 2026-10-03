@@ -2,8 +2,8 @@ import { Download } from "lucide-react";
 import type { LatestRelease } from "@/lib/release";
 import { REPO_URL } from "@/lib/config";
 import HeroDemo from "./HeroDemo";
-import DemoLink from "./a/DemoLink";
 import "@/styles/sections-a.css";
+import "@/styles/hero.css";
 
 export default function Hero({ release }: { release: LatestRelease }) {
   return (
@@ -12,7 +12,7 @@ export default function Hero({ release }: { release: LatestRelease }) {
         <div className="hero__copy">
           <p className="badge hero-in" style={{ "--i": 0 } as React.CSSProperties}>
             <i aria-hidden="true" />
-            Free · Open source · macOS 13+ · Notarized
+            Free · Open source · Notarized
           </p>
           <h1 id="hero-title" className="hero__title">
             <span className="hero-in" style={{ "--i": 1 } as React.CSSProperties}>Stop refreshing.</span>
@@ -31,11 +31,8 @@ export default function Hero({ release }: { release: LatestRelease }) {
             <a className="btn btn--ghost" href={REPO_URL}>View on GitHub</a>
           </div>
           <p className="hero__facts hero-in" style={{ "--i": 5 } as React.CSSProperties}>
-            Apple Silicon DMG · Developer ID signed and notarized · MIT license · No account, no server, nothing leaves your Mac
+            Apple Silicon (arm64) only · macOS 13+ · Developer ID signed and notarized · MIT license · No account, no server, nothing leaves your Mac
           </p>
-          <div className="hero-in" style={{ "--i": 6 } as React.CSSProperties}>
-            <DemoLink />
-          </div>
         </div>
         <div className="hero__media">
           <HeroDemo />

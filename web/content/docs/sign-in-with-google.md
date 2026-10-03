@@ -1,5 +1,7 @@
 WebWatcher can also watch for new mail from specific senders or domains arriving in the Inbox, and notify you the moment it lands. It starts with a normal Google sign-in.
 
+![Settings, Gmail account section](/shots/settings-gmail.png)
+
 ## Sign in
 
 Click *Add Gmail Account*, or *Sign in with Google* in the Gmail sender editor, sign in, and allow access. That is all. WebWatcher uses its own built-in Google OAuth client, so there is no console or JSON step for most people.

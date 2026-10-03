@@ -1,5 +1,7 @@
 A watch type says what counts as a change. The picker chooses one for you from what it sees, and you can change it by hand.
 
+![The watcher editor with Watch Type and Check Interval](/shots/watcher-editor.png)
+
 ## The types
 
 | Type | What it does |

@@ -1,5 +1,7 @@
 Every watcher can have its own icon, title and body, so you know which platform pinged you before you read a word.
 
+![Settings, Notifications: the Delivery picker](/shots/settings-notifications.png)
+
 ## Custom icon
 
 Set a different icon for each watcher. A notification with the Rive logo and one with the Contra logo are different at a glance, even in a stack of banners.

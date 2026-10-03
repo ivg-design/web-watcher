@@ -1,4 +1,4 @@
-import { open, T, txt, has, click, sleep, ok, done } from "./_h.mjs";
+import { open, txt, has, click, sleep, ok, done } from "./_h.mjs";
 const { browser, page } = await open();
 ok(await has(page, "hb-banner"), "banner visible");
 await click(page, "hb-snooze"); await sleep(600);

@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer-core";
-export const BASE = process.env.BASE || "http://localhost:3211";
+export const BASE = process.env.BASE || "http://localhost:3201";
 export async function open(sel, reduce = false) {
   const browser = await puppeteer.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: "new" });
   const page = await browser.newPage();

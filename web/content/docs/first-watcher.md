@@ -11,7 +11,7 @@ Open the page you want to watch in Safari and sign in if it needs a login. WebWa
 3. On the Element step, pick one of the ranked candidates or choose Pick in Safari and click the element yourself. The [next page](/docs/finding-the-element) covers this in detail.
 4. On the Confirm step, check the value WebWatcher read live, then save. The first check runs immediately.
 
-![The add-watcher editor](/shots/add-watcher.png)
+![Add Watcher, element step: Scan page lists candidates; Use selects one](/shots/add-watcher-element.png)
 
 ## What happens next
 

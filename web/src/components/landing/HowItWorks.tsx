@@ -1,8 +1,22 @@
 import { Globe, MousePointer2, BellRing } from "lucide-react";
 import Reveal from "@/components/motion/Reveal";
 import { asset } from "@/lib/config";
-import { PointerMock } from "./a/StepVisuals";
 import "@/styles/sections-a.css";
+
+function Shot({ name, alt }: { name: string; alt: string }) {
+  return (
+    <div className="step__shot">
+      <img
+        src={asset(`/shots/${name}.png`)}
+        srcSet={`${asset(`/shots/${name}.png`)} 1x, ${asset(`/shots/${name}@2x.png`)} 2x`}
+        alt={alt}
+        width={560}
+        height={877}
+        loading="lazy"
+      />
+    </div>
+  );
+}
 
 export default function HowItWorks() {
   return (
@@ -18,11 +32,7 @@ export default function HowItWorks() {
         </Reveal>
         <ol className="steps" style={{ listStyle: "none", padding: 0 }}>
           <Reveal as="li" className="step" delay={0}>
-            <div className="step__card" role="img" aria-label="A Safari page with a few lines of content">
-              <span className="skel" style={{ top: 28 }} />
-              <span className="skel" style={{ top: 48, width: 160, right: "auto" }} />
-              <span className="skel" style={{ top: 68 }} />
-            </div>
+            <Shot name="add-watcher-page" alt="Add Watcher, step 1: the Safari page WebWatcher found" />
             <div className="step__meta">
               <span className="step__num">01</span>
               <Globe size={18} aria-hidden="true" />
@@ -34,7 +44,7 @@ export default function HowItWorks() {
             </p>
           </Reveal>
           <Reveal as="li" className="step" delay={0.1}>
-            <PointerMock />
+            <Shot name="add-watcher-element" alt="Add Watcher, step 2: candidates found by Scan page, with Pick in Safari" />
             <div className="step__meta">
               <span className="step__num">02</span>
               <MousePointer2 size={18} aria-hidden="true" />
@@ -46,15 +56,7 @@ export default function HowItWorks() {
             </p>
           </Reveal>
           <Reveal as="li" className="step" delay={0.2}>
-            <div className="step__card" role="img" aria-label="Notification: Rive Community, 3 new. Bell badge went 0 to 3, just now">
-              <div className="mini-notif">
-                <img src={asset("/images/webwatcher-icon.png")} alt="" width={34} height={34} />
-                <div>
-                  <strong>Rive Community · 3 new</strong>
-                  <small>bell badge went 0 → 3 · just now</small>
-                </div>
-              </div>
-            </div>
+            <Shot name="add-watcher-confirm" alt="Add Watcher, step 3: the live reading before saving" />
             <div className="step__meta">
               <span className="step__num">03</span>
               <BellRing size={18} aria-hidden="true" />

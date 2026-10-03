@@ -1,4 +1,4 @@
-import { open, T, txt, has, click, sleep, ok, done } from "./_h.mjs";
+import { open, txt, has, click, sleep, ok, done } from "./_h.mjs";
 const { browser, page } = await open();
 const exp = { badge: ["3", "5", "Rive Community — 5 new"], text: ["“Open”", "“Closed”", "Status changed"], subtree: ["48 items", "51 items", "Notifications changed"], title: ["(0)", "(3)", "Inbox changed"], aria: ["1 new", "2 new", "Rive Community — 2 new"] };
 for (const [s, [b, a, title]] of Object.entries(exp)) {

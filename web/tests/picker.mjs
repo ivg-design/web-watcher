@@ -1,0 +1,86 @@
+import { open, T, txt, click, sleep, ok, done } from "./_h.mjs";
+const { browser, page } = await open();
+const lit = () => page.$eval(T("pd-outline"), (e) => e.dataset.lit).catch(() => null);
+const attr = (id, a) => page.$eval(T(id), (e, a) => e.getAttribute(a), a);
+const center = (sel) => page.$eval(sel, (e) => { const r = e.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+
+await page.$eval("#picker", (e) => e.scrollIntoView());
+ok((await attr("pd", "data-step")) === "1", "starts on step 1 (Page)");
+ok(await page.$eval(T("pd-step-2"), (e) => e.disabled), "step 2 pill is disabled before scanning");
+await click(page, "pd-scan");
+await sleep(1000);
+ok((await attr("pd", "data-step")) === "2", "Scan page advances to step 2");
+ok((await lit()) === "badge", "best match (badge) is outlined in the sketch");
+ok((await txt(page, "pd-strategy")) === "Badge count" && (await txt(page, "pd-value")) === "3", "panel shows Badge count / 3");
+ok((await txt(page, "pd-selector")).includes("span.badge"), "panel shows the selector");
+
+await click(page, "pd-cand-inbox");
+await sleep(300);
+ok((await lit()) === "inbox", "selecting Inbox moves the outline to the inbox link");
+ok((await txt(page, "pd-strategy")) === "Text change" && (await txt(page, "pd-value")) === "Inbox (12)", "panel updates to Text change / Inbox (12)");
+const ob = await page.$eval(T("pd-outline"), (e) => e.getBoundingClientRect().toJSON());
+const ib = await page.$eval('[data-node="inbox"]', (e) => e.getBoundingClientRect().toJSON());
+ok(Math.abs(ob.left + 3 - ib.left) < 2 && Math.abs(ob.top + 3 - ib.top) < 2, "outline geometry matches the inbox element");
+await click(page, "pd-cand-title");
+await sleep(300);
+ok((await lit()) === "title" && (await txt(page, "pd-strategy")) === "Document title", "Page title candidate outlines the tab title");
+await click(page, "pd-cand-feed");
+ok((await txt(page, "pd-value")) === "48 items", "Feed candidate: subtree, 48 items");
+
+await click(page, "pd-cand-badge");
+await click(page, "pd-use");
+await sleep(150);
+ok((await attr("pd", "data-step")) === "3", "Use this element advances to Confirm");
+ok((await txt(page, "pd-live")).includes("Reading"), "live read starts as 'Reading the page'");
+await sleep(1000);
+ok((await txt(page, "pd-live")) === "3", "live read resolves to the badge value");
+ok((await txt(page, "pd-newrow")).includes("Not saved yet"), "popover shows the pending watcher row");
+await click(page, "pd-add");
+ok((await txt(page, "pd-newrow")).includes("Watching") && (await txt(page, "pd-newrow")).includes("3"), "Add watcher: row becomes live in the popover");
+await click(page, "pd-step-2");
+ok((await attr("pd", "data-step")) === "2", "step pill navigates back to Element");
+await click(page, "pd-step-3");
+ok((await attr("pd", "data-step")) === "3", "step pill navigates forward to Confirm");
+await click(page, "pd-step-1");
+ok((await attr("pd", "data-step")) === "1", "step pill navigates to Page");
+await click(page, "pd-step-2");
+
+// In-page outline mode
+await click(page, "pd-pick");
+ok((await attr("pd", "data-picking")) === "1", "Pick in Safari switches to the in-page outline mode");
+let c = await center('[data-node="inbox"]');
+await page.mouse.move(c.x, c.y);
+await sleep(350);
+ok((await lit()) === "inbox", "mouse over the inbox link outlines it");
+c = await center('[data-node="item2"]');
+await page.mouse.move(c.x, c.y);
+await sleep(350);
+ok((await lit()) === "item2", "mouse over a feed row outlines that row");
+ok((await txt(page, "pd-selector")).includes("li:nth-child(2)"), "panel selector follows the mouse");
+c = await center('[data-node="badge"]');
+await page.mouse.move(c.x, c.y);
+await page.mouse.click(c.x, c.y);
+await sleep(300);
+ok((await page.evaluate(() => document.activeElement?.getAttribute("data-testid"))) === "pd-sketch", "sketch is keyboard focused");
+await page.keyboard.press("ArrowUp");
+await sleep(260);
+ok((await lit()) === "bell", "ArrowUp walks to the parent (bell)");
+await page.keyboard.press("ArrowUp");
+await sleep(260);
+ok((await lit()) === "topbar", "ArrowUp again walks to the top bar");
+await page.keyboard.press("ArrowDown");
+await sleep(260);
+ok((await lit()) === "brand", "ArrowDown walks to the first child");
+await page.keyboard.press("ArrowRight");
+await sleep(260);
+ok((await lit()) === "inbox", "ArrowRight walks to the next sibling");
+await page.keyboard.press("Enter");
+await sleep(1100);
+ok((await attr("pd", "data-step")) === "3" && (await txt(page, "pd-live")) === "Inbox (12)", "Enter confirms: Confirm step reads Inbox (12)");
+
+// Escape cancels
+await click(page, "pd-step-2");
+await click(page, "pd-pick");
+await page.keyboard.press("Escape");
+ok((await attr("pd", "data-picking")) === "0", "Escape leaves the in-page mode");
+await done(browser);

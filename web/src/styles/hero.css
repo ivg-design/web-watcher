@@ -1,0 +1,32 @@
+/* Hero: copy and the in-place demo share the container, equal weight, no bleed */
+.hero__grid { display: grid; gap: 40px; align-items: center; }
+.hero__media { min-width: 0; }
+@media (min-width: 1100px) {
+  .hero__grid { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 56px; }
+  .hero__title { font-size: clamp(60px, 5.4vw, 82px); }
+}
+
+.hv { width: 100%; }
+.hv__frame { position: relative; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden; isolation: isolate; background: linear-gradient(150deg, #f6b25c, #ef7a6b 35%, #e0508a 70%, #b44fd0); box-shadow: 0 30px 60px -28px rgb(20 22 28 / 0.45); }
+.hv__poster, .hv__win { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hv__poster { object-fit: cover; transition: opacity 400ms var(--ease-quart); }
+.hv__poster.is-hidden { opacity: 0; }
+.hv__win { inset: 50% auto auto 50%; width: 90%; height: auto; aspect-ratio: 3106 / 1362; transform: translate(-50%, -52%); border-radius: 12px; overflow: hidden; background: #14161c; box-shadow: 0 24px 48px -16px rgb(20 22 28 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.12); opacity: 0; transition: opacity 400ms var(--ease-quart); }
+.hv__win.is-on { opacity: 1; }
+.hv__win video { width: 100%; height: 100%; object-fit: cover; }
+.hv__play { position: absolute; inset: 0; z-index: 3; display: grid; place-content: center; justify-items: center; gap: 12px; background: none; border: 0; color: #fff; }
+.hv__play-btn { width: 80px; height: 80px; border-radius: 50%; background: #fff; color: var(--accent); display: grid; place-items: center; box-shadow: 0 10px 30px rgb(20 22 28 / 0.35); }
+.hv__play-label { font-weight: 600; font-size: 15px; padding: 6px 12px; border-radius: 999px; background: rgb(20 22 28 / 0.62); backdrop-filter: blur(6px); }
+.hv__play:focus-visible { outline: 3px solid #fff; outline-offset: -8px; border-radius: 20px; }
+.hv__bar { position: absolute; z-index: 3; left: 50%; bottom: 4%; transform: translateX(-50%); display: inline-flex; gap: 6px; padding: 6px; border-radius: 999px; background: rgb(20 22 28 / 0.72); backdrop-filter: blur(8px); }
+.hv__bar button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: #fff; display: grid; place-items: center; }
+.hv__bar button:focus-visible { outline: 2px solid #fff; outline-offset: 0; }
+.hv__bar button[aria-pressed="true"] { color: #ffb4b4; }
+.hv__cap { color: var(--muted); font-size: 13.5px; margin-top: 12px; }
+@media (max-width: 520px) { .hv__play-btn { width: 64px; height: 64px; } .hv__play-btn svg { width: 24px; height: 24px; } .hv__frame { border-radius: 14px; } }
+
+/* How it works: real captures instead of mocks */
+.step__shot { height: 300px; border-radius: 12px; overflow: hidden; position: relative; }
+.step__shot img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.gshot { max-width: 440px; height: 330px; margin-inline: auto; border-radius: 14px; overflow: hidden; }
+.gshot img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }

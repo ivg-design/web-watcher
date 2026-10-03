@@ -1,5 +1,7 @@
 A Gmail watcher is a sender pattern, not an inbox. You tell WebWatcher which addresses matter and it counts what is unread from them.
 
+![The Gmail sender watcher editor](/shots/gmail-sender-editor.png)
+
 ## Senders and domains
 
 In the Gmail sender editor, the Senders field takes one or more addresses or `@domain.com` patterns, for example `hello@rive.app, @rive.app`. A pattern with a domain matches everyone at that domain.

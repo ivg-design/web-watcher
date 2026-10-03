@@ -4,7 +4,10 @@ export const RELEASES_URL = `${REPO_URL}/releases`;
 export const HERALD_URL = "https://github.com/ivg-design/herald";
 export const DEMO_VIDEO_URL =
   "https://github.com/user-attachments/assets/8adbf24e-0b20-4d1a-8bc1-d2593f2a02f7";
-export const DEMO_DURATION = "0:40";
+/** Self-hosted, transcoded copy of the README demo (the GitHub user-attachments URL 404s without a GitHub session, so it cannot be a <video> src). */
+export const DEMO_VIDEO_SRC = "/media/webwatcher-demo.mp4";
+export const DEMO_POSTER = "/shots/hero-poster.png";
+export const DEMO_DURATION = "1:13";
 
 /** Hardcoded fallback used when the GitHub API is unreachable at build time. Refresh per release. */
 export const FALLBACK_RELEASE = {

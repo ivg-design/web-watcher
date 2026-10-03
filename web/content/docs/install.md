@@ -1,5 +1,7 @@
 Download the DMG, drag the app to Applications, and open it. WebWatcher lives in the menu bar, not the Dock, so look for the hourglass-with-an-eye icon after it launches.
 
+![The menu bar popover with three watchers](/shots/popover.png)
+
 ## Requirements
 
 - macOS 13.0 or later.
