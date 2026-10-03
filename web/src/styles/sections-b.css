@@ -95,3 +95,24 @@
 .cl__d { font-family: var(--font-mono); color: var(--muted); font-size: 13px; padding-top: 2px; }
 .cl__t { color: var(--muted); font-size: 15px; line-height: 1.65; }
 
+
+/* additions */
+.cl__more { display: inline-block; margin-top: 24px; color: var(--accent); font-size: 14px; font-weight: 600; }
+.cl__more:hover { text-decoration: underline; text-underline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.gnotif .subjects { display: flex; flex-wrap: wrap; gap: 0 4px; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.subj { display: inline; transition: opacity 300ms var(--ease-quart); }
+.subj--in { animation: subj-in 360ms var(--ease-quint) both; }
+.subj.is-read { text-decoration: line-through; opacity: 0.45; }
+.roll__d { display: inline-block; animation: roll-in 300ms var(--ease-quart) both; }
+@keyframes subj-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes roll-in { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: none; } }
+.pill, .bbtn { cursor: default; font-family: inherit; }
+.dl__small .sha { cursor: pointer; }
+.gbtn { cursor: default; user-select: none; }
+.dl__box .btn svg { flex: none; }
+@media (max-width: 480px) { .dl__box { padding: 20px; } .banner__btns .bbtn { flex: 1 1 auto; } }
+@media (prefers-reduced-motion: reduce) {
+  .subj--in, .roll__d { animation: none; }
+  .flip > * { transition: none; }
+}
