@@ -21,7 +21,7 @@
 .demo { position: relative; container-type: inline-size; aspect-ratio: 700 / 600; border-radius: 16px 0 0 16px; overflow: hidden; background: #2a2e3b; box-shadow: 0 30px 60px -30px rgb(20 22 28 / 0.45); isolation: isolate; }
 @media (min-width: 1100px) { .demo { border-radius: 16px 0 0 16px; } }
 .demo__scene { --u: calc(100cqw / 700); position: absolute; inset: 0; font-size: calc(var(--u) * 13); }
-.demo__menubar { position: absolute; left: 0; right: 0; top: 0; height: calc(var(--u) * 38); background: #14161c; display: flex; align-items: center; justify-content: flex-end; gap: calc(var(--u) * 16); padding-right: calc(var(--u) * 100); color: #e9ebf3; font-size: calc(var(--u) * 12.5); }
+.demo__menubar { position: absolute; left: 0; right: 0; top: 0; height: calc(var(--u) * 38); background: #14161c; display: flex; align-items: center; justify-content: flex-end; gap: calc(var(--u) * 16); padding-right: calc(var(--u) * 150); color: #e9ebf3; font-size: calc(var(--u) * 12.5); }
 .demo__glyph { position: relative; width: calc(var(--u) * 30); height: calc(var(--u) * 22); background: #e9ebf3; border-radius: calc(var(--u) * 4); display: grid; place-items: center; color: #14161c; }
 .demo__glyph svg { width: 70%; height: 80%; overflow: visible; }
 .demo__desk { position: absolute; inset: calc(var(--u) * 38) 0 0 0; background: #cdd2e2; }
@@ -121,7 +121,7 @@
 .sketch i.is-hot { background: transparent; box-shadow: 0 0 0 2px var(--accent); }
 .sketch i.is-hot::after { content: ""; position: absolute; inset: 0; background: rgb(31 94 255 / 0.4); border-radius: 2px; }
 .picker__copy .eyebrow { color: var(--accent); }
-.picker__h { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.04em; line-height: 1.04; font-size: clamp(38px, 6.4vw, 60px); margin-top: 16px; text-wrap: pretty; }
+.picker__h { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.04em; line-height: 1.04; font-size: clamp(38px, 6.4vw, 58px); letter-spacing: -0.052em; margin-top: 16px; text-wrap: pretty; }
 .picker__p { color: var(--on-dark-muted); font-size: 17px; line-height: 1.7; margin-top: 24px; max-width: 34em; }
 .ticks { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 16px; }
 .ticks li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 1.5; }

@@ -48,8 +48,9 @@ export default function GmailCard() {
           <span className="subjects">
             {visible.map((s, i) => (
               <span key={s} className={started && !reduce ? "subj--in" : undefined}>
+                {i > 0 ? <span aria-hidden="true">{"· "}</span> : null}
                 <span className={`subj${read === i ? " is-read" : ""}`}>{s}</span>
-                {i < visible.length - 1 ? " ·" : ""}
+                {i < visible.length - 1 ? " " : ""}
               </span>
             ))}
           </span>
