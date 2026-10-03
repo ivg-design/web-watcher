@@ -19,6 +19,27 @@ ok(m.href === "/", `docs brand href "/" (${m.href})`);
 ok(/\/docs\/?$/.test(m.crumb), `docs crumb -> ${m.crumb}`);
 ok(m.hh === 64 && m.ih === 54 && m.iw === 54, `docs icon ${m.iw}x${m.ih} in header ${m.hh}`);
 
+const dh = await page.evaluate(() => {
+  const bgOf = (q) => getComputedStyle(document.querySelector(q)).backgroundColor;
+  const shell = document.querySelector(".docs-shell");
+  const bad = [];
+  for (const e of shell.querySelectorAll("*")) { const c = getComputedStyle(e); if (c.color === "rgb(31, 94, 255)" || c.backgroundColor === "rgb(31, 94, 255)") bad.push(e.className || e.tagName); }
+  const rgb = (v) => { const c = document.createElement("canvas").getContext("2d"); c.fillStyle = v; c.fillRect(0, 0, 1, 1); return [...c.getImageData(0, 0, 1, 1).data].slice(0, 3).join(","); };
+  return { hbg: bgOf(".docs-header"), shellBg: rgb(bgOf(".docs-shell")), bodyBg: rgb(getComputedStyle(document.body).backgroundColor), bad, brandHref: document.querySelector(".docs-header .brand").getAttribute("href") };
+});
+await go("/docs/notification-templates", 1440);
+const tk = await page.evaluate(() => { const c = document.querySelector(".prose table code"); return c ? getComputedStyle(c).whiteSpace : null; });
+ok(tk === "nowrap", `table code token white-space nowrap (${tk})`);
+const dbg2 = await page.evaluate(() => { const e = document.querySelector(".docs-header"); const c = getComputedStyle(e); return { bg: c.backgroundColor, bb: c.borderBottomColor }; });
+await go("/", 1440);
+const lh = await page.evaluate(() => { const c = getComputedStyle(document.querySelector(".site-header")); return { bg: c.backgroundColor, bb: c.borderBottomColor }; });
+ok(dh.hbg === lh.bg && dbg2.bb === lh.bb, `docs header bg/border equal landing header (${dh.hbg} vs ${lh.bg})`);
+ok(dh.shellBg !== "244,245,250" && dh.bodyBg !== "244,245,250", `docs body not old #f4f5fa (${dh.shellBg})`);
+ok(dh.bad.length === 0, `no element in docs shell uses the old accent rgb(31, 94, 255) ${JSON.stringify(dh.bad)}`);
+ok(dh.brandHref === "/", `docs brand links to landing root (${dh.brandHref})`);
+const ups = await page.$$eval("#changelog .clx__t", (e) => e.map((x) => x.textContent.trim()));
+ok(ups.length > 0 && ups.every((t) => /[.!?\u2026]$/.test(t) && !t.includes("...") && !/\u2026\s+\S/.test(t)), `Recent updates summaries end cleanly, no glued ellipsis (${ups.length})`);
+
 await go("/", 1440);
 const l = await page.evaluate(() => {
   const i = document.querySelector(".site-header .brand img").getBoundingClientRect();

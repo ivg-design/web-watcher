@@ -50,21 +50,33 @@ const isHeraldResync = (e: ChangelogEntry) =>
   e.sections.every((s) => s.items.every((i) => /^Vendored Herald client|^Herald client re-synced/i.test(i)));
 
 const ORDER = ["Added", "Changed", "Fixed"];
+const LIMIT = 160;
+/** Plain text of one item, cut to whole sentences, ending in exactly one terminal mark. */
 const cut = (t: string) => {
-  const plain = t.replace(/`/g, "").replace(/\*\*/g, "");
-  const m = plain.search(/;|: | \(|\. /);
-  const out = (m > 20 ? plain.slice(0, m) : plain).replace(/\.$/, "");
-  if (out.length <= 110) return out;
-  const head = out.slice(0, 108);
+  const plain = t
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/[`*]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\.{3,}|…/g, ".");
+  if (plain.length <= LIMIT) return /[.!?]$/.test(plain) ? plain : `${plain}.`;
+  // Whole sentences that fit in the limit.
+  let end = -1;
+  for (const m of plain.matchAll(/[.!?](?=\s)/g)) {
+    if ((m.index ?? 0) + 1 <= LIMIT) end = (m.index ?? 0) + 1; else break;
+  }
+  if (end > 0) return plain.slice(0, end);
+  // The first sentence is itself too long: cut at a word boundary.
+  const head = plain.slice(0, LIMIT);
   const sp = head.lastIndexOf(" ");
-  // Cut at a word boundary, never mid-word.
-  return `${(sp > 40 ? head.slice(0, sp) : head).replace(/[\s,;:.\-–—(]+$/, "")}…`;
+  return `${head.slice(0, sp > 40 ? sp : LIMIT).replace(/[\s,;:.\-–—(]+$/, "")}…`;
 };
 
-/** Short one-line summary of an entry for the landing page list. */
+/** Short one-line summary of an entry for the landing page list: the first item only. */
 export function summarize(e: ChangelogEntry): string {
   const sorted = [...e.sections].sort((a, b) => ORDER.indexOf(a.title) - ORDER.indexOf(b.title));
-  return sorted.flatMap((s) => s.items).slice(0, 3).map(cut).map((t) => (/[.…!?]$/.test(t) ? t : `${t}.`)).join(" ");
+  const first = sorted.flatMap((s) => s.items)[0];
+  return first ? cut(first) : "";
 }
 
 /** Latest meaningful release of each of the newest minor lines (pure Herald client re-syncs are skipped). */

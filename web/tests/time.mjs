@@ -60,6 +60,26 @@ for (const w of [1440, 390]) {
     await page.evaluate(() => window.__ww_record({ source: "hero", name: "T", title: "T", body: "b" }));
     await sleep(600);
     chk(/just now/.test(await page.$eval(T("watch-last"), (e) => e.textContent)), "record() triggers an immediate check");
+    // The menu bar's bottom edge counts down to the next check and cuts back when it happens.
+    const line = () => page.$eval(T("tickline") + " i", (e) => new DOMMatrix(getComputedStyle(e).transform).a);
+    const hb = await page.$eval(".site-header", (e) => e.getBoundingClientRect().bottom);
+    const lb = await page.$eval(T("tickline"), (e) => { const r = e.getBoundingClientRect(); return { b: r.bottom, w: r.width, vw: document.querySelector(".site-header").getBoundingClientRect().width }; });
+    chk(Math.abs(lb.b - hb) <= 2 && Math.abs(lb.w - lb.vw) < 1, `countdown line sits on the header's bottom edge, full width (${Math.round(lb.w)})`);
+    const a0 = await line(); await sleep(3200); const a1 = await line();
+    chk(a0 < 0.1 && a1 > a0 && Math.abs(a1 - Math.round(a1 * 15) / 15) < 0.001, `countdown restarts on a check and advances in whole seconds (${a0.toFixed(3)} -> ${a1.toFixed(3)} of a 15 s interval)`);
+    // Brand: from deep in the page with a #section in the address, back to the very top and a clean URL.
+    await page.goto(BASE + "/#privacy", { waitUntil: "networkidle2" }); await sleep(900);
+    const y0 = await page.evaluate(() => scrollY);
+    await page.click(T("brand-home")); await sleep(1800);
+    const at = await page.evaluate(() => ({ y: scrollY, hash: location.hash, path: location.pathname }));
+    chk(y0 > 2000 && at.y === 0 && at.hash === "" , `brand returns to the very top and clears the hash (${y0} -> ${at.y}, "${at.hash}")`);
+  }
+  {
+    const rp = await browser.newPage(); await rp.setViewport({ width: w, height: w < 500 ? 844 : 900 });
+    await rp.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
+    await rp.goto(BASE + "/", { waitUntil: "networkidle2" }); await sleep(500);
+    chk(!(await rp.$(T("tickline"))), "reduced motion: no countdown line");
+    await rp.close();
   }
   await page.close();
 }

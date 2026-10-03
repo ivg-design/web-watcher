@@ -12,6 +12,13 @@ try {
     ok(!!(await page.$("#privacy h2.h2-v3")), tag + "title uses h2-v3");
     for (const n of ["1", "2", "3", "gmail", "net"]) ok(!!(await page.$(T("pv-node-" + n))), tag + "node " + n);
     ok(!(await page.$(T("pv-ready"))), tag + "ready hidden");
+    ok(!!(await page.$(T("pv-zeros"))), tag + "zeros row present");
+    await page.$eval(T("pv-zeros"), (e) => e.scrollIntoView({ block: "center" }));
+    await sleep(3000);
+    const zs = await page.$$eval('[data-testid^="pv-zero-"]', (els) => els.map((e) => [e.querySelector(".pvz__n").textContent, e.querySelector(".pvz__l").textContent]));
+    ok(zs.length === 3 && zs.every((z) => z[0] === "(0)"), tag + "three numerals end at (0): " + JSON.stringify(zs.map((z) => z[0])));
+    ok(zs.map((z) => z[1]).join("|") === "servers|analytics|data collected", tag + "zero labels exact");
+    ok(!(await page.$eval(T("pv-zero-1"), (e) => getComputedStyle(e.querySelector(".pvz__n")).color === getComputedStyle(document.documentElement).getPropertyValue("--n-signal"))), tag + "zeros not red");
     for (let i = 1; i <= 3; i++) {
       await page.$eval(T("pv-switch-" + i), (e) => e.scrollIntoView({ block: "center" }));
       await page.click(T("pv-switch-" + i));
@@ -27,4 +34,13 @@ try {
     ok(over.length === 0, tag + "no overflow " + over.join());
     await page.close();
   }
+  const rp = await browser.newPage();
+  await rp.setViewport({ width: 390, height: 844, isMobile: true });
+  await rp.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
+  await rp.goto(BASE + "/", { waitUntil: "networkidle2", timeout: 90000 });
+  await rp.$eval(T("pv-zeros"), (e) => e.scrollIntoView({ block: "center" }));
+  await sleep(300);
+  const rz = await rp.$$eval(".pvz__n", (els) => els.map((e) => e.textContent));
+  ok(rz.length === 3 && rz.every((z) => z === "(0)"), "reduced motion: numerals read (0) at 300 ms");
+  await rp.close();
 } finally { await done(browser); }

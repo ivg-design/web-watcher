@@ -22,3 +22,18 @@
   .ivl .roll__v, .ivl .roll__v.is-out { animation: none; }
   .ivl .roll__v.is-out { display: none; }
 }
+/* The hour, ruled. */
+.ivl__ruler { grid-column: 1 / -1; min-width: 0; margin-top: clamp(8px, 2vw, 24px); }
+.ivl__since { margin: 0 0 48px; font-size: 13.5px; color: var(--n-ink-2); line-height: 1.5; }
+.ivl__since b { font-weight: 500; color: var(--n-ink); }
+.ivl__rule { position: relative; height: 56px; border-bottom: 1px solid var(--n-line-2); }
+.ivl__rule canvas { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; }
+.ivl__now { position: absolute; bottom: 0; width: 1px; height: 72px; background: var(--n-ink); }
+.ivl__now span { position: absolute; bottom: 100%; left: 0; transform: translateX(-50%); padding-bottom: 4px; font-family: var(--font-mono); font-style: normal; font-weight: 500; font-size: 12.5px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; color: var(--n-ink); white-space: nowrap; }
+.ivl__now[data-edge="s"] span { transform: none; }
+.ivl__now[data-edge="e"] span { transform: translateX(-100%); }
+.ivl__marks { position: relative; height: 28px; margin-top: 8px; }
+.ivl__marks span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.ivl__marks span[data-edge="s"] { transform: none; }
+.ivl__marks span[data-edge="e"] { transform: translateX(-100%); }
+@media (max-width: 699px) { .ivl__marks span:not([data-edge]) { display: none; } }

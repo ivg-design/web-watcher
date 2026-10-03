@@ -67,8 +67,8 @@
 .wt-list__t b { font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wt-list__t small { font-size: 11.5px; }
 .wt-list__a { font-family: var(--font-mono); }
-.wt-list__r.is-new { visibility: hidden; }
-.wt-list__r.is-new.is-on { visibility: visible; box-shadow: inset 3px 0 0 var(--n-signal); background: var(--n-bg-3); }
+.wt-list__slot { display: block; min-height: 166px; }
+.wt-list__r.is-new.is-on { box-shadow: inset 3px 0 0 var(--n-signal); background: var(--n-bg-3); }
 .wt-list__n { align-self: flex-end; font: 500 13px var(--font-mono); color: var(--n-ink); font-variant-numeric: tabular-nums; }
 
 /* product card */

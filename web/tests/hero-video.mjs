@@ -16,24 +16,27 @@ ok(s.preload === "metadata" && s.src.endsWith("/video/demo.mp4"), "video preload
 ok(s.paused && s.t === 0, "before the click the video is paused at 0 (no autoplay)");
 ok(await page.$eval(".hv__poster", (e) => getComputedStyle(e).opacity === "1" && e.complete && e.naturalWidth > 0), "poster image is visible");
 const f0 = await frame();
-const cw = await page.evaluate(() => document.documentElement.getBoundingClientRect().width);
-ok(f0.right >= cw - 2 && f0.right <= cw + 0.5, "frame bleeds to the right edge, not past it (right=" + Math.round(f0.right) + " of " + cw + ")");
-const wrap = await page.$eval(".hero__media", (e) => e.getBoundingClientRect().right);
-ok(wrap <= cw + 0.5, "media column does not extend past the viewport (" + Math.round(wrap) + ")");
+// Round 2: no bleed. The frame is the container's width, centred on the page, with four rounded corners.
+const box = await page.$eval("#hero .container", (e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return { left: r.left + parseFloat(cs.paddingLeft), right: r.right - parseFloat(cs.paddingRight), mid: (r.left + r.right) / 2 }; });
+ok(Math.abs(f0.left - box.left) < 1 && Math.abs(f0.right - box.right) < 1, "frame spans the content width exactly (" + Math.round(f0.left) + " to " + Math.round(f0.right) + ")");
+ok(Math.abs((f0.left + f0.right) / 2 - box.mid) < 1, "frame is centred on the page");
+const radii = await page.$eval(".hv__frame", (e) => { const c = getComputedStyle(e); return [c.borderTopLeftRadius, c.borderTopRightRadius, c.borderBottomRightRadius, c.borderBottomLeftRadius]; });
+ok(new Set(radii).size === 1 && parseFloat(radii[0]) >= 12, "four equal rounded corners (" + radii[0] + ")");
+ok(!(await page.$(T("hv-mute"))), "no sound control before play (the recording is silent)");
 const geo = async (label) => {
   const f = await frame();
   const c = await page.$eval(T("hv-play"), (e) => e.getBoundingClientRect().toJSON());
-  const inset = label === 390 ? 12 : 16;
-  ok(c.right <= f.right - 8 && c.top >= f.top + f.height / 2 && c.bottom <= f.bottom, label + ": play control is inside the bottom-right quadrant");
-  ok(c.left >= f.left + f.width * 0.64 - 1 && c.bottom <= f.bottom - 8, label + ": play control sits in the free gradient right of the page window (left " + Math.round(c.left - f.left) + " of " + Math.round(f.width) + ")");
-  ok(Math.abs(f.right - c.right - inset) < 1.5 && Math.abs(f.bottom - c.bottom - inset) < 1.5 && Math.round(c.height) === 44, label + ": control inset " + inset + "px from the right and bottom, 44px tall");
+  ok(c.top >= f.top + f.height / 2 && c.bottom <= f.bottom - 8 && c.left >= f.left && c.right <= f.right && Math.round(c.height) === 44, label + ": play control inside the frame's lower half, 44px tall");
+  if (label !== 390) ok(Math.abs((c.left + c.right) / 2 - (f.left + f.right) / 2) < 1.5, label + ": play control centred on the frame");
 };
 await geo(1440);
 await page.screenshot({ path: process.env.HERO_SHOT_DIR ? process.env.HERO_SHOT_DIR + "/hero-1440.png" : "/dev/null", clip: await page.$eval("#hero", (e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y + scrollY, width: r.width, height: r.height }; }) });
 await page.click(T("hv-play"));
 await sleep(2500);
 s = await v();
-ok(!s.muted && !s.paused && s.t > 0, "click: plays in place with sound (t=" + s.t.toFixed(1) + ")");
+ok(!s.paused && s.t > 0, "click: plays in place (t=" + s.t.toFixed(1) + ")");
+ok(!(await page.$(T("hv-mute"))), "no sound control during playback: every control on the frame does something");
+ok(await page.$eval(T("hv-video"), (e) => !e.webkitAudioDecodedByteCount), "the recording has no audio track");
 ok(!(await page.$("dialog")), "no dialog in the DOM");
 const f1 = await frame();
 ok(Math.abs(f0.width - f1.width) < 1 && Math.abs(f0.height - f1.height) < 1, "the frame did not resize");
@@ -48,10 +51,6 @@ ok(s.paused && Math.abs(s.t - t1) < 0.05, "pause button pauses");
 await page.click(T("hv-pause"));
 await sleep(500);
 ok(!(await v()).paused, "play button resumes");
-await page.click(T("hv-mute"));
-ok((await v()).muted, "mute works");
-await page.click(T("hv-mute"));
-ok(!(await v()).muted, "unmute works");
 const w = await page.$eval(".hv__win", (e) => e.getBoundingClientRect().toJSON());
 await page.mouse.click(w.left + w.width / 2, Math.max(w.top, 0) + 200);
 await sleep(300);
@@ -71,7 +70,7 @@ ok(await page.$eval(T("hv-link"), (e) => e.offsetParent !== null), "1024: text l
 await page.click(T("hv-link"));
 await sleep(1200);
 s = await v();
-ok(!s.paused && !s.muted && s.t < 4, "1024: text link starts playback from the top with sound");
+ok(!s.paused && s.t < 4, "1024: text link starts playback from the top");
 // leaving the viewport pauses
 await page.evaluate(() => window.scrollTo(0, 3000));
 await sleep(800);

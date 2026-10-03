@@ -6,3 +6,8 @@
 .site-header__end { gap: 12px; }
 @media (min-width: 1100px) { .site-header__end { gap: 20px; } }
 .menubar-clock { font-family: var(--font-mono); font-weight: 500; font-size: 13px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; color: var(--n-ink-2); white-space: nowrap; min-width: 8.2em; text-align: right; }
+/* The countdown to the next check, drawn on the menu bar's bottom edge. Steps, never a glide. */
+.tickline { position: absolute; left: 0; right: 0; top: 63px; height: 2px; overflow: hidden; pointer-events: none; }
+.tickline i { display: block; height: 100%; background: var(--n-ink); transform-origin: left; transform: scaleX(0); animation-name: tickline; animation-fill-mode: forwards; }
+@keyframes tickline { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .tickline { display: none; } }

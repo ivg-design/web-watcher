@@ -83,7 +83,8 @@ export default function Moment() {
       run();
     };
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; tryStart(); }, { threshold: 0.3 });
-    io.observe(root);
+    // The numeral is the object; the root has no box where the fold lays its children out itself (display: contents).
+    io.observe(root.querySelector(".mo__num") ?? root);
     document.addEventListener("visibilitychange", tryStart);
     return () => { io.disconnect(); document.removeEventListener("visibilitychange", tryStart); clear(); };
   }, [run]);

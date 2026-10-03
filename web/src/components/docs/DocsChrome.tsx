@@ -118,7 +118,7 @@ export default function DocsChrome({
       </header>
 
       {drawer && (
-        <nav id="docs-drawer" className="docs-drawer" aria-label="Documentation">
+        <nav id="docs-drawer" className="docs-drawer paper" aria-label="Documentation">
           <Tree sections={sections} current={current} onNavigate={() => setDrawer(false)} />
           <div className="docs-group docs-drawer__site">
             <p className="docs-group__t">WebWatcher</p>
@@ -129,7 +129,7 @@ export default function DocsChrome({
         </nav>
       )}
 
-      <div className="docs-shell">
+      <div className="docs-shell paper">
         <div className="docs-shell__in">
           <nav className="docs-side" aria-label="Documentation">
             <Tree sections={sections} current={current} />

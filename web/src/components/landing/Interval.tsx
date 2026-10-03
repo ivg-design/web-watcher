@@ -39,6 +39,86 @@ function Roll({ value, testId, innerRef }: { value: string; testId: string; inne
   );
 }
 
+const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+const BONE = "#f3f1ec";
+const REST = "#5b606c";
+
+/**
+ * The hour, ruled: one tick per check at the chosen interval, from the top of the hour to the next.
+ * Ticks already behind the real clock are lit. On narrow screens the span drops to ten minutes so
+ * ticks stay apart. Drawn on a canvas at device pixels so 240 one-pixel ticks stay sharp.
+ */
+function HourRuler({ interval }: { interval: number }) {
+  const wrap = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [width, setWidth] = useState(0);
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth));
+    ro.observe(el);
+    const tick = () => setNow(Math.floor(Date.now() / 1000));
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => { ro.disconnect(); window.clearInterval(id); };
+  }, []);
+
+  // Span: the hour, unless its ticks would sit under 4 px apart; then ten minutes.
+  const span = width > 0 && interval < 600 && width / (3600 / interval) < 4 ? 600 : 3600;
+  const total = Math.max(1, Math.round(span / interval));
+  const local = now === null ? null : now - new Date(now * 1000).getTimezoneOffset() * 60;
+  const start = local === null ? null : local - (local % span);
+  const elapsed = local === null || start === null ? 0 : local - start;
+  const lit = Math.floor(elapsed / interval);
+  const hourLit = local === null ? 0 : Math.floor((local % 3600) / interval);
+  const hourTotal = Math.round(3600 / interval);
+
+  useEffect(() => {
+    const c = canvas.current;
+    if (!c || !width) return;
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const H = 56;
+    c.width = Math.round(width * dpr);
+    c.height = Math.round(H * dpr);
+    const g = c.getContext("2d");
+    if (!g) return;
+    g.clearRect(0, 0, c.width, c.height);
+    const w = Math.max(1, Math.round(dpr));
+    const major = span === 3600 ? 300 : 60; // five-minute or one-minute marks stand taller
+    for (let i = 0; i <= total; i++) {
+      const t = i * interval;
+      const x = Math.min(c.width - w, Math.round((t / span) * (c.width - w)));
+      const tall = t % major === 0;
+      const h = Math.round((tall ? 40 : 24) * dpr);
+      g.fillStyle = i <= lit && now !== null ? BONE : REST;
+      g.fillRect(x, c.height - h, w, h);
+    }
+  }, [width, interval, span, total, lit, now === null]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const label = (sec: number) => timeFmt.format(new Date((sec + new Date(sec * 1000).getTimezoneOffset() * 60) * 1000));
+  const marks = start === null ? [] : (span === 3600 ? [0, 900, 1800, 2700, 3600] : [0, 300, 600]).map((o) => ({ o, text: label(start + o) }));
+  const pct = (elapsed / span) * 100;
+
+  return (
+    <div className="ivl__ruler" data-testid="ivl-ruler" data-span={span} data-ticks={total} data-lit={lit}>
+      <p className="ivl__since t-label" data-testid="ivl-since">
+        {start === null || local === null
+          ? `A watcher on this interval looks ${fmt(hourTotal)} ${hourTotal === 1 ? "time" : "times"} an hour.`
+          : <>Since {label(local - (local % 3600))} a watcher on this interval has looked <b className="t-num">{fmt(hourLit)}</b> {hourLit === 1 ? "time" : "times"}. {fmt(hourTotal - hourLit)} to go before {label(local - (local % 3600) + 3600)}.</>}
+      </p>
+      <div className="ivl__rule" ref={wrap} aria-hidden="true">
+        <canvas ref={canvas} />
+        {start !== null && <i className="ivl__now" data-edge={pct < 6 ? "s" : pct > 94 ? "e" : undefined} style={{ left: `${pct}%` }}><span>{label(local ?? 0)}</span></i>}
+      </div>
+      <div className="ivl__marks t-label" aria-hidden="true">
+        {marks.map((m) => <span key={m.o} style={{ left: `${(m.o / span) * 100}%` }} data-edge={m.o === 0 ? "s" : m.o === span ? "e" : undefined}>{m.text}</span>)}
+      </div>
+    </div>
+  );
+}
+
 export default function Interval() {
   const { interval, setInterval } = useWatch();
   const band = useRef<HTMLDivElement>(null);
@@ -116,6 +196,7 @@ export default function Interval() {
                 : `The header hourglass now checks every ${label}. Open it.`}
             </p>
           </div>
+          <HourRuler interval={interval} />
         </div>
       </div>
     </section>

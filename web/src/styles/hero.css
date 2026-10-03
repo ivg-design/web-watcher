@@ -27,24 +27,28 @@
 @media (min-width: 1100px) { .hero__title span { white-space: nowrap; } }
 
 .hero__rec { margin-top: clamp(48px, 6vw, 88px); }
-.hero__rec-label { margin: 0 0 12px; }
-.hero__media { min-width: 0; --bleed: 0px; }
+.hero__media { min-width: 0; }
+/* 700–1099: the numeral sits beside the headline instead of 500 px below it. */
+@media (min-width: 700px) and (max-width: 1099px) {
+  .hero__fold { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title num" "lede lede" "cta cta" "watch watch" "moment moment" "meta meta" "facts facts"; column-gap: 24px; align-items: start; }
+  .hero__moment { display: contents; }
+  .hero__moment .mo { display: contents; }
+  .hero__moment .mo__num { grid-area: num; justify-self: end; --mo-num: clamp(150px, 22vw, 210px); margin-top: -0.04em; }
+  .hero__moment .mo__strip { grid-area: moment; margin-top: 28px; }
+  .hero__moment .mo__meta { grid-area: meta; }
+}
 @media (min-width: 1100px) {
   .hero__fold { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-template-rows: auto auto auto auto 1fr; grid-template-areas: "title moment" "lede moment" "cta moment" "watch moment" "facts moment"; align-items: start; gap: 0 48px; }
   .hero__moment { margin-top: 0; }
   .hero__lede { margin-top: 36px; }
   .hero__cta { margin-top: 28px; }
   .hero__facts { margin-top: 24px; }
-  /* cqw (the hero's own width) instead of vw: 100vw includes the scrollbar gutter and pushed the frame past the edge. */
-  .hero { container-type: inline-size; }
   .hero .hero__watch { display: none; } /* the on-frame play control carries the label here */
-  .hero__media { --bleed: calc(max(0px, (100cqw - var(--maxw)) / 2) + var(--gutter)); margin-right: calc(-1 * var(--bleed)); }
-  .hero .hv__frame { border-radius: 20px 0 0 20px; }
-  .hero .hv__cap { padding-right: var(--bleed); }
 }
 
+/* The recording: one desktop, at content width, four corners. No bleed. */
 .hv { width: 100%; }
-.hv__frame { position: relative; aspect-ratio: 1440 / 896; border-radius: 20px; overflow: hidden; isolation: isolate; background: linear-gradient(150deg, #f6b25c, #ef7a6b 35%, #e0508a 70%, #b44fd0);  }
+.hv__frame { position: relative; aspect-ratio: 1440 / 896; border-radius: 16px; box-shadow: 0 0 0 1px var(--n-line); overflow: hidden; isolation: isolate; background: linear-gradient(150deg, #f6b25c, #ef7a6b 35%, #e0508a 70%, #b44fd0);  }
 .hv__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hv__poster.is-hidden { opacity: 0; }
 .hv__win { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; overflow: hidden; background: #14161c; opacity: 0; pointer-events: none; }
@@ -53,7 +57,7 @@
 .hv__progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgb(255 255 255 / 0.25); }
 .hv__progress::after { content: ""; position: absolute; inset: 0; background: #fff; transform-origin: left; transform: scaleX(var(--p, 0)); transition: transform 250ms linear; }
 .hv__hit { position: absolute; inset: 0; z-index: 2; cursor: pointer; }
-.hv__play { position: absolute; z-index: 3; right: 16px; bottom: 16px; height: 44px; display: inline-flex; align-items: center; gap: 10px; padding: 0 18px 0 6px; border: 0; border-radius: 999px; background: rgb(20 22 28 / 0.78); color: #fff; font: inherit; cursor: pointer; }
+.hv__play { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); bottom: 20px; height: 44px; display: inline-flex; align-items: center; gap: 10px; padding: 0 18px 0 6px; border: 0; border-radius: 999px; background: rgb(20 22 28 / 0.78); color: #fff; font: inherit; cursor: pointer; }
 .hv__play-btn { width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #14161c; display: grid; place-items: center; flex: none; }
 .hv__play-label { font-weight: 600; font-size: 15px; white-space: nowrap; }
 .hv:not(.is-engaged) .hv__frame:hover .hv__play { background: rgb(20 22 28 / 0.92); }
@@ -62,9 +66,9 @@
 .hv__bar button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: #fff; display: grid; place-items: center; cursor: pointer; }
 .hv__bar button:focus-visible { outline: 2px solid #fff; outline-offset: 0; }
 .hv__bar button[aria-pressed="true"] { color: #ffb4b4; }
-.hv__cap { color: var(--muted); font-size: 13.5px; margin-top: 12px; }
+.hv__cap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 24px; color: var(--n-muted); font-size: 13.5px; margin-top: 14px; }
 /* Phones: the free gradient right of the page window is narrow, so the control is the disc alone (the text link above the frame carries the label). */
-@media (max-width: 520px) { .hv .hv__frame { border-radius: 14px; } .hv__play { right: 12px; bottom: 12px; padding: 0 6px; gap: 0; } .hv__play-label { display: none; } }
+@media (max-width: 520px) { .hv .hv__frame { border-radius: 14px; } .hv__play { left: auto; transform: none; right: 12px; bottom: 12px; padding: 0 6px; gap: 0; } .hv__play-label { display: none; } }
 
 /* How it works: real captures instead of mocks */
 .step__shot { height: 300px; border-radius: 12px; overflow: hidden; position: relative; }

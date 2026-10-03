@@ -55,14 +55,16 @@ export function CountEx({ on }: P) {
   return (
     <span className="wt-list" data-testid="wt-ex-count">
       <span className="wt-list__h"><b>Rive Community</b><small>Latest</small></span>
+      <span className="wt-list__slot">
       <span className="wt-list__rows wt-watched">
-        {THREADS.map(([t, who, ago], i) => (
-          <span key={t} className={`wt-list__r${i === 3 ? " is-new" : ""}${i === 3 && on ? " is-on" : ""}`}>
+        {THREADS.map(([t, who, ago], i) => (i === 3 && !on ? null : (
+          <span key={t} className={`wt-list__r${i === 3 ? " is-new is-on" : ""}`}>
             <i aria-hidden="true">{who[0].toUpperCase()}</i>
             <span className="wt-list__t"><b>{t}</b><small>{who}</small></span>
             <small className="wt-list__a">{ago}</small>
           </span>
-        ))}
+        )))}
+      </span>
       </span>
       <span className="wt-list__n"><span data-testid="wt-val-count"><Roll v={on ? "4 items" : "3 items"} /></span></span>
     </span>

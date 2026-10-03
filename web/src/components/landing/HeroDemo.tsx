@@ -1,6 +1,6 @@
 "use client";
 
-import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEMO_DURATION, DEMO_VIDEO_SRC, DEMO_POSTER, DEMO_POSTER_2X, asset } from "@/lib/config";
 import "@/styles/hero.css";
@@ -18,8 +18,8 @@ export function HeroWatchLink({ className, style }: { className?: string; style?
 }
 
 /**
- * The poster (the real app) is all the visitor sees until they press play; the demo then plays
- * in place, with sound, on the same frame. No dialog, no muted autoplay.
+ * The poster (a frame of the recording) is all the visitor sees until they press play; the demo then
+ * plays in place on the same frame. The recording is silent, so there is no sound control. No dialog, no autoplay.
  */
 export default function HeroDemo() {
   const frameRef = useRef<HTMLDivElement>(null);
@@ -27,7 +27,6 @@ export default function HeroDemo() {
   const [near, setNear] = useState(false);
   const [engaged, setEngaged] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(false);
   const [rolling, setRolling] = useState(false); // first frame is painting
   const engagedRef = useRef(false);
   const seenRef = useRef(false); // true once the frame has been on screen during this playback
@@ -39,7 +38,7 @@ export default function HeroDemo() {
     const lean = window.matchMedia("(pointer: coarse)").matches || !!conn?.saveData;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const nearObs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { if (!lean) setNear(true); nearObs.disconnect(); } }, { rootMargin: "400px" });
-    // never keep sound running off screen
+    // never keep it running off screen
     const seenObs = new IntersectionObserver(([e]) => {
       const v = videoRef.current;
       if (e.isIntersecting) { seenRef.current = true; return; }
@@ -61,15 +60,14 @@ export default function HeroDemo() {
       frameRef.current?.scrollIntoView({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     }
     v.currentTime = 0;
-    v.muted = false;
+    v.muted = true;
     v.loop = false;
     engagedRef.current = true;
     const r = frameRef.current?.getBoundingClientRect();
     seenRef.current = !!r && r.top < window.innerHeight * 0.8 && r.bottom > window.innerHeight * 0.2;
-    setMuted(false);
     setEngaged(true);
     setPaused(false);
-    void v.play().catch(() => { v.muted = true; setMuted(true); void v.play().catch(() => {}); });
+    void v.play().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -81,12 +79,6 @@ export default function HeroDemo() {
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) void v.play(); else v.pause();
-  };
-  const toggleMute = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = !v.muted;
-    setMuted(v.muted);
   };
   const onEnded = () => {
     engagedRef.current = false;
@@ -107,9 +99,9 @@ export default function HeroDemo() {
           className={`hv__poster${rolling ? " is-hidden" : ""}`}
           src={asset(DEMO_POSTER)}
           srcSet={`${asset(DEMO_POSTER)} 1x, ${asset(DEMO_POSTER_2X)} 2x`}
-          alt="The WebWatcher menu bar popover listing three watchers"
-          width={1200}
-          height={900}
+          alt="A Safari window on a community feed with a bell badge of 3, and beside it the WebWatcher Add Watcher window listing the number it found"
+          width={1440}
+          height={896}
           fetchPriority="high"
         />
         <div className={`hv__win${rolling ? " is-on" : ""}`} onClick={engaged ? togglePause : undefined}>
@@ -118,6 +110,7 @@ export default function HeroDemo() {
             data-testid="hv-video"
             src={near ? asset(DEMO_VIDEO_SRC) : undefined}
             playsInline
+            muted
             preload="metadata"
             aria-label="WebWatcher demo: picking the Rive community bell and getting the first notification"
             onPlaying={() => { if (engagedRef.current) setRolling(true); }}
@@ -144,13 +137,10 @@ export default function HeroDemo() {
             <button type="button" data-testid="hv-pause" onClick={togglePause} aria-label={paused ? "Play" : "Pause"}>
               {paused ? <Play size={18} fill="currentColor" strokeWidth={0} /> : <Pause size={18} fill="currentColor" strokeWidth={0} />}
             </button>
-            <button type="button" data-testid="hv-mute" onClick={toggleMute} aria-label={muted ? "Unmute" : "Mute"} aria-pressed={muted}>
-              {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            </button>
           </div>
         )}
       </div>
-      <p className="hv__cap">Adding a watcher for a community bell and getting the first notification. Recorded from WebWatcher 1.10.9.</p>
+      <p className="hv__cap"><span className="t-label">The real app, 15 s</span><span>Adding a watcher for a community bell and getting the first notification. Recorded from <span className="nw">WebWatcher</span> 1.10.9.</span></p>
     </div>
   );
 }

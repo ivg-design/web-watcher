@@ -4,12 +4,53 @@ import "@/styles/privacy.css";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { asset } from "@/lib/config";
+import Roll from "./hero/Roll";
 
 const SWITCHES = [
   { label: "Safari ▸ Develop ▸ Allow JavaScript from Apple Events", note: "Lets WebWatcher read the tab you point it at." },
   { label: "System Settings ▸ Privacy & Security ▸ Automation ▸ Safari & System Events", note: "One prompt, once." },
   { label: "Notifications ▸ Allow", note: "So changes can reach you." },
 ];
+
+const ZEROS = ["servers", "analytics", "data collected"];
+const STEP = 140;
+
+function Zeros() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [v, setV] = useState([0, 0, 0]);
+  const [inst, setInst] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timers: number[] = [];
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      setInst(true);
+      setV([3, 3, 3]);
+      ZEROS.forEach((_, i) => {
+        for (let k = 1; k <= 3; k++) {
+          timers.push(window.setTimeout(() => {
+            setInst(false);
+            setV((a) => a.map((x, j) => (j === i ? 3 - k : x)));
+          }, 120 * i + STEP * k + 30));
+        }
+      });
+    }, { threshold: 0.4 });
+    io.observe(el);
+    return () => { io.disconnect(); timers.forEach(clearTimeout); };
+  }, []);
+  return (
+    <div className="pvz" ref={ref} role="list" aria-label="No servers, no analytics, no data collected" data-testid="pv-zeros">
+      {ZEROS.map((l, i) => (
+        <div className="pvz__i" role="listitem" aria-label={`No ${l}`} key={l} data-testid={`pv-zero-${i + 1}`}>
+          <span className="pvz__n t-wide t-num" aria-hidden="true">(<Roll v={v[i]} instant={inst} />)</span>
+          <span className="pvz__l" aria-hidden="true">{l}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Diagram() {
   const ref = useRef<HTMLDivElement>(null);
@@ -54,37 +95,36 @@ export default function Privacy() {
             with the source on <span className="nw">GitHub</span>.
           </p>
         </div>
+        <Zeros />
         <Diagram />
         <div className="pvs">
-          <div>
+          <div className="pvs__head">
             <h3 className="pvs__h">Three switches, once</h3>
             <p className="pvs__sub">The only setup macOS asks for. Try them.</p>
           </div>
-          <div>
-            <ul className="pvs__list">
-              {SWITCHES.map((s, i) => (
-                <li key={s.label}>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={on[i]}
-                    className="pvs__row"
-                    data-testid={`pv-switch-${i + 1}`}
-                    onClick={() => setOn((o) => o.map((v, j) => (j === i ? !v : v)))}
-                  >
-                    <span className="pvs__t">{s.label}<small>{s.note}</small></span>
-                    <span className="pvs__tg" aria-hidden="true" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="pvs__ready" aria-live="polite" data-on={ready}>
-              {ready && (
-                <span data-testid="pv-ready">
-                  Ready. <Link href={asset("/docs/first-watcher")}>Add your first watcher →</Link>
-                </span>
-              )}
-            </div>
+          <ul className="pvs__list">
+            {SWITCHES.map((s, i) => (
+              <li key={s.label}>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={on[i]}
+                  className="pvs__row"
+                  data-testid={`pv-switch-${i + 1}`}
+                  onClick={() => setOn((o) => o.map((v, j) => (j === i ? !v : v)))}
+                >
+                  <span className="pvs__t"><span>{s.label.split(" ▸ ").map((seg, k) => <span key={seg}>{k > 0 && " ▸ "}<span className="nw">{seg}</span></span>)}</span><small>{s.note}</small></span>
+                  <span className="pvs__tg" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="pvs__ready" aria-live="polite" data-on={ready}>
+            {ready && (
+              <span data-testid="pv-ready">
+                Ready. <Link href={asset("/docs/first-watcher")}>Add your first watcher →</Link>
+              </span>
+            )}
           </div>
         </div>
       </div>

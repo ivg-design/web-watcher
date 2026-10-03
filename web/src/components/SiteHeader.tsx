@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { asset, REPO_URL } from "@/lib/config";
 import WatchMark from "@/components/watch/WatchMark";
+import TickLine from "@/components/watch/TickLine";
 import "@/styles/header.css";
 
 const LINKS = [
@@ -90,6 +91,7 @@ export default function SiteHeader() {
           </button>
         </div>
       </div>
+      <TickLine />
       {open && (
         <nav id="mobile-nav" className="mobile-nav" aria-label="Mobile">
           {LINKS.map((l) => (

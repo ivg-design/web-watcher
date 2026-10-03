@@ -43,6 +43,10 @@ export default function WatchMark() {
 
   const [renderer, setRenderer] = useState<"svg" | "rive">("svg");
   const [mountRive, setMountRive] = useState(false);
+  // The Rive file keeps a fixed 6.5 s sand loop and its runtime cannot retime it, so it is mounted only where the
+  // SVG loop would be the same 6.5 s (interval above 60 s). At 60 s or less the SVG sand follows the interval.
+  const riveAllowed = interval > 60;
+  const shown: "svg" | "rive" = riveAllowed ? renderer : "svg";
   const [hover, setHover] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [tickSignal, setTickSignal] = useState(0);
@@ -251,7 +255,7 @@ export default function WatchMark() {
         type="button"
         className="ww-mark"
         data-testid="watch-mark"
-        data-renderer={renderer}
+        data-renderer={shown}
         data-reduced={reduced ? "1" : "0"}
         style={{ "--ww-period": interval <= 60 ? `${interval}s` : "6.5s" } as React.CSSProperties}
         aria-label={label}
@@ -261,7 +265,7 @@ export default function WatchMark() {
         onPointerEnter={() => setHover(true)}
         onPointerLeave={() => setHover(false)}
       >
-        <svg className="ww-mark__svg" viewBox="0 0 36 36" width="36" height="36" aria-hidden focusable="false" data-hidden={renderer === "rive" ? "1" : "0"}>
+        <svg className="ww-mark__svg" viewBox="0 0 36 36" width="36" height="36" aria-hidden focusable="false" data-hidden={shown === "rive" ? "1" : "0"}>
           <defs>
             <clipPath id={clipTop}><path d={TOP} /></clipPath>
             <clipPath id={clipBot}><path d={BOT} /></clipPath>
@@ -287,7 +291,7 @@ export default function WatchMark() {
             </g>
           </g>
         </svg>
-        {mountRive && RiveComp && (
+        {mountRive && riveAllowed && RiveComp && (
           <RiveComp
             sinkRef={sinkRef}
             unseen={unseen}

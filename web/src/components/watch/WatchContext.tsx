@@ -8,7 +8,7 @@
  *
  * Demos call `record(...)`. The header/HUD owns the rendering of badge, notice and popover.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import WatchNotices from "./WatchNotices";
 import { CHECK_EVENT } from "./events";
 
@@ -51,9 +51,18 @@ interface WatchCtx {
   /** The site watcher's check interval in seconds (the app's CheckInterval cases; default 30). */
   interval: number;
   setInterval: (seconds: number) => void;
+  /** True while the page is running timed checks (false outside the provider and under reduced motion). */
+  timed: boolean;
 }
 
 const Ctx = createContext<WatchCtx | null>(null);
+
+const RM = "(prefers-reduced-motion: reduce)";
+const subscribeMotion = (cb: () => void) => {
+  const m = window.matchMedia(RM);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
 
 export function WatchProvider({ children }: { children: React.ReactNode }) {
   const [changes, setChanges] = useState<WatchChange[]>([]);
@@ -77,12 +86,20 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
     window.__ww_setInterval = setInterval;
     return () => { delete window.__ww_setInterval; };
   }, [setInterval]);
+  // A check re-arms the timer, so the next one is always `interval` after the last (a recorded change counts as a check).
+  const timed = useSyncExternalStore(subscribeMotion, () => !window.matchMedia(RM).matches, () => false);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setInterval(() => {
-      if (!document.hidden) window.dispatchEvent(new Event(CHECK_EVENT));
-    }, interval * 1000);
-    return () => window.clearInterval(id);
+    let id = 0;
+    const arm = () => {
+      window.clearTimeout(id);
+      id = window.setTimeout(() => {
+        if (document.hidden) arm(); else window.dispatchEvent(new Event(CHECK_EVENT));
+      }, interval * 1000);
+    };
+    arm();
+    window.addEventListener(CHECK_EVENT, arm);
+    return () => { window.clearTimeout(id); window.removeEventListener(CHECK_EVENT, arm); };
   }, [interval]);
 
   const value = useMemo<WatchCtx>(() => ({
@@ -95,7 +112,8 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
     clear,
     interval,
     setInterval,
-  }), [changes, seenUpTo, record, markSeen, clear, interval, setInterval]);
+    timed,
+  }), [changes, seenUpTo, record, markSeen, clear, interval, setInterval, timed]);
 
   return (
     <Ctx.Provider value={value}>
@@ -121,4 +139,5 @@ const NOOP: WatchCtx = {
   clear: () => {},
   interval: 30,
   setInterval: () => {},
+  timed: false,
 };

@@ -40,7 +40,6 @@ export default function Hero({ release }: { release: LatestRelease }) {
           </div>
         </div>
         <div className="hero__rec">
-          <p className="t-label hero__rec-label">The real app, 15 s</p>
           <div className="hero__media">
             <HeroDemo />
           </div>

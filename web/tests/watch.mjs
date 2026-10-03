@@ -18,9 +18,24 @@ const extHosts = (reqs) => reqs.filter((u) => /unpkg\.com|jsdelivr/.test(u));
   chk((await page.$eval(T("watch-mark"), (e) => e.dataset.renderer)) === "svg", "renderer stays svg with no interaction");
   chk(riveReqs(reqs).length === 0, `no rive/wasm request before first interaction (${riveReqs(reqs).length})`);
   const mark0 = reqs.length;
+  const rend = () => page.$eval(T("watch-mark"), (e) => e.dataset.renderer);
+  const period = () => page.$eval(T("watch-mark"), (e) => getComputedStyle(e).getPropertyValue("--ww-period").trim());
   await page.mouse.move(300, 300);
+  await sleep(4000);
+  // The Rive file cannot retime its 6.5 s sand loop: at 60 s or less the SVG sand owns the loop and follows the interval.
+  chk((await rend()) === "svg", "interval 30 s: renderer stays svg (sand follows the interval)");
+  chk((await period()) === "30s", `interval 30 s: --ww-period ${await period()}`);
+  await page.evaluate(() => window.__ww_setInterval(90));
   await page.waitForFunction(() => document.querySelector('[data-testid="watch-mark"]')?.dataset.renderer === "rive", { timeout: 8000 }).catch(() => {});
-  chk((await page.$eval(T("watch-mark"), (e) => e.dataset.renderer)) === "rive", "renderer reaches rive after first pointermove");
+  chk((await rend()) === "rive", "interval 90 s: renderer reaches rive (both loops are 6.5 s)");
+  chk((await period()) === "6.5s", `interval 90 s: --ww-period ${await period()}`);
+  await page.evaluate(() => window.__ww_setInterval(15));
+  await sleep(300);
+  chk((await rend()) === "svg" && (await period()) === "15s", `interval 15 s: back to svg with --ww-period ${await period()}`);
+  chk((await page.$(`${T("watch-mark")} canvas`)) === null, "interval 15 s: rive canvas unmounted");
+  await page.evaluate(() => window.__ww_setInterval(120));
+  await page.waitForFunction(() => document.querySelector('[data-testid="watch-mark"]')?.dataset.renderer === "rive", { timeout: 8000 }).catch(() => {});
+  chk((await rend()) === "rive", "interval 120 s: rive again");
   const after = reqs.slice(mark0);
   chk(riveReqs(after).some((u) => /\/rive\/rive\.wasm/.test(u)), "wasm is self-hosted at /rive/rive.wasm");
   chk(extHosts(reqs).length === 0, `no unpkg/jsdelivr request (${extHosts(reqs).join(",")})`);
@@ -88,6 +103,7 @@ for (const w of [1280, 390]) {
   const riveUp = await page.evaluate(async () => { try { const r = await fetch("/rive/watcher-mark.riv", { method: "HEAD" }); return r.ok && !(r.headers.get("content-type") || "").includes("text/html"); } catch { return false; } });
   const gated = await page.evaluate(() => matchMedia("(pointer: coarse)").matches && innerWidth < 640);
   if (riveUp && !gated) {
+    await page.evaluate(() => window.__ww_setInterval(90));
     await page.mouse.move(40, 300);
     await page.waitForFunction(() => document.querySelector('[data-testid="watch-mark"]')?.dataset.renderer === "rive", { timeout: 8000 }).catch(() => {});
     const rr = await page.$eval(T("watch-mark"), (e) => e.dataset.renderer);

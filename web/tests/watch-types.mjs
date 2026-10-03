@@ -40,6 +40,15 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
   ok(sm === 0, "panels >= 44px");
   await shot(`${w}-idle`);
 
+  {
+    const ph0 = () => page.$eval('.wt-panel[data-s="count"]', (e) => Math.round(e.getBoundingClientRect().height));
+    ok((await count(".wt-list__r")) === 3, "count: exactly 3 rows before the click, no empty slot");
+    const h0 = await ph0();
+    await click(page, "wt-row-count"); await sleep(900);
+    ok((await count(".wt-list__r")) === 4, "count: fourth row cuts in");
+    ok((await ph0()) === h0, `count: panel height unchanged (${h0})`);
+    await click(page, "wt-reset-count"); await sleep(500);
+  }
   let b = await badge();
   for (const [s, [b0, a, title, body, read]] of Object.entries(cases)) {
     ok(norm(await read()) === b0, `${s}: initial ${b0}`);

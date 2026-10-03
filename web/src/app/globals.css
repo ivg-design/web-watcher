@@ -48,6 +48,7 @@
   --p-muted: oklch(0.48 0.012 255);
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
   --ease-step: steps(1, end);
+  --zero-wdth: 88%;
 }
 /* Night scope: remaps the v2 names so existing section CSS inherits the dark surface. */
 .night, .site-header {
@@ -66,7 +67,8 @@
 }
 /* Type: one family, two widths. */
 .t-cond { font-family: var(--font-display); font-stretch: 62%; font-weight: 800; letter-spacing: -0.02em; line-height: 0.92; }
-.t-wide { font-family: var(--font-display); font-stretch: 125%; font-weight: 200; letter-spacing: -0.06em; line-height: 1; }
+/* The numeral: light, at normal width. At 125% Archivo's zero is a circle and reads as the letter O. */
+.t-wide { font-family: var(--font-display); font-stretch: var(--zero-wdth, 100%); font-weight: 200; letter-spacing: -0.04em; line-height: 1; }
 .t-num { font-variant-numeric: tabular-nums lining-nums; }
 .t-label { font-family: var(--font-mono); font-weight: 500; font-size: 12.5px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; color: var(--muted); }
 .h2-v3 { font-family: var(--font-display); font-stretch: 62%; font-weight: 800; letter-spacing: -0.02em; line-height: 0.94; font-size: clamp(40px, 5.6vw, 72px); text-wrap: balance; }

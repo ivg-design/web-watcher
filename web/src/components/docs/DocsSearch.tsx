@@ -70,7 +70,7 @@ export default function DocsSearch({ index, onClose }: { index: SearchItem[]; on
 
   return (
     <div className="search" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="search__box" role="dialog" aria-modal="true" aria-label="Search documentation" onKeyDown={onKeyDown}>
+      <div className="search__box paper" role="dialog" aria-modal="true" aria-label="Search documentation" onKeyDown={onKeyDown}>
         <div className="search__input">
           <Search size={18} aria-hidden />
           <input
