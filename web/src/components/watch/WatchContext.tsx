@@ -43,6 +43,9 @@ interface WatchCtx {
   /** Marks everything seen (popover opened). */
   markSeen: () => void;
   clear: () => void;
+  /** The site watcher's check interval in seconds (the app's CheckInterval cases; default 30). */
+  interval: number;
+  setInterval: (seconds: number) => void;
 }
 
 const Ctx = createContext<WatchCtx | null>(null);
@@ -50,6 +53,8 @@ const Ctx = createContext<WatchCtx | null>(null);
 export function WatchProvider({ children }: { children: React.ReactNode }) {
   const [changes, setChanges] = useState<WatchChange[]>([]);
   const [seenUpTo, setSeenUpTo] = useState(0);
+  const [interval, setIntervalState] = useState(30);
+  const setInterval = useCallback((s: number) => setIntervalState(s), []);
   const nextId = useRef(1);
 
   const record = useCallback((c: WatchInput) => {
@@ -68,7 +73,9 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
     record,
     markSeen,
     clear,
-  }), [changes, seenUpTo, record, markSeen, clear]);
+    interval,
+    setInterval,
+  }), [changes, seenUpTo, record, markSeen, clear, interval, setInterval]);
 
   return (
     <Ctx.Provider value={value}>
@@ -92,4 +99,6 @@ const NOOP: WatchCtx = {
   record: (c) => ({ ...c, id: 0, at: 0 }),
   markSeen: () => {},
   clear: () => {},
+  interval: 30,
+  setInterval: () => {},
 };

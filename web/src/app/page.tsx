@@ -2,6 +2,7 @@ import SiteHeader from "@/components/SiteHeader";
 import Footer from "@/components/Footer";
 import Hero from "@/components/landing/Hero";
 import HowItWorks from "@/components/landing/HowItWorks";
+import Interval from "@/components/landing/Interval";
 import Picker from "@/components/landing/Picker";
 import WatchTypes from "@/components/landing/WatchTypes";
 import Gmail from "@/components/landing/Gmail";
@@ -18,8 +19,9 @@ export default async function Home() {
   return (
     <WatchProvider>
       <SiteHeader />
-      <main>
+      <main className="night">
         <Hero release={release} />
+        <Interval />
         <HowItWorks />
         <Picker />
         <WatchTypes />
