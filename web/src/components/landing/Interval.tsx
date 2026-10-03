@@ -100,7 +100,8 @@ export default function Interval() {
                   className="ivl__chip"
                   onClick={() => setInterval(o.s)}
                 >
-                  {o.label}
+                  <span>{o.label}</span>
+                  <span className="ivl__n">{fmt(perDay(o.s))} a day</span>
                 </button>
               ))}
             </div>
@@ -112,7 +113,7 @@ export default function Interval() {
           </div>
         </div>
         <p className="ivl__copy">
-          Each watcher has its own timer, set to the interval you pick for it. A check reads the page in a Safari tab that stays in the background. A change posts one notification.
+          Each watcher has its own timer, set to the interval you pick for it. A check reads the page from a Safari tab, and opens one in the background if there is none. A change posts one notification.
         </p>
       </div>
     </section>

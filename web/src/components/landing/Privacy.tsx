@@ -3,7 +3,6 @@
 import "@/styles/privacy.css";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Reveal from "@/components/motion/Reveal";
 import { asset } from "@/lib/config";
 
 const SWITCHES = [
@@ -26,7 +25,7 @@ function Diagram() {
     <div className="pvd" ref={ref} data-live={live} data-testid="pv-diagram" role="group" aria-label="Data path: Safari tab to WebWatcher to Notification Center. The internet is not on the path.">
       <div className="pvd__node pvd__n1" data-testid="pv-node-1"><b>Safari tab</b><span>your session</span></div>
       <div className="pvd__conn pvd__c1" aria-hidden="true"><i className="pvd__dot" /></div>
-      <div className="pvd__node pvd__node--core pvd__n2" data-testid="pv-node-2"><b>WebWatcher</b><span>your Mac</span></div>
+      <div className="pvd__node pvd__node--core pvd__n2" data-testid="pv-node-2"><b><span className="nw">WebWatcher</span></b><span>your Mac</span></div>
       <div className="pvd__conn pvd__c2" aria-hidden="true"><i className="pvd__dot" /></div>
       <div className="pvd__node pvd__n3" data-testid="pv-node-3"><b>Notification Center / Herald</b><span>your Mac</span></div>
       <div className="pvd__gm" data-testid="pv-node-gmail">
@@ -44,23 +43,18 @@ export default function Privacy() {
   const [on, setOn] = useState([false, false, false]);
   const ready = on.every(Boolean);
   return (
-    <section id="privacy" className="pvx">
+    <section id="privacy" className="pvx section">
       <div className="container">
         <div className="pvx__top">
-          <Reveal>
-            <p className="eyebrow"><span className="eyebrow__n">06</span>Privacy &amp; permissions</p>
-            <h2 className="pvx__h">It runs on your Mac, in your Safari, and nowhere else.</h2>
-            <p className="pvx__p">
-              Checks run in the Safari tab you are already signed into, nothing is proxied or logged, and your config
-              lives in <code>~/Library/Application Support/WebWatcher/</code>. Gmail tokens stay in the macOS Keychain
-              with the <code>gmail.modify</code> scope only. The app is <span className="nw">Developer ID</span> signed and notarized, MIT licensed,
-              with the source on GitHub.
-            </p>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <Diagram />
-          </Reveal>
+          <h2 className="h2-v3 pvx__h">It runs on your Mac, in your Safari, and nowhere else.</h2>
+          <p className="pvx__p">
+            Checks run in the Safari tab you are already signed into, nothing is proxied or logged, and your config
+            lives in <code>~/Library/Application Support/WebWatcher/</code>. Gmail tokens stay in the macOS Keychain
+            with the <code>gmail.modify</code> scope only. The app is <span className="nw">Developer ID</span> signed and notarized, MIT licensed,
+            with the source on <span className="nw">GitHub</span>.
+          </p>
         </div>
+        <Diagram />
         <div className="pvs">
           <div>
             <h3 className="pvs__h">Three switches, once</h3>
@@ -78,7 +72,6 @@ export default function Privacy() {
                     data-testid={`pv-switch-${i + 1}`}
                     onClick={() => setOn((o) => o.map((v, j) => (j === i ? !v : v)))}
                   >
-                    <span className="pvs__n">0{i + 1}</span>
                     <span className="pvs__t">{s.label}<small>{s.note}</small></span>
                     <span className="pvs__tg" aria-hidden="true" />
                   </button>
@@ -88,7 +81,7 @@ export default function Privacy() {
             <div className="pvs__ready" aria-live="polite" data-on={ready}>
               {ready && (
                 <span data-testid="pv-ready">
-                  Ready — <Link href={asset("/docs/first-watcher")}>add your first watcher →</Link>
+                  Ready. <Link href={asset("/docs/first-watcher")}>Add your first watcher →</Link>
                 </span>
               )}
             </div>

@@ -2,8 +2,9 @@
 .mo { display: grid; gap: 0; min-width: 0; --mo-num: clamp(120px, 26vw, 220px); }
 @media (min-width: 1100px) { .mo { --mo-num: clamp(160px, 38vh, 360px); } }
 @media (max-width: 480px) { .mo { --mo-num: 120px; } }
+@media (min-width: 1100px) { .mo__num { text-align: right; margin-top: -0.05em; } .mo__num .roll { justify-items: end; } }
 
-.mo__num { display: block; font-size: var(--mo-num); line-height: 0.9; color: var(--n-ink); opacity: 0.45; white-space: nowrap; margin-left: -0.04em; animation: cut 1ms steps(1, end) both; animation-delay: 120ms; padding-block: 0.04em; }
+.mo__num { display: block; font-size: var(--mo-num); line-height: 0.9; color: var(--n-ink); opacity: 0.5; white-space: nowrap; margin-inline: -0.04em; animation: cut 1ms steps(1, end) both; animation-delay: 120ms; padding-block: 0.04em; }
 .mo__num[data-on="1"] { color: var(--n-signal); opacity: 1; }
 .mo__num .roll { padding-inline: 0.01em; }
 .mo .roll__v.is-out::before { content: attr(data-v); }
@@ -18,7 +19,7 @@
 .mo__nav { display: inline-flex; gap: 2px; color: #9a9a9f; flex: none; }
 .mo__nav svg { width: 16px; height: 16px; }
 .mo__addr { position: relative; flex: 1; min-width: 0; height: 28px; border-radius: 7px; background: #1c1c1e; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.mo__prog { position: absolute; inset: 0; background: #0a84ff; opacity: 0.45; transform: scaleX(0); transform-origin: left; pointer-events: none; }
+.mo__prog { position: absolute; inset: 0; background: #0a84ff; opacity: 0.5; transform: scaleX(0); transform-origin: left; pointer-events: none; }
 .mo__url { position: relative; font-size: 12.5px; color: #d6d6d9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-inline: 28px; }
 .mo__reload { position: absolute; right: 0; top: 0; z-index: 1; width: 32px; height: 28px; display: grid; place-items: center; border: 0; background: transparent; color: #a0a0a5; border-radius: 7px; cursor: pointer; }
 .mo__reload:hover { color: #fff; background: rgb(255 255 255 / 0.14); }
@@ -26,11 +27,11 @@
 .mo__reload svg { transform-origin: 50% 50%; }
 @media (pointer: coarse) { .mo__reload { width: 44px; height: 44px; top: -8px; } .mo__addr { overflow: visible; } .mo__prog { border-radius: 7px; } }
 .mo__tabrow { display: flex; padding: 6px 10px 0; background: #2a2a2d; }
-.mo__tab { display: block; max-width: 100%; padding: 7px 14px; border-radius: 7px 7px 0 0; background: #3b3b3f; color: #f2f2f4; font-size: 12.5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums lining-nums; }
+.mo__tab { display: block; min-width: 0; max-width: 100%; padding: 7px 14px; border-radius: 7px 7px 0 0; background: #3b3b3f; color: #f2f2f4; font-size: 12.5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums lining-nums; }
 .mo__tab .roll { font-variant-numeric: tabular-nums lining-nums; }
 
 .mo__meta { margin-top: 14px; display: grid; gap: 10px; max-width: 520px; animation: cut 1ms steps(1, end) both; animation-delay: 180ms; }
-.mo__count { color: var(--n-muted); font-size: 13px; }
+.mo__count { margin-left: auto; align-self: center; padding: 0 4px 6px 12px; font-family: var(--font-mono); font-weight: 500; font-size: 15px; line-height: 1.2; color: var(--n-ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mo__count .roll, .mo__tab .roll { vertical-align: top; }
 .mo__capwrap { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; min-height: 36px; visibility: hidden; }
 .mo__capwrap[data-show="1"] { visibility: visible; }

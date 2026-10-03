@@ -32,7 +32,7 @@ ok(!!(await page.$('[data-testid="pv-ready"] a[href$="/docs/first-watcher"]')), 
 // download button
 await page.$eval(T("dl-btn"), (e) => e.scrollIntoView({ block: "center" }));
 const before = await txt(page, "dl-btn");
-ok(/^Download for Mac · DMG · \d+ MB$/.test(before), "button label: " + before);
+ok(before === "Download for Mac", "button label: " + before);
 await page.click(T("dl-btn")).catch(() => {});
 await sleep(250);
 ok((await txt(page, "dl-btn")) === "Starting download…", "label Starting download…");

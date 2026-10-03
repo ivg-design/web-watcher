@@ -2,11 +2,10 @@ import PickerDemo from "./picker/PickerDemo";
 
 export default function Picker() {
   return (
-    <section id="picker" className="picker" aria-labelledby="picker-title">
+    <section id="picker" className="section picker" aria-labelledby="picker-title">
       <div className="container">
         <div className="picker__head">
-          <p className="eyebrow"><span className="eyebrow__n">02</span>Guided picker</p>
-          <h2 id="picker-title" className="picker__h">It reads the page so you don’t have to.</h2>
+          <h2 id="picker-title" className="h2-v3 picker__h">It reads the page so you don’t have to.</h2>
           <p className="picker__p">
             This is the real flow, on a sketch of a community page. Scan the page, select a candidate to see exactly what
             WebWatcher would track, or point at the element yourself the way Pick in Safari does.

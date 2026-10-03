@@ -48,7 +48,7 @@ export default function SiteHeader() {
       <div className="container site-header__row">
         <Link href={asset("/")} className="brand" onClick={() => setOpen(false)}>
           { }
-          <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={54} height={54} />
+          <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={54} height={54} />
           <span>WebWatcher</span>
         </Link>
         <nav className="nav" aria-label="Primary">

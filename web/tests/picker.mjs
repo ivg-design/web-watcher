@@ -4,8 +4,10 @@ const { browser, page } = await open();
 const click = async (pg, id) => { await pg.$eval(T(id), (e) => e.scrollIntoView({ block: "center", behavior: "instant" })); await pg.click(T(id)); };
 const lit = () => page.$eval(T("pd-outline"), (e) => e.dataset.lit).catch(() => null);
 const attr = (id, a) => page.$eval(T(id), (e, a) => e.getAttribute(a), a);
+const badge = () => page.$eval(T("watch-badge"), (e) => +e.textContent.trim()).catch(() => 0);
 const center = (sel) => page.$eval(sel, (e) => { const r = e.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
 
+await page.setViewport({ width: 1440, height: 900 });
 await page.$eval("#picker", (e) => e.scrollIntoView());
 ok((await attr("pd", "data-step")) === "1", "starts on step 1 (Page)");
 ok(await page.$eval(T("pd-step-2"), (e) => e.disabled), "step 2 pill is disabled before scanning");
@@ -36,13 +38,16 @@ ok((await attr("pd", "data-step")) === "3", "Use this element advances to Confir
 ok((await txt(page, "pd-live")).includes("Reading"), "live read starts as 'Reading the page'");
 await sleep(1000);
 ok((await txt(page, "pd-live")) === "3", "live read resolves to the badge value");
-ok((await txt(page, "pd-newrow")).includes("Not saved yet"), "popover shows the pending watcher row");
+ok(await has(page, "pd-popover") && await has(page, "pd-empty") && !(await has(page, "pd-newrow")), "popover mock is visible and empty before Add");
+const L = await page.evaluate(() => { const r = (q) => document.querySelector(q).getBoundingClientRect(); const a = r(".pd__sheet"), b = r(".pd__safari"), c = r(".pm"); return { sheetL: a.right <= b.left + 1, popR: c.left >= b.right - 1, wide: b.width > a.width && b.width > c.width }; });
+ok(L.sheetL && L.popR && L.wide, "1440: three columns, sheet | Safari (widest) | popover");
 await sleep(700);
+const b0 = await badge();
 await click(page, "pd-add");
-await sleep(100);
-ok((await txt(page, "pd-newrow")).includes("Watching") && (await txt(page, "pd-newrow")).includes("3"), "Add watcher: row becomes live in the popover");
-if (await has(page, "watch-badge")) ok((await txt(page, "watch-badge")) === "1", "Add watcher ticks the header badge to 1");
-else console.log("SKIP header badge assertion: [data-testid=watch-badge] not present");
+await sleep(300);
+ok((await txt(page, "pd-newrow")).includes("Watching") && (await txt(page, "pd-newrow")).includes("3") && (await page.$$(T("pd-newrow"))).length === 1, "Add watcher: exactly one row appears in the popover");
+ok(await page.$eval(T("pd-newrow"), (e) => { const r = e.getBoundingClientRect(), s = document.querySelector(".pd__safari").getBoundingClientRect(); return r.left >= s.right - 1; }), "1440: the row appears beside the window, not over it");
+ok((await badge()) === b0 + 1, `Add watcher ticks the header badge (${b0} -> ${await badge()})`);
 await click(page, "pd-step-2");
 ok((await attr("pd", "data-step")) === "2", "step pill navigates back to Element");
 await click(page, "pd-step-3");
@@ -100,12 +105,12 @@ ok((await attr("pd", "data-step")) === "3" && (await txt(page, "pd-live")) === "
 
 // Add watcher records to the header mark when it exists
 await sleep(700);
+const b1 = await badge();
 await click(page, "pd-add");
-await sleep(100);
+await sleep(300);
 ok((await txt(page, "pd-newrow")).includes("Watching"), "Add watcher (picked via keyboard): popover row is live");
 await sleep(300);
-if (await has(page, "watch-badge")) ok((await txt(page, "watch-badge")) === "2", "second Add watcher ticks the badge to 2 (once per add)");
-else console.log("SKIP header badge assertion: [data-testid=watch-badge] not present");
+ok((await badge()) === b1 + 1, "second Add watcher ticks the badge once");
 
 // Escape cancels
 await click(page, "pd-step-2");

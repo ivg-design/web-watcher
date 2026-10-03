@@ -6,6 +6,7 @@ import { getChangelog } from "@/lib/changelog";
 import { renderInline } from "@/lib/markdown";
 import { toCanonicalUrl } from "@/lib/seo";
 import "@/styles/docs.css";
+import "@/styles/download.css";
 
 const description = "Every WebWatcher release, newest first: what was added, changed and fixed in each version and build.";
 
@@ -21,7 +22,8 @@ export default function ChangelogPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="container">
+      <main id="main" className="paper cl-page">
+        <div className="container">
         <header className="page-head">
           <h1 className="page-title">Changelog</h1>
           <p className="doc-lede">
@@ -53,6 +55,7 @@ export default function ChangelogPage() {
               </div>
             </article>
           ))}
+        </div>
         </div>
       </main>
       <Footer />

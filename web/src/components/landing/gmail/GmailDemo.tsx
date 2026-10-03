@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { asset } from "@/lib/config";
 import { useWatch } from "@/components/watch/WatchContext";
+import Roll from "@/components/landing/hero/Roll";
 import "@/styles/gmail.css";
 
 type Mail = {
@@ -170,11 +171,12 @@ export default function GmailDemo() {
     setNotif("shown");
   };
 
+  const reducedNow = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const undoText = undo ? { archived: "Archived", trashed: "Moved to Trash", spam: "Reported as spam" }[undo.kind] : "";
   const rows = mails.slice(0, MAX_ROWS);
 
   return (
-    <div className="gx" ref={stage} aria-live="off">
+    <div className="gx" ref={stage} aria-live="off" data-testid="gm-demo">
       <div className="gx__mail">
         <div className="gx__bar">
           <span className="gx__label">Inbox</span>
@@ -229,7 +231,7 @@ export default function GmailDemo() {
                 ) : null}
               </span>
               <span className="gx__count" data-testid="gm-count">
-                <span key={count} className="gx__roll">{count}</span>
+                <Roll v={count} instant={reducedNow} />
               </span>
             </button>
             <div className="gx__acts">

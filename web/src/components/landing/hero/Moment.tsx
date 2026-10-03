@@ -122,10 +122,10 @@ export default function Moment() {
           <span className="mo__tab" data-testid="mo-tab">
             (<Roll v={tab} instant={instant} />) Inbox — Contra
           </span>
+          <span className="mo__count" data-testid="mo-count">⌘R ×<Roll v={count} instant={instant} /></span>
         </div>
       </div>
       <div className="mo__meta">
-        <span className="t-label mo__count" data-testid="mo-count">⌘R ×<Roll v={count} instant={instant} /></span>
         <span className="mo__capwrap" data-show={done ? "1" : "0"}>
           <span className="mo__cap" data-testid="mo-cap">Seen on its next check. You did not have to look.</span>
           <button type="button" className="mo__replay" data-testid="mo-replay" onClick={replay}>Replay</button>

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
-import Reveal from "@/components/motion/Reveal";
+import { Hourglass } from "lucide-react";
 import { useWatch } from "@/components/watch/WatchContext";
 import { asset } from "@/lib/config";
 import { BadgeEx, CountEx, DisappearsEx, ExistsEx, SubtreeEx, TextEx } from "./types/examples";
@@ -34,6 +33,7 @@ export default function WatchTypes() {
   const { record } = useWatch();
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [notif, setNotif] = useState<Row | null>(null);
+  const [flash, setFlash] = useState<string | null>(null);
   const timers = useRef<Record<string, number>>({});
   useEffect(() => {
     const t = timers.current;
@@ -44,76 +44,68 @@ export default function WatchTypes() {
     if (done[r.slug]) return;
     setDone((d) => ({ ...d, [r.slug]: true }));
     record({ source: "types", name: r.watcher, title: r.watcher, body: r.body, value: r.value });
+    setFlash(r.slug);
+    window.clearTimeout(timers.current.flash);
+    timers.current.flash = window.setTimeout(() => setFlash(null), 1200);
     window.clearTimeout(timers.current.notif);
     timers.current.notif = window.setTimeout(() => setNotif(r), 450);
   };
   const reset = (r: Row) => {
     setDone((d) => ({ ...d, [r.slug]: false }));
+    setFlash((f) => (f === r.slug ? null : f));
+    if (notif?.slug === r.slug || flash === r.slug) window.clearTimeout(timers.current.notif);
     setNotif((n) => (n?.slug === r.slug ? null : n));
-    if (notif?.slug !== r.slug) return;
-    window.clearTimeout(timers.current.notif);
   };
 
   return (
-    <section id="watch-types" className="section" aria-labelledby="types-title">
+    <section id="watch-types" className="section wt" aria-labelledby="types-title">
       <div className="container">
-        <Reveal>
-          <p className="eyebrow"><span className="eyebrow__n">03</span>What it can watch</p>
-          <h2 id="types-title" className="h2">Badges are the start.</h2>
-          <p className="lede">Six ways to read a page. The picker chooses one for you; pick by hand when you know better. Click a row to watch it happen.</p>
-        </Reveal>
-        <ul className="wt-table">
+        <h2 id="types-title" className="h2-v3">Badges are the start.</h2>
+        <p className="lede">Six ways to read a page. The picker chooses one for you. Pick by hand when you know better. Click a panel to watch it change.</p>
+        <ul className="wt-wall">
           {ROWS.map((r) => {
             const on = !!done[r.slug];
+            const lands = notif?.slug === r.slug;
+            const hint = on ? (r.value === "changed" ? "changed" : `changed: ${r.value}`) : "see it change";
             return (
-              <li key={r.slug} className={`wt-row${on ? " is-changed" : ""}`} data-s={r.slug === "count" ? "list" : r.slug === "exists" || r.slug === "disappears" ? "prod" : undefined}>
-                <button type="button" className="wt-row__btn" aria-label={`Watch ${r.name} change`} aria-pressed={on} data-testid={`wt-row-${r.slug}`} onClick={() => play(r)}>
-                  <span className="wt-row__name">{r.name}</span>
-                  <span className="wt-row__dw">
-                    <span className="wt-row__desc">{r.desc}</span>
-                    {!on && <span className="wt-row__hint" aria-hidden="true">see it change ▸</span>}
+              <li key={r.slug} className={`wt-panel${on ? " is-changed" : ""}${flash === r.slug ? " is-flash" : ""}${lands ? " has-notif" : ""}`} data-s={r.slug}>
+                <button type="button" className="wt-btn" aria-label={`Watch ${r.name} change`} aria-pressed={on} data-testid={`wt-row-${r.slug}`} onClick={() => play(r)}>
+                  <span className="wt-top">
+                    <span className="t-label wt-name">{r.name}</span>
+                    <span className="t-label wt-tick" aria-hidden="true"><Hourglass size={12} strokeWidth={1.75} />30 s</span>
                   </span>
-                  <span className="wt-ex">
-                    <span className="wt-stage">
-                      <span className="wt-stage__in"><r.Ex on={on} /></span>
-                      {!on && <span className="wt-tap" aria-hidden="true">tap</span>}
-                    </span>
+                  <span className="wt-stage"><r.Ex on={on} /></span>
+                  <span className="wt-foot">
+                    <span className="wt-desc">{r.desc}</span>
+                    <span className="t-label wt-hint" aria-hidden="true">{hint}</span>
                   </span>
                 </button>
                 {on && (
-                  <span className="wt-row__state">
-                    <i aria-hidden="true" />changed
-                  </span>
-                )}
-                {on && (
-                  <button type="button" className="wt-row__reset" data-testid={`wt-reset-${r.slug}`} aria-label={`Reset ${r.name}`} onClick={() => reset(r)}>
-                    Reset
+                  <button type="button" className="t-label wt-reset" data-testid={`wt-reset-${r.slug}`} aria-label={`Put ${r.name} back`} onClick={() => reset(r)}>
+                    Put it back
                   </button>
                 )}
+                <div className="wt-live" aria-live="polite">
+                  {lands && notif && (
+                    <div className="wt-notif" data-testid="wt-notif" role="group" aria-label="Notification as WebWatcher posts it">
+                      <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={36} height={36} />
+                      <div className="wt-notif__t">
+                        <strong data-testid="wt-notif-title">{notif.watcher}</strong>
+                        {notif.sub && <b className="wt-notif__sub" data-testid="wt-notif-sub">{notif.sub}</b>}
+                        <span data-testid="wt-notif-body">{notif.body}</span>
+                      </div>
+                      <span className="wt-notif__now">now</span>
+                    </div>
+                  )}
+                </div>
               </li>
             );
           })}
         </ul>
-        <div className="wt-slot">
-          {!notif && <p className="wt-slot__hint">The notification <span className="nw">WebWatcher</span> posts lands here. Click a row.</p>}
-          <div className="wt-live" aria-live="polite">
-            {notif && (
-              <div className="wt-notif" key={notif.slug} data-testid="wt-notif" role="group" aria-label="Notification as WebWatcher posts it">
-                <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={36} height={36} />
-                <div className="wt-notif__t">
-                  <strong data-testid="wt-notif-title">{notif.watcher}</strong>
-                  {notif.sub && <b className="wt-notif__sub" data-testid="wt-notif-sub">{notif.sub}</b>}
-                  <span data-testid="wt-notif-body">{notif.body}</span>
-                </div>
-                <span className="wt-notif__now">now</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <Reveal className="wt-profiles" delay={0.1}>
-          <Sparkles size={18} aria-hidden="true" />
-          <span>Site profiles: Rive community, LinkedIn, Reddit, Contra, and any site with a (N) tab title — one click fills in the right strategy, selector and refresh behaviour.</span>
-        </Reveal>
+        <p className="wt-profiles">
+          <span className="t-label">Site profiles</span>
+          <span>Rive community, LinkedIn, Reddit, Contra, and any site with a (N) tab title. One click fills in the right strategy, selector and refresh behaviour.</span>
+        </p>
       </div>
     </section>
   );

@@ -107,14 +107,14 @@ for (const w of [1280, 390]) {
   chk(Math.sign(parseFloat(a)) !== Math.sign(parseFloat(b)), `look-x changed sign ${a} -> ${b}`);
   chk(a !== b && ta !== tb, `iris moved ${a} (${ta}) -> ${b} (${tb})`);
 
-  await page.evaluate(() => window.__ww_record({ source: "types", name: "Rive Community · bell", title: "Rive Community — 5 new", body: "Badge went 3 → 5", value: "5" }));
-  await sleep(500);
-  chk((await page.$eval(T("watch-badge"), (e) => e.textContent.trim())) === "1", "badge shows 1");
+  // The hero moment is the page's first recorded change: its chip is the one-time callout.
+  await page.waitForSelector(T("watch-notice"), { timeout: 8000 });
+  chk((await page.$eval(T("watch-badge"), (e) => e.textContent.trim())) === "1", "badge shows 1 (hero moment)");
   const ntxt = await page.$eval(T("watch-notice"), (e) => e.textContent);
-  chk(ntxt.includes("Rive Community — 5 new"), "callout appears with the change title");
+  chk(ntxt.includes("Contra Inbox"), "callout appears with the change title");
   chk(ntxt.includes("Logged in your menu bar — click it."), "callout carries the menu-bar line");
   const hs = await page.$eval(".ww-notice__hint--l", (e) => getComputedStyle(e).fontSize);
-  chk(hs === "12px", `hint is 12px (${hs})`);
+  chk(hs === "12.5px", `hint is 12.5px (${hs})`);
   const g = await page.evaluate(() => {
     const n = document.querySelector('[data-testid="watch-notice"]').getBoundingClientRect();
     const m = document.querySelector('[data-testid="watch-mark"]').getBoundingClientRect();
@@ -122,18 +122,18 @@ for (const w of [1280, 390]) {
     const b = document.querySelector(".site-header .brand img")?.getBoundingClientRect() ?? { right: 0 };
     return { nt: n.top, nb: n.bottom, nr: n.right, nl: n.left, nw: n.width, mt: m.top, mb: m.bottom, ml: m.left, ht: h.top, hb: h.bottom, br: b.right, sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth };
   });
-  chk(g.nt >= g.ht - 0.5 && g.nb <= g.hb + 0.5, `chip stays inside the header (${Math.round(g.nt)}..${Math.round(g.nb)} in ${Math.round(g.ht)}..${Math.round(g.hb)})`);
-  chk(Math.abs((g.nt + g.nb) / 2 - (g.mt + g.mb) / 2) <= 2, "chip is vertically centred on the mark");
-  chk(g.nr <= g.ml && g.ml - g.nr <= 14, `chip ends just left of the mark (gap ${Math.round(g.ml - g.nr)})`);
-  chk(g.nl >= g.br + 4, `chip never covers the app icon (${Math.round(g.nl)} > ${Math.round(g.br)})`);
+  chk(g.nt >= g.hb + 7.5 && g.nt <= g.hb + 8.5, `chip hangs 8px under the header (${Math.round(g.nt)} vs ${Math.round(g.hb)})`);
+  chk(g.nt >= g.mb, "chip sits under the mark, not beside it");
+  chk(g.nl >= 0 && g.nr <= g.cw, "chip inside the viewport");
   chk(g.sw <= g.cw, `no horizontal overflow with chip visible (${g.sw}/${g.cw})`);
   const t1 = Date.now();
   await page.waitForFunction(() => !document.querySelector('[data-testid="watch-notice"]'), { timeout: 9000 }).catch(() => {});
   chk(!(await page.$(T("watch-notice"))) && Date.now() - t1 < 8000, "callout auto-dismissed (~6 s)");
+  await page.evaluate(() => window.__ww_record({ source: "types", name: "Rive Community · bell", title: "Rive Community — 5 new", body: "Badge went 3 → 5", value: "5" }));
   await page.evaluate(() => window.__ww_record({ source: "types", name: "Second", title: "Second change", body: "x", value: "2" }));
   await sleep(700);
-  chk(!(await page.$(T("watch-notice"))), "second record() shows NO callout");
-  chk((await page.$eval(T("watch-badge"), (e) => e.textContent.trim())) === "2", "badge still ticks to 2");
+  chk(!(await page.$(T("watch-notice"))), "later record() shows NO callout");
+  chk((await page.$eval(T("watch-badge"), (e) => e.textContent.trim())) === "3", "badge still ticks to 3");
   await page.click(T("watch-mark")); await page.waitForSelector(T("watch-popover")); await sleep(500);
   chk(!(await page.$(T("watch-notice"))), "no callout over the open popover");
   const rowsH = await page.$$eval(".ww-pop__item", (r) => r.map((x) => x.getBoundingClientRect().height));
@@ -157,7 +157,7 @@ for (const w of [1280, 390]) {
   await page.waitForSelector(T("watch-popover"));
   await sleep(400);
   const rows = await page.$$eval(T("watch-row"), (r) => r.map((x) => x.textContent));
-  chk(rows.length === 3 && rows.some((t) => t.includes("Rive Community · bell")) && rows.some((t) => t.includes("Second")), `coalesced rows: ${rows.length}`);
+  chk(rows.length === 4 && rows.some((t) => t.includes("Rive Community · bell")) && rows.some((t) => t.includes("Second")), `coalesced rows: ${rows.length}`);
   chk(rows.filter((t) => t.includes("Gmail · @rive.app")).length === 1, "Gmail collapses into one sender row");
   chk(!(await page.$(T("watch-badge"))), "badge cleared on open");
   await page.evaluate(() => window.__ww_record({ source: "gmail", name: "Gamma alerts", title: "Gamma — 7 unread", body: "latest Today", value: "7" }));
@@ -171,11 +171,11 @@ for (const w of [1280, 390]) {
   await page.evaluate(() => window.__ww_record({ source: "types", name: "Rive Community · bell", title: "Rive Community — 7 new", body: "Badge went 5 → 7", value: "7" }));
   await sleep(500);
   const live = await page.$$eval(T("watch-row"), (r) => r.map((x) => x.textContent));
-  chk(live.length === 3 && live[0].includes("Rive Community · bell") && live[0].includes("Last: 7"), `same watcher updates in place and moves first (${live.length}: ${live[0]})`);
+  chk(live.length === 4 && live[0].includes("Rive Community · bell") && live[0].includes("Last: 7"), `same watcher updates in place and moves first (${live.length}: ${live[0]})`);
   chk(await page.$eval(`${T("watch-row")} .ww-pop__val`, (e) => e.classList.contains("is-roll")) || (await page.$eval(T("watch-mark"), (e) => e.dataset.reduced)) === "1", "changed value rolls");
   await page.click(T("watch-check")); await sleep(300);
   chk(!!(await page.$(T("watch-popover"))), "Check All Now keeps popover and records nothing");
-  chk((await page.$$(T("watch-row"))).length === 3, "no new rows from check");
+  chk((await page.$$(T("watch-row"))).length === 4, "no new rows from check");
   await page.keyboard.press("Escape"); await sleep(500);
   chk(!(await page.$(T("watch-popover"))), "Escape closes popover");
   chk(await page.$eval(T("watch-mark"), (e) => document.activeElement === e), "focus returned to mark");
@@ -222,7 +222,7 @@ for (const w of [1280, 390]) {
 
   // outside click closes
   await page.click(T("watch-mark")); await page.waitForSelector(T("watch-popover"));
-  await page.mouse.click(w / 2, 400); await sleep(500);
+  await page.mouse.click(w / 2, w < 500 ? 110 : 400); await sleep(500);
   chk(!(await page.$(T("watch-popover"))), "outside click closes");
   await page.close();
 }

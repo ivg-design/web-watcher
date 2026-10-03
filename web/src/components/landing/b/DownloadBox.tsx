@@ -2,7 +2,6 @@
 
 import "@/styles/download.css";
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Download } from "lucide-react";
 import { RELEASES_URL, asset } from "@/lib/config";
 import type { LatestRelease } from "@/lib/release";
 
@@ -40,28 +39,32 @@ export default function DownloadBox({ release }: { release: LatestRelease }) {
   };
 
   return (
-    <div className="dlx__box">
-      <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={44} height={44} />
-      <div className="dlx__ver">
-        <span className="nw">WebWatcher</span> <span className="nw">{release.version}</span> · <span className="nw">Build {release.build}</span> · {release.monthYear}
-      </div>
-      <a className="dlx__btn" href={release.dmgUrl} data-forge-action="download_intent" data-testid="dl-btn" onClick={onStart}>
-        <Download size={18} aria-hidden="true" />
-        <span>{starting ? "Starting download…" : `Download for Mac · DMG · ${release.sizeMb}`}</span>
-      </a>
-      <span className="sr-only" role="status" data-testid="dl-status">{starting ? "Starting download…" : copied ? "Copied" : ""}</span>
-      <p className="dlx__fine"><span className="nw">Apple Silicon</span> (arm64) only · <span className="nw">macOS 13</span> or later</p>
-      <div className="dlx__links">
-        {release.sha ? (
-          <button type="button" className="dlx__sha" data-testid="dl-sha" onClick={onCopy} title={release.sha}>
-            {copied ? <Check size={16} aria-hidden="true" className="dlx__ok" /> : <Copy size={16} aria-hidden="true" />}
-            {copied ? "Copied" : <>Copy <span className="nw">SHA-256</span> checksum</>}
-          </button>
-        ) : (
-          <a href={release.shaUrl} target="_blank" rel="noopener noreferrer"><span className="nw">SHA-256</span> checksum</a>
-        )}
-        <a href={RELEASES_URL} target="_blank" rel="noopener noreferrer">All releases on GitHub ↗</a>
-        <a href={asset("/docs/building-from-source")}>Build from source: swift build / Xcode</a>
+    <div className="dlx__frame">
+      <div className="dlx__box">
+        <div className="dlx__head">
+          <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={56} height={56} />
+          <div className="dlx__ver">
+            <b><span className="nw">WebWatcher</span> <span className="nw">{release.version}</span></b>
+            <span><span className="nw">Build {release.build}</span>, {release.monthYear}, DMG, {release.sizeMb}</span>
+          </div>
+        </div>
+        <a className="dlx__btn" href={release.dmgUrl} data-forge-action="download_intent" data-testid="dl-btn" onClick={onStart}>
+          <span>{starting ? "Starting download…" : "Download for Mac"}</span>
+        </a>
+        <span className="sr-only" role="status" data-testid="dl-status">{starting ? "Starting download…" : copied ? "Copied" : ""}</span>
+        <p className="dlx__fine"><span className="nw">Apple Silicon</span> (arm64) only. <span className="nw">macOS 13</span> or later.</p>
+        <div className="dlx__links">
+          {release.sha ? (
+            <button type="button" className="dlx__sha" data-testid="dl-sha" onClick={onCopy} title={release.sha}>
+              <span className="dlx__mk" aria-hidden="true">{copied ? "✓" : "⧉"}</span>
+              <span>{copied ? "Copied" : <>Copy <span className="nw">SHA-256</span> checksum</>}</span>
+            </button>
+          ) : (
+            <a href={release.shaUrl} target="_blank" rel="noopener noreferrer"><span className="nw">SHA-256</span> checksum</a>
+          )}
+          <a href={RELEASES_URL} target="_blank" rel="noopener noreferrer"><span>All releases on <span className="nw">GitHub</span> ↗</span></a>
+          <a href={asset("/docs/building-from-source")}>Build from source: swift build / Xcode</a>
+        </div>
       </div>
     </div>
   );

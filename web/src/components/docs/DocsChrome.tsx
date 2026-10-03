@@ -99,7 +99,7 @@ export default function DocsChrome({
         <div className="docs-brand">
           <Link href={asset("/")} className="brand" aria-label="WebWatcher home">
             { }
-            <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={54} height={54} />
+            <img src={asset("/images/webwatcher-icon-tile.png")} alt="" aria-hidden="true" width={54} height={54} />
             WebWatcher
           </Link>
           <Link href={asset("/docs")} className="docs-crumb">/ Docs</Link>

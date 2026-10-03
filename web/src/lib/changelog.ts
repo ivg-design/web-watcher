@@ -64,7 +64,7 @@ const cut = (t: string) => {
 /** Short one-line summary of an entry for the landing page list. */
 export function summarize(e: ChangelogEntry): string {
   const sorted = [...e.sections].sort((a, b) => ORDER.indexOf(a.title) - ORDER.indexOf(b.title));
-  return sorted.flatMap((s) => s.items).slice(0, 3).map(cut).join(" · ");
+  return sorted.flatMap((s) => s.items).slice(0, 3).map(cut).map((t) => (/[.…!?]$/.test(t) ? t : `${t}.`)).join(" ");
 }
 
 /** Latest meaningful release of each of the newest minor lines (pure Herald client re-syncs are skipped). */

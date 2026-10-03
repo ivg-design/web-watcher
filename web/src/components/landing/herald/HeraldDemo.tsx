@@ -48,6 +48,7 @@ function Banner(p: BannerProps) {
         <div className="hx__top">
           <span className="hx__app">{p.app}</span>
           <span className="hx__time">{p.time}</span>
+          <span className="hx__ctl">
           <button
             type="button"
             className={`hx__speak${p.speaking ? " is-on" : ""}`}
@@ -71,6 +72,7 @@ function Banner(p: BannerProps) {
           <button type="button" className="hx__x" data-testid={p.closeId} aria-label="Dismiss" onClick={() => p.onLeave("done")}>
             <X size={13} strokeWidth={2.6} />
           </button>
+          </span>
         </div>
         <div className={p.speaking ? "hx__tw is-reading" : "hx__tw"}>{p.title}</div>
         {p.body}

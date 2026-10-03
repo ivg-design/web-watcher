@@ -1,6 +1,5 @@
 import "@/styles/sections-b.css";
 import "@/styles/gmail.css";
-import Reveal from "@/components/motion/Reveal";
 import { asset } from "@/lib/config";
 import GmailDemo from "./gmail/GmailDemo";
 
@@ -16,39 +15,46 @@ function GoogleG() {
 }
 
 export default function Gmail() {
+  const img = asset("/shots/gmail-sender-editor.png");
   return (
     <section id="gmail" className="section">
-      <div className="container gmail__grid">
-        <Reveal>
-          <p className="eyebrow"><span className="eyebrow__n">04</span>Gmail sender watchers</p>
-          <h2 className="display">Watch a sender, not an inbox.</h2>
-          <p className="gmail__p">
-            Sign in with Google once. Then watch one address, several, or a whole domain. New mail from them becomes a
-            single notification that counts up as mail arrives; the menu count follows as you read, and the notification clears
-            once nothing is unread. Click it to open the message; Archive, Mark as Read, Delete and Spam work on every
-            message it counted.
-          </p>
-          <a className="glink" href={asset("/docs/sign-in-with-google")}>
-            <GoogleG />
-            Sign in with Google
-          </a>
-          <p className="gmail__fine">
-            Scope: gmail.modify only · tokens stay in your Keychain · the app ships its own OAuth client, nothing to
-            configure
-          </p>
-          <figure className="gmail__fig">
-            <img
-              src={asset("/shots/gmail-sender-editor.png")}
-              srcSet={`${asset("/shots/gmail-sender-editor.png")} 1x, ${asset("/shots/gmail-sender-editor@2x.png")} 2x`}
-              alt="The Gmail sender watcher editor in WebWatcher"
-              width={560}
-              height={732}
-              loading="lazy"
-            />
-            <figcaption>The sender watcher editor in <span className="nw">WebWatcher</span></figcaption>
-          </figure>
-        </Reveal>
-        <GmailDemo />
+      <div className="container">
+        <div className="gmail__grid">
+          <div className="gmail__copy">
+            <h2 className="h2-v3">Watch a sender, not an inbox.</h2>
+            <p className="gmail__p">
+              Sign in with Google once. Then watch one address, several, or a whole domain. New mail from them becomes a
+              single notification that counts up as mail arrives. The menu count follows as you read, and the notification clears
+              once nothing is unread. Click it to open the message. Archive, Mark as Read, Delete and Spam work on every
+              message it counted.
+            </p>
+            <a className="glink" href={asset("/docs/sign-in-with-google")} data-testid="gm-signin">
+              <GoogleG />
+              Sign in with Google
+            </a>
+            <p className="gmail__fine t-label">
+              Scope: gmail.modify only. Tokens stay in your Keychain. The app ships its own OAuth client, nothing to configure.
+            </p>
+          </div>
+          <GmailDemo />
+        </div>
+        <figure className="gmail__fig" data-testid="gm-figure">
+          <div className="gmail__frame">
+            <div className="gmail__win">
+              <img
+                src={img}
+                srcSet={`${img} 1x, ${asset("/shots/gmail-sender-editor@2x.png")} 2x`}
+                alt="The Gmail sender watcher editor in WebWatcher"
+                width={560}
+                height={732}
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <figcaption className="t-label">
+            The sender watcher editor in <span className="nw">WebWatcher</span> 1.10.9.
+          </figcaption>
+        </figure>
       </div>
     </section>
   );

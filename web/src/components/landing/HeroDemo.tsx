@@ -30,6 +30,7 @@ export default function HeroDemo() {
   const [muted, setMuted] = useState(false);
   const [rolling, setRolling] = useState(false); // first frame is painting
   const engagedRef = useRef(false);
+  const seenRef = useRef(false); // true once the frame has been on screen during this playback
 
   useEffect(() => {
     const el = frameRef.current;
@@ -41,7 +42,9 @@ export default function HeroDemo() {
     // never keep sound running off screen
     const seenObs = new IntersectionObserver(([e]) => {
       const v = videoRef.current;
-      if (!e.isIntersecting && engagedRef.current && v && !v.paused) v.pause();
+      if (e.isIntersecting) { seenRef.current = true; return; }
+      // Only after it has been seen: start() may begin playing while the smooth scroll to the frame is still under way.
+      if (seenRef.current && engagedRef.current && v && !v.paused) { v.pause(); seenRef.current = false; }
     }, { threshold: 0.2 });
     nearObs.observe(el);
     seenObs.observe(el);
@@ -61,6 +64,8 @@ export default function HeroDemo() {
     v.muted = false;
     v.loop = false;
     engagedRef.current = true;
+    const r = frameRef.current?.getBoundingClientRect();
+    seenRef.current = !!r && r.top < window.innerHeight * 0.8 && r.bottom > window.innerHeight * 0.2;
     setMuted(false);
     setEngaged(true);
     setPaused(false);

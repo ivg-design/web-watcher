@@ -1,5 +1,8 @@
 import puppeteer from "puppeteer-core";
-import { T, sleep, ok } from "./_h.mjs";
+import { T, sleep } from "./_h.mjs";
+const SHOT = "/private/tmp/claude-501/-Users-ivg-github-web-watcher/1b5c3420-5ad4-4c49-88f4-04aad1e374ed/scratchpad/w6/";
+let fails = 0;
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) fails++; };
 const BASE = process.env.BASE || "http://localhost:3101";
 const SEL = "#herald *";
 const browser = await puppeteer.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: "new" });
@@ -25,6 +28,11 @@ async function run(w, h) {
   ok(true, "banner enters on view");
   ok((await page.evaluate(() => window.__ctor)) === 0 && (await page.evaluate(() => window.__played.length)) === 0, "no Audio created and nothing played on load");
   ok(await page.evaluate(() => !document.querySelector("#herald").innerHTML.includes("speechSynthesis")), "no speech synthesis in the section");
+  ok(await page.evaluate(() => [...document.querySelectorAll("audio")].every((a) => a.paused) && window.__played.length === 0), "audio paused after load");
+  await page.hover(T("hb-speak")); await sleep(300);
+  ok(await page.evaluate(() => window.__ctor === 0 && window.__played.length === 0), "audio still paused after hovering the speaker");
+  ok(await page.evaluate(() => { const n = document.querySelector("#herald"); const cs = getComputedStyle(n); return cs.borderTopWidth === "1px" && n.getBoundingClientRect().width >= innerWidth - 20 && document.querySelector("#herald h2").className.includes("h2-v3") && !n.querySelector(".eyebrow") && !!n.querySelector(".herald__head img"); }), "full-bleed hairline band, h2-v3 with inline logo, no eyebrow");
+  ok(await page.evaluate(() => { const a = document.querySelector('[data-testid="herald-get"]'); return a.textContent.trim() === "Get Herald" && !!document.querySelector(".herald__free") && getComputedStyle(a).whiteSpace === "nowrap"; }), "CTA 'Get Herald' + mono free tag");
   await sleep(500);
   const t = await page.$eval(T("hb-banner"), (e) => e.textContent);
   ok(t.includes("3 new from Rive team") && t.includes("WebWatcher · Email") && t.includes("now") && t.includes("Scripting update · Office hours · Release notes"), "banner content");
@@ -35,6 +43,9 @@ async function run(w, h) {
   });
   ok(g.br <= g.sr + 1 && g.bl >= g.sl - 1 && g.bb <= g.sb + 1, "banner inside stage");
   ok(await page.evaluate((s) => [...document.querySelectorAll(s)].every((e) => e.getBoundingClientRect().right <= innerWidth + 1), SEL), "no overflow in section");
+  const appFull = () => page.$$eval(".hx__app", (a) => a.every((e) => e.scrollWidth <= e.clientWidth + 0.5 && getComputedStyle(e).textOverflow !== "ellipsis"));
+  ok(await appFull(), ".hx__app not truncated (idle)");
+  await page.screenshot({ path: SHOT + `herald-shown-${w}.png` });
   if (w > 900) ok(g.ratio <= 1.62 && g.ratio > 1.4, "stage ~16:10 (min-height keeps two banners in)");
   if (w > 900) ok(g.bl > g.sl + 100, "banner at the right side"); else ok(g.br - g.bl > g.sr - g.sl - 24, "banner full width of stage");
   await sleep(1500);
@@ -54,18 +65,28 @@ async function run(w, h) {
   ok(Math.abs(q0.b.top - q0.a.bottom - 10) < 1.5 && Math.abs(q0.b.width - q0.a.width) < 1 && Math.abs(q0.b.left - q0.a.left) < 1, "banner 2 stacked under, same width, 10px gap");
   ok(q0.b.bottom <= q0.s.bottom + 1 && q0.b.right <= q0.s.right + 1, "banner 2 inside stage");
   ok(await page.evaluate((s) => [...document.querySelectorAll(s)].every((e) => e.getBoundingClientRect().right <= innerWidth + 1), SEL), "no overflow with two banners");
-  // tooltip
+  // tooltip: beside the Snooze pill, never over another pill
   if (w > 900) {
-    await page.hover(T("hb-snooze")); await sleep(300);
-    ok(await page.$eval(".hx__tip", (e) => getComputedStyle(e).opacity === "1" && e.textContent === "returns at 9:00"), "snooze tooltip");
-    ok(await page.evaluate(() => { const t = document.querySelector(".hx__tip").getBoundingClientRect(), p = document.querySelector(".hx__snooze").getBoundingClientRect(); return t.top >= p.bottom - 1; }), "tooltip below the pill");
+    await page.hover(T("hb-snooze")); await sleep(200);
+    ok(await page.$eval(".hx__tip", (e) => getComputedStyle(e).visibility === "visible" && e.textContent === "returns at 9:00"), "snooze tooltip");
+    ok(await page.evaluate(() => {
+      const t = document.querySelector(".hx__tip").getBoundingClientRect(), p = document.querySelector(".hx__snooze").getBoundingClientRect();
+      const ban = document.querySelector('[data-testid="hb-banner"]').getBoundingClientRect();
+      const hit = [...document.querySelectorAll(".hx__pill")].some((q) => { if (q.classList.contains("hx__snooze") && q.closest('[data-testid="hb-banner"]')) return false; const r = q.getBoundingClientRect(); return !(t.right <= r.left || t.left >= r.right || t.bottom <= r.top || t.top >= r.bottom); });
+      return t.left >= p.right && !hit && t.right <= ban.right;
+    }), "tooltip right of the pill, overlapping no pill, inside its banner");
+    await page.screenshot({ path: SHOT + `herald-tooltip-${w}.png` });
   }
+  ok(await page.evaluate(() => { const x = document.querySelector('[data-testid="hb-speak"]'); const r = x.getBoundingClientRect(); const cx = r.left + r.width / 2, cy = r.top + r.height / 2; return [[0, -20], [0, 20]].every(([dx, dy]) => document.elementFromPoint(cx + dx, cy + dy)?.closest('[data-testid="hb-speak"]')); }), "speaker hit area >= 44 px tall");
+  ok(await page.evaluate(() => { const x = document.querySelector('[data-testid="hb-close"]'); const r = x.getBoundingClientRect(); const cx = r.left + r.width / 2, cy = r.top + r.height / 2; return [[0, -20], [0, 20], [-20, 0], [20, 0]].every(([dx, dy]) => document.elementFromPoint(cx + dx, cy + dy)?.closest('[data-testid="hb-close"]')); }), "dismiss hit area >= 44 px");
   // speak: pre-rendered sample, click only
   ok(["hb-read", "hb-archive", "hb-delete", "hb-spam", "hb-snooze"].length === (await page.$$eval("[data-testid=hb-banner] .hx__pill", (b) => b.map((x) => x.textContent.replace("returns at 9:00", "")).filter((x) => ["Mark as Read", "Archive", "Delete", "Spam", "Snooze"].includes(x)).length)) && !(await has(page, "hb-open")), "email buttons: Mark as Read, Archive, Delete, Spam, Snooze (no Open)");
   ok(await page.$eval(T("hb-speak"), (e) => e.dataset.speaking === "0" && e.getAttribute("aria-pressed") === "false"), "speaker idle, always rendered");
   await click(page, "hb-speak");
   ok(await page.$eval(T("hb-speak"), (e) => e.dataset.speaking === "1" && e.getAttribute("aria-pressed") === "true" && e.classList.contains("is-on") && e.textContent.includes("reading") && e.querySelectorAll(".hx__meter i").length === 5), "speak -> reading + 5-bar meter");
   ok(await page.$eval("[data-testid=hb-banner] .hx__tw", (e) => e.classList.contains("is-reading")), "title underline sweep while reading");
+  ok(await appFull(), ".hx__app not truncated while the reading chip is shown");
+  await page.screenshot({ path: SHOT + `herald-reading-${w}.png` });
   ok((await page.evaluate(() => window.__played[0] || "")).endsWith("/audio/herald-email-3.mp3"), "plays the email-3 sample");
   ok((await page.evaluate(() => window.__ctor)) === 1, "one Audio, created on first click");
   await click(page, "hb2-speak");
@@ -123,12 +144,17 @@ async function run(w, h) {
   }
 
   if (w <= 900) {
-    const hts = await page.$$eval(".hx__pill, .hx__x, .hx__speak, .hx__more", (b) => b.map((x) => x.getBoundingClientRect().height));
+    const hts = await page.$$eval(".hx__pill, .hx__more", (b) => b.map((x) => x.getBoundingClientRect().height));
     ok(hts.every((x) => x >= 43.5), "targets >= 44px");
   }
   await page.close();
 }
-await run(1280, 900);
-await run(390, 844);
-await browser.close();
-process.exit(0);
+try {
+  await run(1280, 900);
+  await run(1440, 900);
+  await run(390, 844);
+} finally {
+  await browser.close();
+}
+console.log(fails ? `${fails} FAILED` : "all passed");
+process.exit(fails ? 1 : 0);

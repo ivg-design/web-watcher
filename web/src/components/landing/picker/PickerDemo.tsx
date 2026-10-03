@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Bell, Check, ChevronLeft, ChevronRight, Eye, Inbox, Lock, MessageCircle } from "lucide-react";
+import { Bell, Check, ChevronLeft, ChevronRight, Eye, Lock, MessageCircle } from "lucide-react";
 import { asset } from "@/lib/config";
 import { useWatch } from "@/components/watch/WatchContext";
 import { CANDIDATES, GROUPS, NODES, siblings, type NodeId } from "./data";
@@ -389,26 +389,26 @@ export default function PickerDemo() {
         </div>
       </div>
 
-      {step === 3 && <PopoverMock done={done} reading={reading} added={added} />}
+      <PopoverMock done={done} added={added} />
     </div>
   );
 }
 
-function PopoverMock({ done, reading, added }: { done: (typeof NODES)[NodeId] | null; reading: boolean; added: boolean }) {
+function PopoverMock({ done, added }: { done: (typeof NODES)[NodeId] | null; added: boolean }) {
   return (
     <div className="pm" data-testid="pd-popover" aria-label="The watcher as it appears in the menu bar popover">
       <div className="pm__head"><strong>Web Watcher</strong><small>v1.10.9 (34)</small><span className="pm__dot" /></div>
-      <div className="pm__row"><i className="pm__tog is-on" /><span><strong>iPhone 17 Pro price</strong><small>Last: $1,199.00</small></span></div>
-      <div className="pm__row"><i className="pm__tog is-on" /><span><strong>WebWatcher releases</strong><small>Last: v1.7.0</small></span></div>
-      <div className={`pm__row pm__row--new${added ? " is-added" : ""}`} data-testid="pd-newrow">
-        <i className={`pm__tog${added ? " is-on" : ""}`} />
-        <span>
-          <strong>Rive Community · {done?.label}</strong>
-          <small>{added ? `Watching · Last: ${reading ? "…" : done?.value}` : "Not saved yet · preview"}</small>
-        </span>
-      </div>
-      <div className="pm__sec"><Inbox size={12} aria-hidden /> Email</div>
-      <div className="pm__row"><i className="pm__tog is-on" /><span><strong>Acme invoices</strong><small>3 unread · latest Today 22:45</small></span><b className="pm__pill">3</b></div>
+      {done && added ? (
+        <div className="pm__row pm__row--new" data-testid="pd-newrow">
+          <i className="pm__tog is-on" />
+          <span>
+            <strong>Rive Community · {done.label}</strong>
+            <small>Watching · Last: {done.value}</small>
+          </span>
+        </div>
+      ) : (
+        <p className="pm__empty" data-testid="pd-empty">No watchers yet. Scan a page and add one.</p>
+      )}
       <div className="pm__act">
         { }
         <img src={asset("/images/webwatcher-icon.png")} alt="" aria-hidden="true" width={16} height={16} /> Add Watcher

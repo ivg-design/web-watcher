@@ -20,6 +20,21 @@ for (const w of [1440, 390]) {
     chk(/^[A-Z][a-z]{2} \d{1,2}:\d{2} [AP]M$/.test(clk[0]), `clock "${clk[0]}"`);
     chk(/Local time/.test(clk[2]), "clock title");
   } else chk(clk[1] === "none", "clock hidden at <= 480");
+  {
+    // chip: fresh page, first record
+    const p2 = await browser.newPage();
+    await p2.setViewport({ width: w, height: 900, hasTouch: w < 500 });
+    await p2.goto(BASE + "/", { waitUntil: "networkidle2", timeout: 90000 });
+    await p2.waitForSelector(T("watch-mark"), { timeout: 30000 });
+    await p2.evaluate(() => window.__ww_record({ source: "hero", name: "Chip", title: "Chip", body: "b" }));
+    await p2.waitForSelector(T("watch-notice"), { timeout: 5000 });
+    const g = await p2.evaluate(() => { const n = document.querySelector('[data-testid="watch-notice"]').getBoundingClientRect(); const h = document.querySelector("header.site-header").getBoundingClientRect(); const m = document.querySelector('[data-testid="watch-mark"]').getBoundingClientRect(); return { nt: n.top, hb: h.bottom, nr: n.right, mr: m.right, nl: n.left, w: innerWidth }; });
+    chk(g.nt >= g.hb, `chip below header (top ${g.nt} >= ${g.hb})`);
+    chk(g.nl >= 0 && g.nr <= g.w, "chip inside viewport");
+    if (w > 480) chk(Math.abs(g.nr - g.mr) < 24, `chip right-aligned to mark (${g.nr} vs ${g.mr})`);
+    await p2.screenshot({ path: `/private/tmp/claude-501/-Users-ivg-github-web-watcher/1b5c3420-5ad4-4c49-88f4-04aad1e374ed/scratchpad/W1/chip-${w}.png`, clip: { x: 0, y: 0, width: w, height: 260 } });
+    await p2.close();
+  }
   if (w > 480) {
     await page.evaluate(() => window.__ww_setInterval(15));
     await sleep(300);

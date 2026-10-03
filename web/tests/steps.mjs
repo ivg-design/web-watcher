@@ -50,7 +50,9 @@ for (const w of [1440, 390]) {
     ok(sx[1] < sy[1], "mobile: stage above steps");
     ok(sx[2] <= 390, "mobile: stage fits");
     const strip = await page.$$eval(".hw-steps li", (els) => els.map((e) => Math.round(e.getBoundingClientRect().y)));
-    ok(new Set(strip).size === 1, "mobile: steps form one horizontal strip");
+    ok(strip[0] < strip[1] && strip[1] < strip[2], "mobile: ruler is three stacked rows");
+    const ts = await page.$$eval('[data-testid^="hw-time-"]', (e) => e.map((x) => x.textContent.trim()));
+    ok(ts.join("|") === "t+0.0 s|t+3.2 s|t+7.6 s", "ruler timestamps " + ts.join(" "));
     ok((await rect("hw-step-1"))[3] >= 44, "mobile: step targets >= 44px");
   }
   await page.screenshot({ path: `/private/tmp/claude-501/-Users-ivg-github-web-watcher/1b5c3420-5ad4-4c49-88f4-04aad1e374ed/scratchpad/steps-${w}.png` });

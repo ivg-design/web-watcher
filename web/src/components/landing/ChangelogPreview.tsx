@@ -9,9 +9,9 @@ export default function ChangelogPreview({ entries }: { entries: ChangelogEntry[
   // The block never shows an older version than the download: add the newest release when it is not among the meaningful ones.
   const rows = newest && !entries.some((e) => e.version === newest.version) ? [newest, ...entries] : entries;
   return (
-    <section id="changelog" className="clx">
+    <section id="changelog" className="clx paper">
       <div className="container">
-        <p className="eyebrow"><span className="eyebrow__n">08</span>Recent updates</p>
+        <h2 className="clx__h">Recent updates</h2>
         <div className="clx__list">
           {rows.map((e) => (
             <div className="clx__row" key={e.version}>
