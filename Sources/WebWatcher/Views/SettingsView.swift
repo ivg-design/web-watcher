@@ -104,6 +104,8 @@ struct SettingsView: View {
                                 }
                             )
 
+                            // Safari already has its own row above: a second one for the default browser only when it is another app.
+                            if defaultBrowserBundleID != "com.apple.Safari" {
                             permissionStatusRow(
                                 title: "\(defaultBrowserName) Automation",
                                 report: defaultBrowserAutomationReport,
@@ -116,6 +118,7 @@ struct SettingsView: View {
                                     }
                                 }
                             )
+                            }
                         }
                         .padding(.vertical, 4)
                     }
