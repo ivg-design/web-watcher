@@ -96,13 +96,15 @@ final class EmailWatcherUnreadTests: XCTestCase {
         var w = EmailWatcher(accountId: UUID(), senders: ["a@b.com", "@c.com"])
         w.lastMatchThreadId = "th"
         XCTAssertEqual(w.openURL(accountIndex: 2)?.absoluteString, "https://mail.google.com/mail/u/2/#inbox")
+        // One unread opens the same filtered search as several: never a single thread, which may be the wrong one.
         w.unreadCount = 1
-        XCTAssertEqual(w.openURL(accountIndex: 2)?.absoluteString, "https://mail.google.com/mail/u/2/#inbox/th")
+        XCTAssertEqual(w.openURL(accountIndex: 2), SenderMatcher.gmailSearchURL(accountIndex: 2, senders: w.senders))
+        XCTAssertTrue(w.openURL(accountIndex: 2)?.absoluteString.contains("#search/") == true)
         w.unreadCount = 2
         XCTAssertEqual(w.openURL(accountIndex: 2), SenderMatcher.gmailSearchURL(accountIndex: 2, senders: w.senders))
         w.lastMatchThreadId = nil
         w.unreadCount = 1
-        XCTAssertEqual(w.openURL(accountIndex: 0)?.absoluteString, "https://mail.google.com/mail/u/0/#inbox")
+        XCTAssertEqual(w.openURL(accountIndex: 0), SenderMatcher.gmailSearchURL(accountIndex: 0, senders: w.senders))
     }
 
     func testGmailSearchURLEncoding() {

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.10] (Build 35) - 2026-10-05
+
+### Changed
+
+- The email watcher's link opens Gmail's search for the unread mail from the watched senders, so it always matches the count. Every check is recorded in ~/Library/Logs/WebWatcher/checks.log. Settings: the Gmail poll interval is readable, no duplicate Safari Automation row. Add Watcher: the zero-confirmation check only appears for badge watchers.
+
 ## [1.10.9] (Build 34) - 2026-10-02
 
 ### Changed

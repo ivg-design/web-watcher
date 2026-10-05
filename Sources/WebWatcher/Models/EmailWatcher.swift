@@ -109,14 +109,12 @@ struct EmailWatcher: Identifiable, Codable, Equatable {
         return lastMatchDate == nil ? "No email yet" : "No unread"
     }
 
-    /// More than one unread → the unread search for these senders; exactly one with a known
-    /// thread → that thread; otherwise the inbox.
+    /// Any unread → Gmail's search for the unread inbox mail from these senders, which is exactly what the count
+    /// counts, so what opens always matches the number. (Opening the "last match" thread instead could land on a
+    /// different, already read conversation.) Nothing unread → the inbox.
     func openURL(accountIndex: Int) -> URL? {
-        if unreadCount > 1 {
-            return Self.searchURL(accountIndex: accountIndex, senders: senders)
-        }
-        if unreadCount == 1, let threadId = lastMatchThreadId {
-            return URL(string: "https://mail.google.com/mail/u/\(accountIndex)/#inbox/\(threadId)")
+        if unreadCount >= 1, let search = Self.searchURL(accountIndex: accountIndex, senders: senders) {
+            return search
         }
         return URL(string: "https://mail.google.com/mail/u/\(accountIndex)/#inbox")
     }

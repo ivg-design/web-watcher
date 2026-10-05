@@ -97,11 +97,12 @@ final class EmailWatcherTests: XCTestCase {
 
     // MARK: - openURL
 
-    func testOpenURLUsesThreadWhenAvailable() {
-        var w = EmailWatcher(accountId: UUID())
+    func testOpenURLWithUnreadMailIsTheFilteredSearchNotAThread() {
+        var w = EmailWatcher(accountId: UUID(), senders: ["a@b.com"])
         w.lastMatchThreadId = "t1"
         w.unreadCount = 1
-        XCTAssertEqual(w.openURL(accountIndex: 0)?.absoluteString, "https://mail.google.com/mail/u/0/#inbox/t1")
+        XCTAssertEqual(w.openURL(accountIndex: 0), SenderMatcher.gmailSearchURL(accountIndex: 0, senders: ["a@b.com"]))
+        XCTAssertFalse(w.openURL(accountIndex: 0)?.absoluteString.contains("t1") == true)
     }
 
     func testOpenURLFallsBackToInboxWithoutAMatch() {

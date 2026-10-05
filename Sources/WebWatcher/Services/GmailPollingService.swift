@@ -157,6 +157,7 @@ class GmailPollingService: ObservableObject {
             refs = try await api.listMessages(accessToken: accessToken, query: query, maxResults: 25).messages ?? []
         } catch {
             print("Gmail: unread refresh failed for \(current.name): \(error)")
+            CheckLog.write("mail \"\(current.name)\" unread list failed: \(error) (kept \(previousCount) unread)")
             return
         }
 
@@ -187,6 +188,8 @@ class GmailPollingService: ObservableObject {
             subjects: sorted.prefix(3).map(\.subject)
         )
         seededWatchers.insert(watcherId)
+        CheckLog.write("mail \"\(current.name)\" query=[\(query)] gmail listed \(refs.count), matched \(sorted.count) unread"
+                       + " ids=\(sorted.map(\.messageId).joined(separator: ",")) was=\(previousCount) new=\(fresh.count)")
 
         guard notify else { return }
         if sorted.isEmpty {

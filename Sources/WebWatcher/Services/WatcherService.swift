@@ -221,6 +221,8 @@ class WatcherService: ObservableObject {
     }
 
     private func apply(result: WatchResult, for watcher: Watcher, profile: SiteProfile?) {
+        CheckLog.write(CheckLog.describe(watcher: watcher, result: result, previous: watcher.lastValue)
+                       + (inGracePeriod ? " (grace period after wake)" : ""))
         switch result.observation {
         case .cannot(let reason, let detail):
             guard !inGracePeriod else {
@@ -303,5 +305,73 @@ class WatcherService: ObservableObject {
 
         NotificationService.shared.notifyWatcherBroken(watcher: w, reason: reason)
         store.markHealthNotified(for: watcherId)
+    }
+}
+
+
+/// A plain text record of every check, so "why did it still say unread?" can be answered afterwards:
+/// `~/Library/Logs/WebWatcher/checks.log`, one line per check, kept under about 2 MB (one older file is kept as
+/// `checks.old.log`). It holds watcher names, readings, page titles and addresses, and for mail only counts and
+/// message ids: never message text, subjects or credentials.
+enum CheckLog {
+    private static let queue = DispatchQueue(label: "webwatcher.checklog")
+    private static let limit = 1_000_000
+    static var directory: URL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("Logs/WebWatcher", isDirectory: true)
+    /// Off in the screenshot and demo modes and under tests, which must not write into the user's Logs folder.
+    static var isEnabled: Bool = NSClassFromString("XCTestCase") == nil
+        && ProcessInfo.processInfo.environment["WW_SCREENSHOTS"] == nil
+        && ProcessInfo.processInfo.environment["WW_DEMO"] == nil
+
+    private static let stamp: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    /// One line: time, then the text with line breaks flattened.
+    static func line(_ text: String, now: Date = Date()) -> String {
+        stamp.string(from: now) + " " + text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ") + "\n"
+    }
+
+    static func write(_ text: String) {
+        guard isEnabled else { return }
+        let entry = line(text)
+        queue.async {
+            let fm = FileManager.default
+            try? fm.createDirectory(at: directory, withIntermediateDirectories: true)
+            let file = directory.appendingPathComponent("checks.log")
+            if let size = (try? fm.attributesOfItem(atPath: file.path)[.size]) as? Int, size > limit {
+                let old = directory.appendingPathComponent("checks.old.log")
+                try? fm.removeItem(at: old)
+                try? fm.moveItem(at: file, to: old)
+            }
+            if let h = try? FileHandle(forWritingTo: file) {
+                defer { try? h.close() }
+                _ = try? h.seekToEnd()
+                try? h.write(contentsOf: Data(entry.utf8))
+            } else {
+                try? Data(entry.utf8).write(to: file)
+            }
+        }
+    }
+
+    /// What a web check saw: the reading (or why there is none), whether the page was visible, and which tab it was.
+    static func describe(watcher: Watcher, result: WatchResult, previous: String?) -> String {
+        let r = result.report
+        var parts = ["web", "\"\(watcher.name)\""]
+        switch result.observation {
+        case .value(let v): parts.append("read=\(v)")
+        case .zero: parts.append("read=0 (confirmed)")
+        case .cannot(let reason, let detail): parts.append("cannot=\(reason.rawValue)" + (detail.map { " (\($0))" } ?? ""))
+        }
+        parts.append("was=\(previous ?? "none")")
+        if case .cannot = result.observation { parts.append("kept the previous reading") }
+        if let v = r.tabVisible { parts.append(v ? "tab=visible" : "tab=hidden") }
+        if r.isLoading == true { parts.append("still loading") }
+        parts.append("forceRefresh=\(watcher.forceRefresh ? "on" : "off")")
+        if let u = r.matchedURL { parts.append("url=\(u.prefix(120))") }
+        if let t = r.pageTitle { parts.append("title=\"\(t.prefix(80))\"") }
+        return parts.joined(separator: " ")
     }
 }
