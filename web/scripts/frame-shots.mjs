@@ -18,11 +18,17 @@ const GRADIENTS = {
 };
 // shot name -> gradient preset (anything unlisted uses the default)
 const PRESET = {
-  popover: "sunset",
-  "add-watcher-page": "ocean", "add-watcher-element": "ocean", "add-watcher-confirm": "ocean",
-  "watcher-editor": "forest", "gmail-sender-editor": "berry",
-  "settings-general": "lagoon", "settings-gmail": "berry", "settings-notifications": "ember",
-  permissions: "forest", notification: "sunset",
+  popover: "sunset", "popover-dark": "berry", "popover-changed": "ember", "popover-changed-dark": "ocean",
+  "popover-empty": "lagoon", "popover-empty-dark": "ocean",
+  "add-watcher-page": "ocean", "add-watcher-element": "ocean", "add-watcher-confirm": "ocean", "add-watcher-gmail": "berry",
+  "watcher-editor": "forest", "watcher-editor-dark": "ocean", "watcher-editor-advanced": "forest",
+  "watcher-editor-badge": "lagoon", "watcher-editor-text-change": "forest", "watcher-editor-element-count": "ocean",
+  "watcher-editor-element-exists": "sunset", "watcher-editor-element-disappears": "ember", "watcher-editor-anything-changes": "berry",
+  "gmail-sender-editor": "berry", "gmail-sender-editor-dark": "ocean", "gmail-signin": "sunset",
+  "settings-general": "lagoon", "settings-general-dark": "ocean", "settings-gmail": "berry", "settings-gmail-dark": "ocean",
+  "settings-gmail-signin": "sunset", "settings-notifications": "ember", "settings-notifications-dark": "berry",
+  permissions: "forest", "permissions-dark": "ocean", "settings-whole": "lagoon",
+  "permission-notifications": "ember", "permission-automation": "sunset", notification: "sunset",
 };
 const DEFAULT_PRESET = "sunset";
 
@@ -30,7 +36,7 @@ const args = process.argv.slice(2);
 const flag = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const rawDir = resolve(args[0] ?? ".");
 const outDir = resolve(flag("--out", "public/shots"));
-const MARGIN = Number(flag("--margin", 40)) * 2; // px at 2x
+const MARGIN_PT = Number(flag("--margin", 40)); // margin in pt for a normal-width window; narrow windows get ~9% of their width (so the frame stays "a little")
 mkdirSync(outDir, { recursive: true });
 
 function gradientSvg(w, h, { angle, stops }) {
@@ -59,15 +65,23 @@ export async function frame(win, preset, canvas) {
     const scale = Math.min((W * 0.8) / ww, (H * canvas.fill) / wh);
     ww = Math.round(ww * scale); wh = Math.round(wh * scale);
     win = await sharp(win).resize(ww, wh, { kernel: "lanczos3" }).png().toBuffer();
-  } else { W = ww + MARGIN * 2; H = wh + MARGIN * 2; }
+  } else { const m = Math.min(MARGIN_PT, Math.round(ww / 2 * 0.09)) * 2; W = ww + m * 2; H = wh + m * 2; }
   const left = Math.round((W - ww) / 2), top = Math.round((H - wh) / 2);
   const pad = 80;
   const sh1 = await shadowOf(await sharp(win).extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer(), 28, 0.38);
   const sh2 = await shadowOf(await sharp(win).extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer(), 6, 0.3);
+  // Place a shadow layer at (x, y) on the W x H canvas, cropping whatever overhangs the edges.
+  const place = async (buf, x, y) => {
+    const m = await sharp(buf).metadata();
+    const cx = Math.max(0, -x), cy = Math.max(0, -y);
+    const cw = Math.min(m.width - cx, W - Math.max(0, x)), ch = Math.min(m.height - cy, H - Math.max(0, y));
+    const input = cx || cy || cw < m.width || ch < m.height ? await sharp(buf).extract({ left: cx, top: cy, width: cw, height: ch }).png().toBuffer() : buf;
+    return { input, left: Math.max(0, x), top: Math.max(0, y) };
+  };
   return sharp(gradientSvg(W, H, GRADIENTS[preset] ?? GRADIENTS[DEFAULT_PRESET]))
     .composite([
-      { input: sh1, left: left - pad, top: top - pad + 22 },
-      { input: sh2, left: left - pad, top: top - pad + 6 },
+      await place(sh1, left - pad, top - pad + 22),
+      await place(sh2, left - pad, top - pad + 6),
       { input: win, left, top },
     ])
     .png();
@@ -85,5 +99,5 @@ for (const f of readdirSync(rawDir).filter((f) => extname(f) === ".png").sort())
   const name = basename(f, ".png");
   const raw = join(rawDir, f);
   await save(await frame(raw, PRESET[name] ?? DEFAULT_PRESET), name);
-  if (name === "popover") await save(await frame(raw, "sunset", { w: 2400, h: 1800, fill: 0.86 }), "hero-poster");
+  if (name === "popover" && args.includes("--hero")) await save(await frame(raw, "sunset", { w: 2400, h: 1800, fill: 0.86 }), "hero-poster");
 }

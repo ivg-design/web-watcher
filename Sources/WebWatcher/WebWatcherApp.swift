@@ -580,6 +580,13 @@ enum ScreenshotMode {
     static let probe: (any ElementProbing)? = isActive ? CannedProbe() : nil
     /// Set by the Add Watcher editor so the runner can drive the Page → Element → Confirm steps.
     @MainActor static var pickerModel: ElementPickerModel?
+    /// Screenshot-run switches read by the views (Debug only): which tab Add Watcher opens on, how tall the
+    /// editor / Settings windows are, and whether the editor's disclosure sections start open.
+    @MainActor static var startOnEmail = false
+    @MainActor static var editorHeightOverride: CGFloat?
+    @MainActor static var settingsHeight: CGFloat?
+    @MainActor static var editorAdvanced = false
+    @MainActor static var editorNotification = false
 
     static func prefillNewWatcher(name: inout String, url: inout String, markProgrammatic: () -> Void) {
         markProgrammatic()
@@ -587,7 +594,7 @@ enum ScreenshotMode {
             name = "Rive Community bell"
             url = DemoMode.pageURL
         } else {
-            name = "iPhone 17 Pro price"
+            name = "Trail runner price"
             url = CannedProbe.pageURL
         }
     }
@@ -598,20 +605,20 @@ enum ScreenshotMode {
 
 #if DEBUG
 final class CannedProbe: ElementProbing, @unchecked Sendable {
-    static let pageURL = "https://www.apple.com/shop/buy-iphone/iphone-17-pro"
-    static let pageTitle = "Buy iPhone 17 Pro - Apple"
+    static let pageURL = "https://shop.example.com/products/trail-runner"
+    static let pageTitle = "Trail Runner - Example Shop"
 
     static func candidates() -> [ElementCandidate] {
         [
-            ElementCandidate(selector: "[data-autom='cart-count']", anchor: "[data-autom='cart']", strategy: .badgeText,
-                             value: "2", label: "2 · inside Shopping Bag", detail: "Small number on the bag icon in the page header, found by its unique name",
-                             technical: "data-autom=cart-count · 16×16 · top 12 px", tier: 1, score: 96),
-            ElementCandidate(selector: "[data-autom='bag']", strategy: .autoBadge,
-                             label: "Shopping Bag icon", detail: "Icon with no counter yet. Starts reading as soon as one appears",
-                             technical: "data-autom=bag · 44×44 · top 0 px", tier: 2, score: 74),
-            ElementCandidate(selector: ".rf-pdp-currentprice", strategy: .text,
-                             value: "$1,199.00", label: "$1,199.00 · Price", detail: "Current price in the product summary, found by its stable class",
-                             technical: ".rf-pdp-currentprice · 96×24 · top 212 px", tier: 4, score: 88),
+            ElementCandidate(selector: ".cart-count", anchor: ".cart-link", strategy: .badgeText,
+                             value: "2", label: "2 · inside Cart", detail: "Small number on the cart icon in the page header, found by its unique name",
+                             technical: "class=cart-count · 16×16 · top 12 px", tier: 1, score: 96),
+            ElementCandidate(selector: ".cart-icon", strategy: .autoBadge,
+                             label: "Cart icon", detail: "Icon with no counter yet. Starts reading as soon as one appears",
+                             technical: "class=cart-icon · 44×44 · top 0 px", tier: 2, score: 74),
+            ElementCandidate(selector: ".product-price .current", strategy: .text,
+                             value: "$129.00", label: "$129.00 · Price", detail: "Current price in the product summary, found by its stable class",
+                             technical: ".product-price .current · 96×24 · top 212 px", tier: 4, score: 88),
             ElementCandidate(selector: "title", strategy: .title,
                              value: Self.pageTitle, label: "Page title", detail: "The browser tab title",
                              technical: "document.title", tier: 1, score: 40)
@@ -632,17 +639,37 @@ final class CannedProbe: ElementProbing, @unchecked Sendable {
     func reloadTab(for watcher: Watcher, profile: SiteProfile?) async -> Bool { true }
     func openBackgroundTab(for watcher: Watcher, profile: SiteProfile?) async -> Bool { true }
     func diagnose(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport {
-        var r = page(.value("1199"))
-        r.steps = [DoctorStep(label: "Element found", passed: true, note: ".rf-pdp-currentprice"),
-                   DoctorStep(label: "Reads a value", passed: true, note: "$1,199.00")]
+        var r = page(.value("129"))
+        r.steps = [DoctorStep(label: "Element found", passed: true, note: ".product-price .current"),
+                   DoctorStep(label: "Reads a value", passed: true, note: "$129.00")]
         return r
     }
     func locate(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport { page() }
     func pickConfirm(_ watcher: Watcher, profile: SiteProfile?) async -> ProbeReport { page() }
 }
 
-/// Opens each window with sample data, waits for layout, captures it with `screencapture -l`
-/// (-o: no shadow), closes it, and finally quits.
+/// A window that is placed far outside every display and never becomes key or main, yet
+/// reports itself as key/main so its title bar draws the live (coloured) traffic lights.
+/// AppKit's own "keep on a screen" constraint is switched off so the origin sticks.
+final class OffscreenWindow: NSWindow {
+    static let origin = NSPoint(x: -30000, y: -30000)
+    override var isKeyWindow: Bool { true }
+    override var isMainWindow: Bool { true }
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
+    // Private "draw as the active window" queries of the title-bar chrome (Debug screenshots only), so the
+    // traffic lights and title are coloured although this window is never key.
+    @objc(_hasKeyAppearance) func ww_hasKeyAppearance() -> Bool { true }
+    @objc(_hasActiveAppearance) func ww_hasActiveAppearance() -> Bool { true }
+    @objc(_hasActiveControls) func ww_hasActiveControls() -> Bool { true }
+}
+
+/// Renders every window with sample data OFFSCREEN (origin -30000,-30000, ordered in without
+/// activating, never key) and captures each by window id. Capture methods are tried in order and
+/// the first that yields a correct, non-blank image of the expected size wins:
+/// screencapture -l, CGWindowListCreateImage, then in-process cacheDisplay at 2x. The method used
+/// per shot is logged to `<dir>/capture.log`.
 @MainActor
 final class ScreenshotRunner {
     static let shared = ScreenshotRunner()
@@ -653,113 +680,213 @@ final class ScreenshotRunner {
     private let emailStore = EmailWatcherStore.shared
     private lazy var service = WatcherService(store: store)
     private lazy var polling = GmailPollingService(store: gmailStore)
-    private var webWatchers: [Watcher] = []
+    private var watchers: [Watcher] = []
     private var emailWatcher: EmailWatcher!
     private var failures: [String] = []
+    private var logLines: [String] = []
+    private let only: Set<String> = Set((ProcessInfo.processInfo.environment["WW_SHOTS_ONLY"] ?? "").split(separator: ",").map(String.init))
 
     func start() {
         try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
-        NSApp.setActivationPolicy(.regular)
-        seed()
+        NSApp.setActivationPolicy(.accessory)   // no Dock icon, never frontmost
+        AppSettings.shared.notificationDelivery = .heraldWhenAvailable
         Task { @MainActor in
             await self.runAll()
-            if !self.failures.isEmpty { print("screenshots: FAILED \(self.failures)") }
+            self.log("screens: " + NSScreen.screens.map { NSStringFromRect($0.frame) }.joined(separator: " "))
+            if !self.failures.isEmpty { self.log("FAILED \(self.failures)") }
+            try? self.logLines.joined(separator: "\n").appending("\n").write(to: self.outDir.appendingPathComponent("capture.log"), atomically: true, encoding: .utf8)
             NSApp.terminate(nil)
         }
     }
 
-    // MARK: Sample data
+    private func log(_ s: String) { print("screenshots: \(s)"); logLines.append(s) }
+    private func wants(_ name: String) -> Bool { only.isEmpty || only.contains(name) }
 
-    private func seed() {
+    // MARK: Sample data (fictional, privacy-safe)
+
+    private func resetGmail() {
+        for e in emailStore.watchers { emailStore.delete(e) }
+        for a in gmailStore.accounts { gmailStore.delete(a) }
+    }
+
+    private func seedGmail() {
+        resetGmail()
         let now = Date()
-        var apple = Watcher(name: "iPhone 17 Pro price", url: CannedProbe.pageURL, selector: ".rf-pdp-currentprice",
-                            watchType: .textChange, interval: .minutes5, anchorSelector: nil)
-        apple.lastValue = "$1,199.00"; apple.lastConclusiveValue = "$1,199.00"; apple.lastCheck = now.addingTimeInterval(-45)
-        apple.everMatched = true
-        var github = Watcher(name: "WebWatcher releases", url: "https://github.com/ivg-design/web-watcher/releases",
-                             selector: "a.Link--primary[href*='/releases/tag/']", watchType: .textChange, interval: .minutes10)
-        github.lastValue = "v1.7.0"; github.lastConclusiveValue = "v1.7.0"; github.lastCheck = now.addingTimeInterval(-120)
-        github.everMatched = true
-        webWatchers = [apple, github]
-        store.watchers = webWatchers
-
         var account = GmailAccount(email: "alex@example.com", displayName: "Alex", pollingInterval: .minute1)
         account.accessToken = "sample"; account.refreshToken = "sample"
         account.tokenExpiresAt = now.addingTimeInterval(3600); account.lastCheck = now.addingTimeInterval(-30)
         account.unreadCount = 3
         gmailStore.add(account)
-
-        var mail = EmailWatcher(name: "Acme invoices", accountId: account.id, senders: ["billing@acme.com", "@acme-pay.com"])
+        var mail = EmailWatcher(name: "Billing emails", accountId: account.id, senders: ["billing@example.com", "@example-pay.com"])
         mail.unreadCount = 3
         mail.lastMatchDate = now.addingTimeInterval(-540)
-        mail.lastMatchFrom = "Acme Billing <billing@acme.com>"
+        mail.lastMatchFrom = "Example Billing <billing@example.com>"
         mail.lastMatchSubject = "Invoice 2041 is ready"
         mail.recentSubjects = ["Invoice 2041 is ready", "Payment received, thank you", "Your October statement"]
         mail.matchCount = 12
         emailStore.add(mail)
         emailWatcher = mail
+    }
 
+    /// `changed`: the forum bell shows 3 new and the release page just moved; otherwise everything is quiet.
+    private func seedWatchers(changed: Bool) {
+        let now = Date()
+        func make(_ name: String, _ url: String, _ sel: String, _ type: WatchType, _ interval: CheckInterval,
+                  value: String, ago: TimeInterval, strategy: ProbeStrategy?, anchor: String? = nil, changedAgo: TimeInterval? = nil) -> Watcher {
+            var w = Watcher(name: name, url: url, selector: sel, watchType: type, interval: interval, anchorSelector: anchor)
+            w.strategy = strategy
+            w.lastValue = value; w.lastConclusiveValue = value; w.lastCheck = now.addingTimeInterval(-ago); w.everMatched = true
+            if let c = changedAgo { w.lastChangeDate = now.addingTimeInterval(-c) }
+            return w
+        }
+        let bell = make("Community forum bell", "https://community.example.com/", ".header-bell .badge", .badgeNumber, .seconds30,
+                        value: changed ? "3" : "0", ago: 20, strategy: .anchoredBadge, anchor: ".header-bell")
+        let price = make("Trail runner price", "https://shop.example.com/products/trail-runner", ".product-price .current", .textChange, .minutes5,
+                         value: "$129.00", ago: 45, strategy: nil, changedAgo: changed ? 3600 * 26 : nil)
+        let notes = make("Release notes", "https://example.com/changelog", "h2.release-title", .textChange, .minutes10,
+                         value: changed ? "Version 4.2.0" : "Version 4.1.3", ago: 120, strategy: nil, changedAgo: changed ? 420 : nil)
+        let issues = make("Open issues", "https://tracker.example.com/issues?state=open", "li.issue-row", .elementCount, .minutes5,
+                          value: "17", ago: 70, strategy: nil)
+        let stock = make("Back in stock", "https://shop.example.com/products/trail-runner", "button.add-to-cart", .elementExists, .minutes2,
+                         value: "false", ago: 30, strategy: nil)
+        let banner = make("Sale banner", "https://shop.example.com/", "div.sale-banner", .elementDisappears, .minutes30,
+                          value: "true", ago: 300, strategy: nil)
+        let any = make("Forum bell (anything inside)", "https://community.example.com/", ".header-bell", .subtreeChange, .minute1,
+                       value: "9f3a1c", ago: 15, strategy: nil, changedAgo: 900)
+        watchers = [bell, price, notes, issues, stock, banner, any]
+        store.watchers = [bell, price, notes, issues]
         service.isRunning = true
         service.lastCheckTime = now.addingTimeInterval(-45)
     }
 
-    // MARK: Windows
+    // MARK: Run
 
     private func runAll() async {
-        await shootPopover()
-        await shootAddWatcher()
-        await shootWindow("watcher-editor", title: "Edit Watcher",
-                          size: NSSize(width: 480, height: WatcherEditorView.contentHeight),
-                          view: WatcherEditorView(store: store, watcherService: service, existingWatcher: webWatchers[0]))
+        seedWatchers(changed: false)
+        seedGmail()
+
+        // Popover: idle, changed, empty first run; light and dark.
+        await shootPopover("popover", dark: false)
+        await shootPopover("popover-dark", dark: true)
+        seedWatchers(changed: true)
+        await shootPopover("popover-changed", dark: false)
+        await shootPopover("popover-changed-dark", dark: true)
+        seedWatchers(changed: false)
+
+        // Add watcher flow (web page -> element -> confirm) and the Gmail tab.
+        await shootAddWatcher(dark: false)
+        ScreenshotMode.startOnEmail = true
+        await shootAddGmail()
+        ScreenshotMode.startOnEmail = false
+
+        // Watcher editor: one per watch type, plus the options-open variants.
+        let types: [(String, Int)] = [("watcher-editor-badge", 0), ("watcher-editor", 1), ("watcher-editor-text-change", 2), ("watcher-editor-element-count", 3),
+                                      ("watcher-editor-element-exists", 4), ("watcher-editor-element-disappears", 5), ("watcher-editor-anything-changes", 6)]
+        for (name, i) in types {
+            await shootWindow(name, title: "Edit Watcher", size: NSSize(width: 480, height: WatcherEditorView.contentHeight),
+                              view: WatcherEditorView(store: store, watcherService: service, existingWatcher: watchers[i]))
+        }
+        await shootWindow("watcher-editor-dark", title: "Edit Watcher", dark: true, size: NSSize(width: 480, height: WatcherEditorView.contentHeight),
+                          view: WatcherEditorView(store: store, watcherService: service, existingWatcher: watchers[1]))
+        ScreenshotMode.editorHeightOverride = 1450
+        ScreenshotMode.editorAdvanced = true; ScreenshotMode.editorNotification = true
+        await shootWindow("watcher-editor-advanced", title: "Edit Watcher", size: NSSize(width: 480, height: 1450),
+                          view: WatcherEditorView(store: store, watcherService: service, existingWatcher: watchers[1]))
+        ScreenshotMode.editorHeightOverride = nil
+        ScreenshotMode.editorAdvanced = false; ScreenshotMode.editorNotification = false
+
+        // Gmail: connected sender editor, then sign-in (no account) editor and settings.
         await shootWindow("gmail-sender-editor", title: "Edit Email Watcher",
                           size: NSSize(width: 480, height: EmailWatcherEditorView.contentHeight),
                           view: EmailWatcherEditorView(existing: emailWatcher, gmailStore: gmailStore, emailWatcherStore: emailStore,
                                                        gmailPolling: polling, onOpenSettings: {}))
-        // Settings: one window, scrolled to each section in turn.
-        let settings = makeWindow(title: "Settings", size: nil, view: SettingsView(gmailPolling: polling))
-        show(settings)
-        await settle(1.5)
-        capture(settings, "settings-general")
-        for (id, name) in [("permissions", "permissions"), ("notifications", "settings-notifications"), ("gmail", "settings-gmail")] {
-            NotificationCenter.default.post(name: ScreenshotMode.scrollNotification, object: id)
-            await settle(0.8)
-            capture(settings, name)
-        }
-        settings.close()
-        await settle(0.3)
+        await shootWindow("gmail-sender-editor-dark", title: "Edit Email Watcher", dark: true,
+                          size: NSSize(width: 480, height: EmailWatcherEditorView.contentHeight),
+                          view: EmailWatcherEditorView(existing: emailWatcher, gmailStore: gmailStore, emailWatcherStore: emailStore,
+                                                       gmailPolling: polling, onOpenSettings: {}))
+
+        // Settings: one window per appearance, scrolled to each group in turn.
+        await shootSettings(dark: false, whole: false)
+        await shootSettings(dark: true, whole: false)
+        await shootSettings(dark: false, whole: true)
+
+        // Gmail not connected
+        resetGmail()
+        await shootSettingsGmailSignedOut()
+        await shootWindow("gmail-signin", title: "Add Email Watcher",
+                          size: NSSize(width: 480, height: EmailWatcherEditorView.contentHeight),
+                          view: EmailWatcherEditorView(existing: nil, gmailStore: gmailStore, emailWatcherStore: emailStore,
+                                                       gmailPolling: polling, onOpenSettings: {}))
+
+        // Permission alerts
+        await shootAlert("permission-notifications", title: "Configure Notifications", text: """
+        To receive notification banners and sounds:
+
+        1. Open System Settings → Notifications
+        2. Find "WebWatcher" in the list
+        3. Enable "Allow Notifications"
+        4. Set alert style to "Banners" or "Alerts"
+        5. Enable "Play sound for notifications"
+        """, style: .informational, buttons: ["Open Notification Settings", "Later"])
+        await shootAlert("permission-automation", title: "Enable Browser Automation", text: """
+        WebWatcher can’t read open tabs in Safari yet.
+
+        If Safari is listed under:
+        Privacy & Security -> Automation -> WebWatcher
+        enable it there.
+
+        If Safari is NOT listed, click "Reset Automation Permission", then click "Check All Now" in WebWatcher to trigger consent again.
+        """, style: .warning, buttons: ["Open Automation Settings", "Reset Automation Permission", "OK"])
+
+        // Empty first-run popover (no watchers, no accounts)
+        store.watchers = []
+        await shootPopover("popover-empty", dark: false)
+        await shootPopover("popover-empty-dark", dark: true)
     }
 
-    private func shootPopover() async {
+    // MARK: Shots
+
+    private func shootPopover(_ name: String, dark: Bool) async {
+        guard wants(name) else { return }
         let content = MenuBarContentView(
             store: store, watcherService: service, gmailStore: gmailStore, emailWatcherStore: emailStore,
             onAddWatcher: {}, onEditWatcher: { _ in }, onShowSettings: {}, onOpenWatcher: { _ in },
             onOpenGmail: { _ in }, onEditEmailWatcher: { _ in }, onOpenEmailWatcher: { _ in }, onReconnectGmail: { _ in })
-        let host = NSHostingView(rootView: content)
+        let host = NSHostingView(rootView: content.environment(\.controlActiveState, .key))
         let size = NSSize(width: 300, height: max(host.fittingSize.height, 200))
-        let blur = NSVisualEffectView(frame: NSRect(origin: .zero, size: size))
-        blur.material = .popover; blur.state = .active; blur.blendingMode = .behindWindow
-        blur.wantsLayer = true; blur.layer?.cornerRadius = 12; blur.layer?.masksToBounds = true
+        let appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        // The real popover is vibrancy over whatever is behind it; offscreen there is nothing behind,
+        // so draw its resting colour (the system popover grey) instead.
+        let body = NSView(frame: NSRect(origin: .zero, size: size))
+        body.appearance = appearance
+        body.wantsLayer = true
+        body.layer?.cornerRadius = 12; body.layer?.masksToBounds = true
+        body.layer?.borderWidth = 0.5
+        body.layer?.backgroundColor = (dark ? NSColor(white: 0.17, alpha: 1) : NSColor(white: 0.965, alpha: 1)).cgColor
+        body.layer?.borderColor = (dark ? NSColor(white: 1, alpha: 0.16) : NSColor(white: 0, alpha: 0.14)).cgColor
+        host.appearance = appearance
         host.frame = NSRect(x: (size.width - host.fittingSize.width) / 2, y: 0, width: host.fittingSize.width, height: size.height)
         host.autoresizingMask = [.height]
-        blur.addSubview(host)
-        let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
+        body.addSubview(host)
+        let window = OffscreenWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.isOpaque = false; window.backgroundColor = .clear; window.hasShadow = false
-        window.contentView = blur
-        window.center()
+        window.appearance = appearance
+        window.contentView = body
         show(window)
         await settle(1.2)
-        capture(window, "popover")
+        capture(window, name)
         window.close()
-        await settle(0.3)
+        await settle(0.2)
     }
 
-    private func shootAddWatcher() async {
+    private func shootAddWatcher(dark: Bool) async {
+        guard wants("add-watcher-page") || wants("add-watcher-element") || wants("add-watcher-confirm") else { return }
         var window: NSWindow!
         let view = AddWatcherView(
             store: store, watcherService: service, gmailStore: gmailStore, emailWatcherStore: emailStore, gmailPolling: polling,
-            onOpenSettings: {}, onKindChange: { size in window?.setContentSize(size) })
-        window = makeWindow(title: "Add Watcher",
+            onOpenSettings: {}, onKindChange: { size in window?.setContentSize(size); window?.setFrameOrigin(OffscreenWindow.origin) })
+        window = makeWindow(title: "Add Watcher", dark: dark,
                             size: NSSize(width: 480, height: WatcherEditorView.contentHeight + AddWatcherView.barHeight), view: view)
         show(window)
         await settle(1.5)
@@ -779,46 +906,196 @@ final class ScreenshotRunner {
         await settle(2.0)
         capture(window, "add-watcher-confirm")
         window.close()
-        await settle(0.3)
+        await settle(0.2)
     }
 
-    private func shootWindow<V: View>(_ name: String, title: String, size: NSSize, view: V) async {
-        let window = makeWindow(title: title, size: size, view: view)
+    private func shootAddGmail() async {
+        guard wants("add-watcher-gmail") else { return }
+        var window: NSWindow!
+        let view = AddWatcherView(
+            store: store, watcherService: service, gmailStore: gmailStore, emailWatcherStore: emailStore, gmailPolling: polling,
+            onOpenSettings: {}, onKindChange: { size in window?.setContentSize(size); window?.setFrameOrigin(OffscreenWindow.origin) })
+        window = makeWindow(title: "Add Watcher", dark: false,
+                            size: NSSize(width: 480, height: EmailWatcherEditorView.contentHeight + AddWatcherView.barHeight), view: view)
+        show(window)
+        await settle(1.5)
+        capture(window, "add-watcher-gmail")
+        window.close()
+        await settle(0.2)
+    }
+
+    private func shootSettings(dark: Bool, whole: Bool) async {
+        let sfx = dark ? "-dark" : ""
+        let groups: [(String?, String)] = whole ? [(nil, "settings-whole")]
+            : [(nil, "settings-general" + sfx), ("permissions", "permissions" + sfx), ("notifications", "settings-notifications" + sfx), ("gmail", "settings-gmail" + sfx)]
+        guard groups.contains(where: { wants($0.1) }) else { return }
+        if whole { ScreenshotMode.settingsHeight = 1300 }
+        defer { ScreenshotMode.settingsHeight = nil }
+        let window = makeWindow(title: "Settings", dark: dark, size: nil, view: SettingsView(gmailPolling: polling))
+        show(window)
+        await settle(1.5)
+        for (id, name) in groups {
+            if let id {
+                NotificationCenter.default.post(name: ScreenshotMode.scrollNotification, object: id)
+                await settle(0.8)
+            }
+            capture(window, name)
+        }
+        window.close()
+        await settle(0.2)
+    }
+
+    private func shootSettingsGmailSignedOut() async {
+        guard wants("settings-gmail-signin") else { return }
+        let window = makeWindow(title: "Settings", dark: false, size: nil, view: SettingsView(gmailPolling: polling))
+        show(window)
+        await settle(1.5)
+        NotificationCenter.default.post(name: ScreenshotMode.scrollNotification, object: "gmail")
+        await settle(0.8)
+        capture(window, "settings-gmail-signin")
+        window.close()
+        await settle(0.2)
+    }
+
+    private func shootWindow<V: View>(_ name: String, title: String, dark: Bool = false, size: NSSize, view: V) async {
+        guard wants(name) else { return }
+        let window = makeWindow(title: title, dark: dark, size: size, view: view)
         show(window)
         await settle(1.5)
         capture(window, name)
         window.close()
-        await settle(0.3)
+        await settle(0.2)
+    }
+
+    private func shootAlert(_ name: String, title: String, text: String, style: NSAlert.Style, buttons: [String]) async {
+        guard wants(name) else { return }
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = text
+        alert.alertStyle = style
+        for b in buttons { alert.addButton(withTitle: b) }
+        alert.layout()
+        // NSAlert's own panel cannot be kept off the displays, so its laid-out content is moved into an
+        // offscreen window of the same size (title bar hidden, as an alert has none).
+        guard let content = alert.window.contentView else { return }
+        let size = alert.window.frame.size
+        let window = OffscreenWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.titled, .fullSizeContentView], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.titlebarAppearsTransparent = true; window.titleVisibility = .hidden
+        for b in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] { window.standardWindowButton(b)?.isHidden = true }
+        window.appearance = NSAppearance(named: .aqua)
+        window.contentView = content
+        window.setContentSize(size)
+        show(window)
+        await settle(1.0)
+        capture(window, name)
+        window.close()
+        await settle(0.2)
     }
 
     // MARK: Helpers
 
-    private func makeWindow<V: View>(title: String, size: NSSize?, view: V) -> NSWindow {
-        let window = NSWindow(contentViewController: NSHostingController(rootView: view))
+    private func makeWindow<V: View>(title: String, dark: Bool = false, size: NSSize?, view: V) -> OffscreenWindow {
+        let window = OffscreenWindow(contentViewController: NSHostingController(rootView: view.environment(\.controlActiveState, .key)))
         window.title = title
         window.styleMask = [.titled, .closable]
         if let size { window.setContentSize(size) }
         window.isReleasedWhenClosed = false
-        window.center()
+        window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
         return window
     }
 
+    /// Place far outside every display and order in WITHOUT activating the app or making the window key.
     private func show(_ window: NSWindow) {
-        NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        window.setFrameOrigin(OffscreenWindow.origin)
+        window.orderFrontRegardless()
+        window.setFrameOrigin(OffscreenWindow.origin)
+        if NSScreen.screens.contains(where: { $0.frame.intersects(window.frame) }) {
+            failures.append("ON-SCREEN \(window.title)")
+            window.orderOut(nil)
+        }
     }
 
     private func settle(_ seconds: Double) async {
         try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
     }
 
+    // MARK: Capture (by window id; first correct non-blank result wins)
+
     private func capture(_ window: NSWindow, _ name: String) {
-        let path = outDir.appendingPathComponent("\(name).png").path
+        guard wants(name) else { return }
+        _ = window.makeFirstResponder(nil)   // no focus ring / text selection in the shot
+        RunLoop.current.run(until: Date().addingTimeInterval(0.15))
+        let scale = max(window.backingScaleFactor, 1)
+        let expW = Int((window.frame.width * 2).rounded()), expH = Int((window.frame.height * 2).rounded())
+        _ = scale
+        let attempts: [(String, () -> CGImage?)] = [
+            ("screencapture", { self.viaScreencapture(window, name) }),
+            ("CGWindowListCreateImage", { self.viaCGWindowList(window) }),
+            ("cacheDisplay", { self.viaCacheDisplay(window) }),
+        ]
+        for (method, grab) in attempts {
+            guard let img = grab() else { log("\(name): \(method) returned nothing"); continue }
+            if let why = Self.problem(img, expW: expW, expH: expH) { log("\(name): \(method) rejected (\(why); got \(img.width)x\(img.height), want \(expW)x\(expH))"); continue }
+            let rep = NSBitmapImageRep(cgImage: img)
+            guard let data = rep.representation(using: .png, properties: [:]) else { continue }
+            do { try data.write(to: outDir.appendingPathComponent("\(name).png")) } catch { failures.append(name); return }
+            log("\(name): OK method=\(method) \(img.width)x\(img.height)")
+            return
+        }
+        failures.append(name)
+    }
+
+    private func viaScreencapture(_ window: NSWindow, _ name: String) -> CGImage? {
+        let path = ScreenshotMode.scratchFile("sc-\(name).png").path
+        try? FileManager.default.removeItem(atPath: path)
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
         p.arguments = ["-l", String(window.windowNumber), "-o", "-x", path]
-        do { try p.run(); p.waitUntilExit() } catch { failures.append(name) }
-        if p.terminationStatus != 0 { failures.append(name) }
+        do { try p.run(); p.waitUntilExit() } catch { return nil }
+        guard p.terminationStatus == 0, let src = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil) else { return nil }
+        return CGImageSourceCreateImageAtIndex(src, 0, nil)
+    }
+
+    private func viaCGWindowList(_ window: NSWindow) -> CGImage? {
+        typealias Fn = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+        guard let h = dlopen(nil, RTLD_NOW), let sym = dlsym(h, "CGWindowListCreateImage") else { return nil }
+        let fn = unsafeBitCast(sym, to: Fn.self)
+        // optionIncludingWindow = 1<<3, boundsIgnoreFraming = 1<<0, bestResolution = 1<<3 (image option)
+        return fn(.null, 1 << 3, UInt32(window.windowNumber), (1 << 0) | (1 << 3))?.takeRetainedValue()
+    }
+
+    private func viaCacheDisplay(_ window: NSWindow) -> CGImage? {
+        guard let frameView = window.contentView?.superview ?? window.contentView else { return nil }
+        let b = frameView.bounds
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(b.width * 2), pixelsHigh: Int(b.height * 2), bitsPerSample: 8,
+                                         samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return nil }
+        rep.size = b.size
+        frameView.cacheDisplay(in: b, to: rep)
+        return rep.cgImage
+    }
+
+    /// nil when the image is acceptable; otherwise the reason it is not.
+    private static func problem(_ img: CGImage, expW: Int, expH: Int) -> String? {
+        if abs(img.width - expW) > 3 || abs(img.height - expH) > 3 { return "wrong size" }
+        let n = 48
+        var px = [UInt8](repeating: 0, count: n * n * 4)
+        guard let ctx = CGContext(data: &px, width: n, height: n, bitsPerComponent: 8, bytesPerRow: n * 4,
+                                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return "no context" }
+        ctx.interpolationQuality = .low
+        ctx.draw(img, in: CGRect(x: 0, y: 0, width: n, height: n))
+        var opaque = 0, lumSum = 0.0
+        var buckets = Set<Int>()
+        for i in 0..<(n * n) {
+            let r = Int(px[i * 4]), g = Int(px[i * 4 + 1]), bl = Int(px[i * 4 + 2]), a = Int(px[i * 4 + 3])
+            if a > 128 { opaque += 1 }
+            lumSum += Double(r + g + bl) / 765
+            buckets.insert((r / 24) << 16 | (g / 24) << 8 | (bl / 24))
+        }
+        if opaque < n * n / 2 { return "mostly transparent" }
+        if lumSum / Double(n * n) < 0.02 { return "black" }
+        if buckets.count < 4 { return "flat colour" }
+        return nil
     }
 }
 #endif

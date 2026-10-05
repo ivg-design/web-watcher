@@ -27,6 +27,13 @@ struct SettingsView: View {
     @State private var isRefreshingPermissions = false
     @State private var heraldStatus: HeraldStatus?
 
+    private static var windowHeight: CGFloat {
+        #if DEBUG
+        if ScreenshotMode.isActive, let h = ScreenshotMode.settingsHeight { return h }
+        #endif
+        return 650
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Title bar
@@ -261,7 +268,7 @@ struct SettingsView: View {
             #endif
             }
         }
-        .frame(width: 450, height: 650)
+        .frame(width: 450, height: Self.windowHeight)
         .onAppear {
             refreshPermissionStatus()
         }
@@ -712,8 +719,8 @@ struct SettingsView: View {
             // Debug-only `--screenshots` mode: canned dashboard, no real permission probes.
             notificationsGranted = true
             safariAutomationReport = .granted
-            defaultBrowserBundleID = "com.apple.Safari"
-            defaultBrowserName = "Safari"
+            defaultBrowserBundleID = "com.google.Chrome"
+            defaultBrowserName = "Google Chrome"
             defaultBrowserAutomationReport = .granted
             return
         }

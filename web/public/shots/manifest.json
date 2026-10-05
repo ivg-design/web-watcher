@@ -1,0 +1,342 @@
+[
+  {
+    "file": "popover.png",
+    "file2x": "popover@2x.png",
+    "width": 354,
+    "height": 460,
+    "appearance": "light",
+    "title": "Menu-bar popover, watchers idle",
+    "shows": "The menu-bar popover with four quiet watchers (forum bell Nothing new, price, release notes, open issues), a Billing emails Gmail row with an unread badge, and the Add Watcher, Check All Now, Settings and Quit commands.",
+    "section": "popover"
+  },
+  {
+    "file": "popover-dark.png",
+    "file2x": "popover-dark@2x.png",
+    "width": 354,
+    "height": 460,
+    "appearance": "dark",
+    "title": "Menu-bar popover, watchers idle (dark)",
+    "shows": "The same idle popover in dark appearance.",
+    "section": "popover"
+  },
+  {
+    "file": "popover-changed.png",
+    "file2x": "popover-changed@2x.png",
+    "width": 354,
+    "height": 460,
+    "appearance": "light",
+    "title": "Menu-bar popover with a change",
+    "shows": "The popover after a change: the forum bell watcher reads 3 new, the release notes watcher shows the new version, and the Gmail row has a blue unread count.",
+    "section": "popover"
+  },
+  {
+    "file": "popover-changed-dark.png",
+    "file2x": "popover-changed-dark@2x.png",
+    "width": 354,
+    "height": 460,
+    "appearance": "dark",
+    "title": "Menu-bar popover with a change (dark)",
+    "shows": "The changed-state popover in dark appearance.",
+    "section": "popover"
+  },
+  {
+    "file": "popover-empty.png",
+    "file2x": "popover-empty@2x.png",
+    "width": 354,
+    "height": 271,
+    "appearance": "light",
+    "title": "Menu-bar popover, first run",
+    "shows": "The empty first-run popover: 'No watchers configured', Add Watcher enabled, Check All Now greyed out, Settings and Quit.",
+    "section": "popover"
+  },
+  {
+    "file": "popover-empty-dark.png",
+    "file2x": "popover-empty-dark@2x.png",
+    "width": 354,
+    "height": 271,
+    "appearance": "dark",
+    "title": "Menu-bar popover, first run (dark)",
+    "shows": "The empty first-run popover in dark appearance.",
+    "section": "popover"
+  },
+  {
+    "file": "add-watcher-page.png",
+    "file2x": "add-watcher-page@2x.png",
+    "width": 560,
+    "height": 877,
+    "appearance": "light",
+    "title": "Add Watcher: page step",
+    "shows": "The Add Watcher window on the Web page tab at step 1 Page: Site picker, Name, the page URL field, step list, Check Interval and Watch Type pickers, collapsed Advanced and Notification rows, and a disabled Save.",
+    "section": "add-watcher"
+  },
+  {
+    "file": "add-watcher-element.png",
+    "file2x": "add-watcher-element@2x.png",
+    "width": 560,
+    "height": 877,
+    "appearance": "light",
+    "title": "Add Watcher: element step",
+    "shows": "Step 2 Element of the guided picker: Pick in Safari and Rescan buttons and a scrolling list of suggested candidates grouped as Showing a number now, Could get a badge later and Other, each with its value, a plain description, an eye preview and a Use link.",
+    "section": "add-watcher"
+  },
+  {
+    "file": "add-watcher-confirm.png",
+    "file2x": "add-watcher-confirm@2x.png",
+    "width": 560,
+    "height": 877,
+    "appearance": "light",
+    "title": "Add Watcher: confirm step",
+    "shows": "Step 3 Confirm after choosing the price: 'Watching the text $129.00', the check list (Safari running, Tab found, Element found, Reads a value, Zero can be confirmed), and Test again and Change element links, with Save enabled.",
+    "section": "add-watcher"
+  },
+  {
+    "file": "add-watcher-gmail.png",
+    "file2x": "add-watcher-gmail@2x.png",
+    "width": 560,
+    "height": 777,
+    "appearance": "light",
+    "title": "Add Watcher: Gmail sender tab",
+    "shows": "The Add Watcher window on the Gmail sender tab with a connected account picker, the Senders field with Add, Play sound, collapsed Notification row and a disabled Save.",
+    "section": "add-watcher"
+  },
+  {
+    "file": "watcher-editor.png",
+    "file2x": "watcher-editor@2x.png",
+    "width": 560,
+    "height": 832,
+    "appearance": "light",
+    "title": "Watcher editor: text change",
+    "shows": "The Edit Watcher window for a text-change price watcher: Site, Name, the Which element? steps with Confirm card, 5 minutes interval picker, Watch Type set to Text Change, collapsed Advanced and Notification, Delete and Save.",
+    "section": "editor"
+  },
+  {
+    "file": "watcher-editor-dark.png",
+    "file2x": "watcher-editor-dark@2x.png",
+    "width": 560,
+    "height": 832,
+    "appearance": "dark",
+    "title": "Watcher editor (dark)",
+    "shows": "The text-change watcher editor in dark appearance.",
+    "section": "editor"
+  },
+  {
+    "file": "watcher-editor-text-change.png",
+    "file2x": "watcher-editor-text-change@2x.png",
+    "width": 560,
+    "height": 832,
+    "appearance": "light",
+    "title": "Watcher editor: release notes text",
+    "shows": "The editor for a Text Change watcher on a release-notes heading, 10 minute interval.",
+    "section": "editor"
+  },
+  {
+    "file": "watcher-editor-badge.png",
+    "file2x": "watcher-editor-badge@2x.png",
+    "width": 560,
+    "height": 832,
+    "appearance": "light",
+    "title": "Watcher editor: badge / number",
+    "shows": "The editor for a Badge/Number watcher on a forum notification bell, 30 second interval, with the zero-confirmed-by-anchor reading.",
+    "section": "editor"
+  },
+  {
+    "file": "watcher-editor-element-count.png",
+    "file2x": "watcher-editor-element-count@2x.png",
+    "width": 560,
+    "height": 832,
+    "appearance": "light",
+    "title": "Watcher editor: element count",
+    "shows": "The editor for an Element Count watcher that counts open-issue rows, 5 minute interval.",
+    "section": "editor"
+  },
+  {
+    "file": "watcher-editor-element-exists.png",
+    "file2x": "watcher-editor-element-exists@2x.png",
+    "width": 560,
+    "height": 832,
+    "appearance": "light",
+    "title": "Watcher editor: element exists",
+    "shows": "The editor for an Element Exists watcher (Back in stock), Watch Type set to Element Exists.",
+    "section": "editor"
+  },
+  {
+    "file": "watcher-editor-element-disappears.png",
+    "file2x": "watcher-editor-element-disappears@2x.png",
+    "width": 560,
+    "height": 832,
+    "appearance": "light",
+    "title": "Watcher editor: element disappears",
+    "shows": "The editor for an Element Disappears watcher (Sale banner), 30 minute interval.",
+    "section": "editor"
+  },
+  {
+    "file": "watcher-editor-anything-changes.png",
+    "file2x": "watcher-editor-anything-changes@2x.png",
+    "width": 560,
+    "height": 832,
+    "appearance": "light",
+    "title": "Watcher editor: anything changes inside",
+    "shows": "The editor for an Anything Changes Inside watcher on a bell with no number, with its longer description under the Watch Type picker.",
+    "section": "editor"
+  },
+  {
+    "file": "watcher-editor-advanced.png",
+    "file2x": "watcher-editor-advanced@2x.png",
+    "width": 560,
+    "height": 1562,
+    "appearance": "light",
+    "title": "Watcher editor: Advanced and Notification open",
+    "shows": "A tall editor with both disclosure sections open: Selector Type (CSS/XPath), CSS Selector, Anchor with Suggest, Strategy, open-page-automatically, Force refresh, Action URL, API Lookup Command, and the Notification options.",
+    "section": "editor"
+  },
+  {
+    "file": "gmail-sender-editor.png",
+    "file2x": "gmail-sender-editor@2x.png",
+    "width": 560,
+    "height": 732,
+    "appearance": "light",
+    "title": "Gmail sender editor",
+    "shows": "The Edit Email Watcher window for a connected account: Name, Gmail account picker with Connect another account, Senders list (an address and a whole domain) with remove buttons, Play sound, Notification row, Delete and Save.",
+    "section": "gmail"
+  },
+  {
+    "file": "gmail-sender-editor-dark.png",
+    "file2x": "gmail-sender-editor-dark@2x.png",
+    "width": 560,
+    "height": 732,
+    "appearance": "dark",
+    "title": "Gmail sender editor (dark)",
+    "shows": "The sender editor in dark appearance.",
+    "section": "gmail"
+  },
+  {
+    "file": "gmail-signin.png",
+    "file2x": "gmail-signin@2x.png",
+    "width": 560,
+    "height": 732,
+    "appearance": "light",
+    "title": "Gmail: sign in with Google",
+    "shows": "The Add Email Watcher window before any account is connected: the Sign in with Google button and the note about the permission asked, with Senders disabled.",
+    "section": "gmail"
+  },
+  {
+    "file": "settings-general.png",
+    "file2x": "settings-general@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "light",
+    "title": "Settings: General",
+    "shows": "The top of Settings: General (Launch at login, Show badge in menu bar, Reuse existing browser tab), Permissions, Defaults and the start of Notifications.",
+    "section": "settings"
+  },
+  {
+    "file": "settings-general-dark.png",
+    "file2x": "settings-general-dark@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "dark",
+    "title": "Settings: General (dark)",
+    "shows": "The top of Settings in dark appearance.",
+    "section": "settings"
+  },
+  {
+    "file": "settings-notifications.png",
+    "file2x": "settings-notifications@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "light",
+    "title": "Settings: Notifications",
+    "shows": "Notifications group: Deliver notifications via picker set to Herald when available, the Herald running status line and Open System Notification Settings, followed by the Gmail group.",
+    "section": "settings"
+  },
+  {
+    "file": "settings-notifications-dark.png",
+    "file2x": "settings-notifications-dark@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "dark",
+    "title": "Settings: Notifications (dark)",
+    "shows": "The Notifications and Gmail groups in dark appearance.",
+    "section": "settings"
+  },
+  {
+    "file": "settings-gmail.png",
+    "file2x": "settings-gmail@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "light",
+    "title": "Settings: Gmail connected",
+    "shows": "Gmail group with one connected account (unread count, pause switch, red remove button, Notify for every new email), Add Gmail Account, Poll interval picker, collapsed Advanced OAuth client row, then Data and About.",
+    "section": "settings"
+  },
+  {
+    "file": "settings-gmail-dark.png",
+    "file2x": "settings-gmail-dark@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "dark",
+    "title": "Settings: Gmail (dark)",
+    "shows": "The Gmail, Data and About groups in dark appearance.",
+    "section": "settings"
+  },
+  {
+    "file": "settings-gmail-signin.png",
+    "file2x": "settings-gmail-signin@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "light",
+    "title": "Settings: Gmail not connected",
+    "shows": "Gmail group with no account: 'No Gmail accounts connected' and the Add Gmail Account button.",
+    "section": "settings"
+  },
+  {
+    "file": "permissions.png",
+    "file2x": "permissions@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "light",
+    "title": "Settings: Permissions",
+    "shows": "Permissions group: Open System Automation Settings and Refresh, with Notifications, Safari Automation and Google Chrome Automation each shown Granted with an Open button; Defaults and Notifications below.",
+    "section": "permissions"
+  },
+  {
+    "file": "permissions-dark.png",
+    "file2x": "permissions-dark@2x.png",
+    "width": 530,
+    "height": 762,
+    "appearance": "dark",
+    "title": "Settings: Permissions (dark)",
+    "shows": "The Permissions group in dark appearance.",
+    "section": "permissions"
+  },
+  {
+    "file": "settings-whole.png",
+    "file2x": "settings-whole@2x.png",
+    "width": 530,
+    "height": 1412,
+    "appearance": "light",
+    "title": "Settings: whole window",
+    "shows": "The whole Settings window at full height, every group visible: General, Permissions, Defaults, Notifications, Gmail, Data and About.",
+    "section": "settings"
+  },
+  {
+    "file": "permission-notifications.png",
+    "file2x": "permission-notifications@2x.png",
+    "width": 306,
+    "height": 448,
+    "appearance": "light",
+    "title": "Prompt: configure notifications",
+    "shows": "The 'Configure Notifications' dialog with the five steps for enabling banners in System Settings, and the Open Notification Settings and Later buttons.",
+    "section": "permissions"
+  },
+  {
+    "file": "permission-automation.png",
+    "file2x": "permission-automation@2x.png",
+    "width": 760,
+    "height": 344,
+    "appearance": "light",
+    "title": "Prompt: enable browser automation",
+    "shows": "The 'Enable Browser Automation' warning dialog with the Privacy & Security path and the Open Automation Settings, Reset Automation Permission and OK buttons.",
+    "section": "permissions"
+  }
+]

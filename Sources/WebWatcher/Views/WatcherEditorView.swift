@@ -73,7 +73,12 @@ struct WatcherEditorView: View {
 
     /// Single source of truth for this editor's window height (§9.4) — read by both this
     /// view's own `.frame` and `AddWatcherView.size(for: .web)`, so the two can never drift.
-    static let contentHeight: CGFloat = 720
+    static var contentHeight: CGFloat {
+        #if DEBUG
+        if ScreenshotMode.isActive, let h = ScreenshotMode.editorHeightOverride { return h }
+        #endif
+        return 720
+    }
 
     init(store: WatcherStore, watcherService: WatcherService, existingWatcher: Watcher?) {
         self.store = store
@@ -664,6 +669,13 @@ struct WatcherEditorView: View {
                 advancedExpanded = true
             }
         }
+
+        #if DEBUG
+        if ScreenshotMode.isActive, existingWatcher != nil {
+            advancedExpanded = ScreenshotMode.editorAdvanced
+            notificationExpanded = ScreenshotMode.editorNotification
+        }
+        #endif
 
         pickerModel.draft = { [self] in draftWatcher() }
         pickerModel.profile = { [self] in profileId.isEmpty ? nil : profileStore.profile(id: profileId) }

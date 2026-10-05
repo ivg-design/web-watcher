@@ -19,7 +19,12 @@ struct AddWatcherView: View {
     var onOpenSettings: () -> Void
     var onKindChange: (CGSize) -> Void
 
-    @State private var kind: Kind = .web
+    @State private var kind: Kind = {
+        #if DEBUG
+        if ScreenshotMode.isActive && ScreenshotMode.startOnEmail { return .email }
+        #endif
+        return .web
+    }()
 
     /// Height of the segmented bar plus its divider, kept as one constant so the
     /// window size and the bar layout cannot drift apart.
