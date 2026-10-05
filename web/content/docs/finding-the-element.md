@@ -18,7 +18,7 @@ This step connects the watcher to a tab. Open the page in Safari first, and sign
 
 1. Type or paste the URL into the field under **1 · Page**.
 
-   **You see:** "Looking for the page in Safari…", then "Found in Safari: Feed | Rive Community", with the title of your tab. " · background tab" is added when the tab is not the one in front.
+   **You see:** "Looking for the page in Safari…", then "Found in Safari: Feed | Rive Community", with the title of your tab. A suffix, "· background tab", follows the title when the tab is not the one in front.
 
 2. If the line reads "Not open in Safari", click **Open it**.
 
@@ -101,7 +101,7 @@ This step reads the element live before you save, so you find a wrong pick befor
 
 ![Step 3 Confirm with the watched text, the current reading, the list of checks and the Test again and Change element links](/shots/add-watcher-confirm.png "The text under **Editing** says what is watched. The box below it shows each check as passed or failed.")
 
-You see three things in order: the page and a **Change** link that goes back to step 1, a summary of what will be watched, such as "Watching the text "$129.00"", and a box with the reading and the checks.
+You see three things in order: the page and a **Change** link that goes back to step 1, a summary of what will be watched, such as Watching the text “$129.00”, and a box with the reading and the checks.
 
 | Control | What it does |
 |---|---|

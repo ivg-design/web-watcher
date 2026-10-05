@@ -120,6 +120,11 @@ for (const p of ["/docs/first-watcher", "/docs/install"]) {
   ok(h.first === "H1" && h.sideH === 0 && h.titles > 0 && h.aria, `${p}: outline starts at h1, titles are <p>, header/footer icons aria-hidden ${JSON.stringify(h)}`);
 }
 const txt = async (p) => (await (await fetch(BASE + p)).text()).replace(/<[^>]+>/g, " ").replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, " ");
+for (const sl of slugs) {
+  const body = await (await fetch(BASE + sl)).text();
+  const pipe = body.match(/<p>\s*\|[^<]*\|/g);
+  ok(!pipe, `${sl}: no table row left as literal pipe text${pipe ? " " + pipe[0].slice(0, 60) : ""}`);
+}
 const fw = await txt("/docs/first-watcher");
 ok(/When the number goes up/.test(fw) && !/only notifies when the value changes/.test(fw), "first-watcher: rises-only copy");
 const cn = await txt("/docs/custom-notifications");

@@ -350,6 +350,16 @@
     "section": "permissions"
   },
   {
+    "file": "settings-permissions-dark.png",
+    "file2x": "settings-permissions-dark@2x.png",
+    "width": 530,
+    "height": 414,
+    "appearance": "dark",
+    "title": "Settings: Permissions group (dark)",
+    "shows": "The Permissions group in dark appearance.",
+    "section": "permissions"
+  },
+  {
     "file": "settings-defaults.png",
     "file2x": "settings-defaults@2x.png",
     "width": 530,

@@ -10,7 +10,7 @@ A watcher is one saved element of one page. Before you start, open the page in S
 
 2. In **Which element?**, on step **1 · Page**, type or paste the page's URL.
 
-   ![The Add Watcher window on the Web page tab: Site, Name, the Which element? list with step 1 Page open and a URL in its field, Check Interval, Watch Type, Advanced and Notification](/shots/add-watcher-page.png "The **Which element?** assistant starts on **1 · Page**. The line under the URL field reports whether WebWatcher found the tab.")
+   ![The Add Watcher window on the Web page tab: Site, Name, the Which element? list with step 1 Page open and a URL in its field, Check Interval, Watch Type, Advanced and Notification](/shots/add-watcher-page.png "The **Which element?** assistant starts on **1 · Page**. The line under the URL field tells you what to do next.")
 
    **You see:** a line such as "Found in Safari: Feed | Rive Community". If the page is not open, the line reads "Not open in Safari" and an **Open it** link appears. When the tab is found, the assistant moves to step **2 · Element** by itself.
 

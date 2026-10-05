@@ -65,8 +65,8 @@ function shotFile(href: string): ShotFile | null {
   const e = shotManifest().get(href.slice(dir.length));
   const guess = /\.png$/.test(href) ? href.replace(/\.png$/, "@2x.png") : "";
   const src2x = e?.file2x ? dir + e.file2x.replace(/^.*\//, "") : guess;
-  // The file is the authority on its own size; the manifest fills in when it is not a PNG.
-  const size = pngSize(href) ?? (e?.width && e?.height ? ([e.width, e.height] as [number, number]) : null);
+  // The manifest gives the size (regenerated from the PNG files); the PNG header is the fallback for unlisted files.
+  const size = e?.width && e?.height ? ([e.width, e.height] as [number, number]) : pngSize(href);
   return { src: href, src2x: src2x && hasFile(src2x) ? src2x : undefined, w: size?.[0], h: size?.[1], shows: e?.shows };
 }
 

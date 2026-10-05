@@ -107,7 +107,7 @@ Click **Notification** to expand it. These fields change how this watcher's noti
 
 ### Run Diagnosis
 
-A watcher that uses a site recipe has a **Run Diagnosis** button at the bottom of the editor. It checks the whole chain in order: Safari running, tab found, element found, value read, and whether zero can be confirmed. For a custom watcher the same report is part of the Confirm step, with **Test again** to repeat it.
+A watcher that uses a site recipe has a **Run Diagnosis** button at the bottom of the editor. It checks the whole chain in order: Safari running, tab found, element found, the reading from the page, and whether zero can be confirmed. For a custom watcher the same report is part of the Confirm step, with **Test again** to repeat it.
 
 ## Gmail sender watcher
 

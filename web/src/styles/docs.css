@@ -81,6 +81,7 @@
 .prose pre { background: var(--surface); color: var(--p-ink); border: 1px solid var(--line); padding: 16px 18px; border-radius: 8px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.6; }
 .prose pre .ln { display: block; padding-left: 2ch; text-indent: -2ch; }
 .prose img, .prose figure, .prose pre { max-width: 100%; }
+.prose code, .prose pre { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
 .prose pre code { background: none; border: 0; padding: 0; font-size: inherit; }
 .prose .keys { display: flex; flex-wrap: wrap; gap: 10px; }
 .prose .key { display: inline-flex; align-items: center; height: 38px; padding-inline: 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--p-ink); font-family: var(--font-mono); font-size: 13px; font-weight: 500; }
@@ -232,7 +233,7 @@ body:has(.docs-shell), body:has(.cl-page) { background: var(--p-bg); }
 .prose .shot { margin: 28px 0 0; max-width: 100%; }
 .prose .shot__zoom { position: relative; display: block; max-width: 100%; padding: 0; background: none; border: 0; border-radius: 12px; cursor: zoom-in; line-height: 0; }
 .prose .shot picture { display: block; }
-.prose .shot img, .prose .shot.tall img { display: block; width: auto; max-width: 100%; height: auto; margin: 0; border: 0; border-radius: 12px; background: none; }
+.prose .shot img, .prose .shot.tall img { display: block; width: auto; max-width: 100%; height: auto; max-height: min(78vh, 760px); margin: 0; border: 0; border-radius: 12px; background: none; }
 .prose .shot__hint { position: absolute; right: 10px; bottom: 10px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; font-weight: 500; padding: 3px 9px; border-radius: 5px; background: var(--n-bg); color: var(--n-ink); opacity: 0; transition: opacity 0.12s; }
 .prose .shot__zoom:hover .shot__hint, .prose .shot__zoom:focus-visible .shot__hint { opacity: 1; }
 .prose .shot figcaption, .prose .shot.tall figcaption { margin: 12px 0 0; padding: 1px 0 1px 14px; border-left: 2px solid var(--p-ink); max-width: 62ch; font-size: 14px; line-height: 1.55; color: var(--p-ink-2); text-align: left; }

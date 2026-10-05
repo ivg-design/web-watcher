@@ -25,7 +25,7 @@ You can start from Settings or from the email watcher editor. Both run the same 
 
 2. Scroll to the **Gmail** group and click **Add Gmail Account**.
 
-   ![The Gmail group of Settings with no account: the line No Gmail accounts connected, the Add Gmail Account button and the collapsed Advanced row](/shots/settings-gmail-signin.png "Before you connect, the group reads \"No Gmail accounts connected\". **Add Gmail Account** starts the sign-in.")
+   ![The Gmail group of Settings with no account: the line No Gmail accounts connected, and the Add Gmail Account button](/shots/settings-gmail-signin.png "Before you connect, the group reads \"No Gmail accounts connected\". **Add Gmail Account** starts the sign-in.")
 
    **You see:** your default browser opens Google's sign-in page.
 

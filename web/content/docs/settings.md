@@ -142,5 +142,4 @@ The About group shows the app's name and its version. Quote that version when yo
 | A Permissions row does not read **Granted** after you allowed it. | The window read the status before you changed it. | Click **Refresh**. |
 | The status line reads "Herald not running — using macOS notifications". | Herald is not open. | Open Herald. WebWatcher uses it from the next notification. |
 | **Add Gmail Account** is dimmed, with "This build has no Google client configured — see Advanced below." | You are running a build without a Google OAuth client. | Import one under **Advanced: use your own Google OAuth client**. |
-
 | An account reads "Error:" and a **Reconnect** button appears. | Google ended the session. This happens every 7 days if your own OAuth client is in Testing mode. | Click **Reconnect** and sign in again. |
