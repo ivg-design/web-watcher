@@ -45,8 +45,9 @@ ok(c1 === c2, `site-header .container x: ${c1} vs ${c2}`);
 
 // control: without the gutter the same pages must shift, proving the test is sensitive
 {
-  const x = async (path) => { await go(path, 1440); await page.addStyleTag({ content: "html{scrollbar-gutter:auto!important}" }); return (await xs([".toc"]))[0]; };
-  const a = await x("/docs/gmail-limitations"), c = await x("/docs/finding-the-element");
+  // The first page gets a viewport taller than its content, so it has no scrollbar; the second one scrolls.
+  const x = async (path, h) => { await go(path, 1440, h); await page.addStyleTag({ content: "html{scrollbar-gutter:auto!important}" }); return (await xs([".toc"]))[0]; };
+  const a = await x("/docs/gmail-limitations", 9000), c = await x("/docs/finding-the-element", 1300);
   ok(a !== c, `control: gutter off shifts .toc (${a} vs ${c})`);
 }
 
