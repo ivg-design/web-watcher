@@ -94,7 +94,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Create the popover
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 300, height: 400)
+        popover.contentSize = NSSize(width: 300, height: 372)
         popover.behavior = .transient
         popover.animates = true
 
@@ -585,6 +585,8 @@ enum ScreenshotMode {
     @MainActor static var startOnEmail = false
     @MainActor static var editorHeightOverride: CGFloat?
     @MainActor static var settingsHeight: CGFloat?
+    /// When set, Settings shows only these groups (ids: general, permissions, defaults, notifications, gmail, data, about).
+    @MainActor static var settingsOnly: Set<String>?
     @MainActor static var editorAdvanced = false
     @MainActor static var editorNotification = false
 
@@ -663,6 +665,18 @@ final class OffscreenWindow: NSWindow {
     @objc(_hasKeyAppearance) func ww_hasKeyAppearance() -> Bool { true }
     @objc(_hasActiveAppearance) func ww_hasActiveAppearance() -> Bool { true }
     @objc(_hasActiveControls) func ww_hasActiveControls() -> Bool { true }
+    @objc(hasKeyAppearance) func ww_hasKeyAppearancePublic() -> Bool { true }
+    @objc(_hasActiveAppearanceIgnoringKeyFocus) func ww_hasActiveAppearanceIgnoringKeyFocus() -> Bool { true }
+    /// Private switches that make controls draw as active (Debug screenshots only).
+    func forceActiveLook() {
+        typealias SetBool = @convention(c) (AnyObject, Selector, Bool) -> Void
+        for name in ["_setForceActiveControls:", "_setHasActiveAppearance:"] {
+            let sel = Selector(name)
+            if responds(to: sel), let m = class_getInstanceMethod(NSWindow.self, sel) {
+                unsafeBitCast(method_getImplementation(m), to: SetBool.self)(self, sel, true)
+            }
+        }
+    }
 }
 
 /// Renders every window with sample data OFFSCREEN (origin -30000,-30000, ordered in without
@@ -689,6 +703,15 @@ final class ScreenshotRunner {
     func start() {
         try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
         NSApp.setActivationPolicy(.accessory)   // no Dock icon, never frontmost
+        // Overlay scrollers (volatile registered default: nothing is written to any defaults domain).
+        UserDefaults.standard.register(defaults: ["AppleShowScrollBars": "WhenScrolling"])
+        // Controls draw as in an active app (coloured switches, blue default buttons) although the app is
+        // never activated: NSApplication.isActive is made to report true for this Debug process only.
+        let alwaysActive: @convention(block) (AnyObject) -> Bool = { _ in true }
+        if let m = class_getInstanceMethod(NSApplication.self, #selector(getter: NSApplication.isActive)) {
+            method_setImplementation(m, imp_implementationWithBlock(alwaysActive))
+        }
+        log("NSApp.isActive reports \(NSApp.isActive)")
         AppSettings.shared.notificationDelivery = .heraldWhenAvailable
         Task { @MainActor in
             await self.runAll()
@@ -805,10 +828,10 @@ final class ScreenshotRunner {
                           view: EmailWatcherEditorView(existing: emailWatcher, gmailStore: gmailStore, emailWatcherStore: emailStore,
                                                        gmailPolling: polling, onOpenSettings: {}))
 
-        // Settings: one window per appearance, scrolled to each group in turn.
-        await shootSettings(dark: false, whole: false)
-        await shootSettings(dark: true, whole: false)
-        await shootSettings(dark: false, whole: true)
+        // Settings: one shot per group (window fits the group), light and dark, plus the whole window.
+        await shootSettingsSections(dark: false)
+        await shootSettingsSections(dark: true)
+        await shootSettingsWhole()
 
         // Gmail not connected
         resetGmail()
@@ -852,7 +875,7 @@ final class ScreenshotRunner {
             store: store, watcherService: service, gmailStore: gmailStore, emailWatcherStore: emailStore,
             onAddWatcher: {}, onEditWatcher: { _ in }, onShowSettings: {}, onOpenWatcher: { _ in },
             onOpenGmail: { _ in }, onEditEmailWatcher: { _ in }, onOpenEmailWatcher: { _ in }, onReconnectGmail: { _ in })
-        let host = NSHostingView(rootView: content.environment(\.controlActiveState, .key))
+        let host = NSHostingView(rootView: content.environment(\.controlActiveState, .key).tint(Color(nsColor: .controlAccentColor)))
         let size = NSSize(width: 300, height: max(host.fittingSize.height, 200))
         let appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
         // The real popover is vibrancy over whatever is behind it; offscreen there is nothing behind,
@@ -882,6 +905,8 @@ final class ScreenshotRunner {
 
     private func shootAddWatcher(dark: Bool) async {
         guard wants("add-watcher-page") || wants("add-watcher-element") || wants("add-watcher-confirm") else { return }
+        ScreenshotMode.editorHeightOverride = 900   // tall enough that no step is cut off
+        defer { ScreenshotMode.editorHeightOverride = nil }
         var window: NSWindow!
         let view = AddWatcherView(
             store: store, watcherService: service, gmailStore: gmailStore, emailWatcherStore: emailStore, gmailPolling: polling,
@@ -924,34 +949,50 @@ final class ScreenshotRunner {
         await settle(0.2)
     }
 
-    private func shootSettings(dark: Bool, whole: Bool) async {
+    private func shootSettingsSections(dark: Bool) async {
         let sfx = dark ? "-dark" : ""
-        let groups: [(String?, String)] = whole ? [(nil, "settings-whole")]
-            : [(nil, "settings-general" + sfx), ("permissions", "permissions" + sfx), ("notifications", "settings-notifications" + sfx), ("gmail", "settings-gmail" + sfx)]
-        guard groups.contains(where: { wants($0.1) }) else { return }
-        if whole { ScreenshotMode.settingsHeight = 1300 }
+        // (groups shown, shot names, window content height that fits them)
+        var sections: [(Set<String>, [String], CGFloat)] = [
+            (["general"], ["settings-general" + sfx], 222),
+            (["permissions"], ["settings-permissions" + sfx, "permissions" + sfx], 302),
+            (["notifications"], ["settings-notifications" + sfx], 258),
+            (["gmail"], ["settings-gmail" + sfx], 400),
+        ]
+        if !dark { sections += [(["defaults"], ["settings-defaults"], 238), (["data", "about"], ["settings-data-about"], 305)] }
+        for (only, names, height) in sections where names.contains(where: { wants($0) }) {
+            ScreenshotMode.settingsOnly = only
+            ScreenshotMode.settingsHeight = height
+            let window = makeWindow(title: "Settings", dark: dark, size: nil, view: SettingsView(gmailPolling: polling))
+            show(window)
+            await settle(1.5)
+            for n in names { capture(window, n) }
+            window.close()
+            await settle(0.2)
+        }
+        ScreenshotMode.settingsOnly = nil
+        ScreenshotMode.settingsHeight = nil
+    }
+
+    private func shootSettingsWhole() async {
+        guard wants("settings-whole") else { return }
+        ScreenshotMode.settingsHeight = 1300
         defer { ScreenshotMode.settingsHeight = nil }
-        let window = makeWindow(title: "Settings", dark: dark, size: nil, view: SettingsView(gmailPolling: polling))
+        let window = makeWindow(title: "Settings", dark: false, size: nil, view: SettingsView(gmailPolling: polling))
         show(window)
         await settle(1.5)
-        for (id, name) in groups {
-            if let id {
-                NotificationCenter.default.post(name: ScreenshotMode.scrollNotification, object: id)
-                await settle(0.8)
-            }
-            capture(window, name)
-        }
+        capture(window, "settings-whole")
         window.close()
         await settle(0.2)
     }
 
     private func shootSettingsGmailSignedOut() async {
         guard wants("settings-gmail-signin") else { return }
+        ScreenshotMode.settingsOnly = ["gmail"]
+        ScreenshotMode.settingsHeight = 235
+        defer { ScreenshotMode.settingsOnly = nil; ScreenshotMode.settingsHeight = nil }
         let window = makeWindow(title: "Settings", dark: false, size: nil, view: SettingsView(gmailPolling: polling))
         show(window)
         await settle(1.5)
-        NotificationCenter.default.post(name: ScreenshotMode.scrollNotification, object: "gmail")
-        await settle(0.8)
         capture(window, "settings-gmail-signin")
         window.close()
         await settle(0.2)
@@ -996,7 +1037,7 @@ final class ScreenshotRunner {
     // MARK: Helpers
 
     private func makeWindow<V: View>(title: String, dark: Bool = false, size: NSSize?, view: V) -> OffscreenWindow {
-        let window = OffscreenWindow(contentViewController: NSHostingController(rootView: view.environment(\.controlActiveState, .key)))
+        let window = OffscreenWindow(contentViewController: NSHostingController(rootView: view.environment(\.controlActiveState, .key).tint(Color(nsColor: .controlAccentColor))))
         window.title = title
         window.styleMask = [.titled, .closable]
         if let size { window.setContentSize(size) }
@@ -1009,6 +1050,7 @@ final class ScreenshotRunner {
     private func show(_ window: NSWindow) {
         window.setFrameOrigin(OffscreenWindow.origin)
         window.orderFrontRegardless()
+        (window as? OffscreenWindow)?.forceActiveLook()
         window.setFrameOrigin(OffscreenWindow.origin)
         if NSScreen.screens.contains(where: { $0.frame.intersects(window.frame) }) {
             failures.append("ON-SCREEN \(window.title)")
@@ -1025,6 +1067,7 @@ final class ScreenshotRunner {
     private func capture(_ window: NSWindow, _ name: String) {
         guard wants(name) else { return }
         _ = window.makeFirstResponder(nil)   // no focus ring / text selection in the shot
+        if let root = window.contentView?.superview { Self.hideScrollers(root) }
         RunLoop.current.run(until: Date().addingTimeInterval(0.15))
         let scale = max(window.backingScaleFactor, 1)
         let expW = Int((window.frame.width * 2).rounded()), expH = Int((window.frame.height * 2).rounded())
@@ -1073,6 +1116,16 @@ final class ScreenshotRunner {
         rep.size = b.size
         frameView.cacheDisplay(in: b, to: rep)
         return rep.cgImage
+    }
+
+    /// No scroll bar may appear in a screenshot: every scroll view gets overlay, hidden scrollers.
+    private static func hideScrollers(_ view: NSView) {
+        if let sv = view as? NSScrollView {
+            sv.scrollerStyle = .overlay
+            sv.hasVerticalScroller = false
+            sv.hasHorizontalScroller = false
+        }
+        for sub in view.subviews { hideScrollers(sub) }
     }
 
     /// nil when the image is acceptable; otherwise the reason it is not.
@@ -1154,7 +1207,7 @@ import WebKit
 // MARK: - Demo stage (Debug only): every pixel of the recorded region belongs to a window this app owns.
 
 private final class DemoStageWindow: NSWindow {
-    override var canBecomeKey: Bool { true }
+    override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { true }
 }
 

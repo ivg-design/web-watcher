@@ -31,6 +31,11 @@ enum WatchType: String, Codable, CaseIterable {
     /// with no badge (no number, ever) watchable.
     case subtreeChange = "Anything Changes Inside"
 
+    /// Whether "can a quiet reading be told apart from a missing element" is a meaningful check.
+    /// Only a number being tracked (a badge) has a zero to confirm; text, counts of present
+    /// elements, existence and subtree watchers have no such state, so the Confirm card omits the row.
+    var needsZeroConfirmation: Bool { self == .badgeNumber }
+
     var description: String {
         switch self {
         case .textChange:

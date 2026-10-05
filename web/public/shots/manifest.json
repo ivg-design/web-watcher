@@ -63,30 +63,30 @@
     "file": "add-watcher-page.png",
     "file2x": "add-watcher-page@2x.png",
     "width": 560,
-    "height": 877,
+    "height": 1057,
     "appearance": "light",
     "title": "Add Watcher: page step",
-    "shows": "The Add Watcher window on the Web page tab at step 1 Page: Site picker, Name, the page URL field, step list, Check Interval and Watch Type pickers, collapsed Advanced and Notification rows, and a disabled Save.",
+    "shows": "The whole Add Watcher window (tall, nothing cut off) on the Web page tab at step 1 Page: Site picker, Name, the page URL field, step list, Check Interval and Watch Type pickers, collapsed Advanced and Notification, and a disabled Save.",
     "section": "add-watcher"
   },
   {
     "file": "add-watcher-element.png",
     "file2x": "add-watcher-element@2x.png",
     "width": 560,
-    "height": 877,
+    "height": 1057,
     "appearance": "light",
     "title": "Add Watcher: element step",
-    "shows": "Step 2 Element of the guided picker: Pick in Safari and Rescan buttons and a scrolling list of suggested candidates grouped as Showing a number now, Could get a badge later and Other, each with its value, a plain description, an eye preview and a Use link.",
+    "shows": "The whole Add Watcher window at step 2 Element: Pick in Safari and Rescan, and the suggested candidates grouped as Showing a number now, Could get a badge later and Other, each with value, description, preview eye and Use link.",
     "section": "add-watcher"
   },
   {
     "file": "add-watcher-confirm.png",
     "file2x": "add-watcher-confirm@2x.png",
     "width": 560,
-    "height": 877,
+    "height": 1057,
     "appearance": "light",
     "title": "Add Watcher: confirm step",
-    "shows": "Step 3 Confirm after choosing the price: 'Watching the text $129.00', the check list (Safari running, Tab found, Element found, Reads a value, Zero can be confirmed), and Test again and Change element links, with Save enabled.",
+    "shows": "The whole Add Watcher window at step 3 Confirm for a price: Watching the text $129.00, the check list (Safari running, Tab found, Element found, Reads a value), Test again and Change element, then interval, Watch Type and an enabled Save.",
     "section": "add-watcher"
   },
   {
@@ -186,7 +186,7 @@
     "height": 1562,
     "appearance": "light",
     "title": "Watcher editor: Advanced and Notification open",
-    "shows": "A tall editor with both disclosure sections open: Selector Type (CSS/XPath), CSS Selector, Anchor with Suggest, Strategy, open-page-automatically, Force refresh, Action URL, API Lookup Command, and the Notification options.",
+    "shows": "A tall editor with both disclosure sections open and nothing cut off: Selector Type, CSS Selector, Anchor with Suggest, Strategy, open-page, Force refresh, Action URL, API Lookup Command, and the Notification options through Preview Notification.",
     "section": "editor"
   },
   {
@@ -223,87 +223,87 @@
     "file": "settings-general.png",
     "file2x": "settings-general@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 334,
     "appearance": "light",
     "title": "Settings: General",
-    "shows": "The top of Settings: General (Launch at login, Show badge in menu bar, Reuse existing browser tab), Permissions, Defaults and the start of Notifications.",
+    "shows": "The General group alone, whole: Launch at login, Show badge in menu bar and Reuse existing browser tab by domain checkboxes.",
     "section": "settings"
   },
   {
     "file": "settings-general-dark.png",
     "file2x": "settings-general-dark@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 334,
     "appearance": "dark",
     "title": "Settings: General (dark)",
-    "shows": "The top of Settings in dark appearance.",
+    "shows": "The General group in dark appearance.",
     "section": "settings"
   },
   {
     "file": "settings-notifications.png",
     "file2x": "settings-notifications@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 370,
     "appearance": "light",
     "title": "Settings: Notifications",
-    "shows": "Notifications group: Deliver notifications via picker set to Herald when available, the Herald running status line and Open System Notification Settings, followed by the Gmail group.",
+    "shows": "The Notifications group alone, whole: Deliver notifications via picker set to Herald when available, the Herald running status line, Open System Notification Settings and its caption.",
     "section": "settings"
   },
   {
     "file": "settings-notifications-dark.png",
     "file2x": "settings-notifications-dark@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 370,
     "appearance": "dark",
     "title": "Settings: Notifications (dark)",
-    "shows": "The Notifications and Gmail groups in dark appearance.",
+    "shows": "The Notifications group in dark appearance.",
     "section": "settings"
   },
   {
     "file": "settings-gmail.png",
     "file2x": "settings-gmail@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 512,
     "appearance": "light",
     "title": "Settings: Gmail connected",
-    "shows": "Gmail group with one connected account (unread count, pause switch, red remove button, Notify for every new email), Add Gmail Account, Poll interval picker, collapsed Advanced OAuth client row, then Data and About.",
+    "shows": "The Gmail group alone, whole: one connected account with unread count, the pause switch (on) and red remove button, Notify for every new email, Add Gmail Account, the Poll interval picker reading 1 minute, and the collapsed Advanced OAuth client row.",
     "section": "settings"
   },
   {
     "file": "settings-gmail-dark.png",
     "file2x": "settings-gmail-dark@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 512,
     "appearance": "dark",
     "title": "Settings: Gmail (dark)",
-    "shows": "The Gmail, Data and About groups in dark appearance.",
+    "shows": "The Gmail group in dark appearance.",
     "section": "settings"
   },
   {
     "file": "settings-gmail-signin.png",
     "file2x": "settings-gmail-signin@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 347,
     "appearance": "light",
     "title": "Settings: Gmail not connected",
-    "shows": "Gmail group with no account: 'No Gmail accounts connected' and the Add Gmail Account button.",
+    "shows": "The Gmail group with no account connected: No Gmail accounts connected and the Add Gmail Account button.",
     "section": "settings"
   },
   {
     "file": "permissions.png",
     "file2x": "permissions@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 414,
     "appearance": "light",
     "title": "Settings: Permissions",
-    "shows": "Permissions group: Open System Automation Settings and Refresh, with Notifications, Safari Automation and Google Chrome Automation each shown Granted with an Open button; Defaults and Notifications below.",
+    "shows": "The Permissions group alone, whole: Open System Automation Settings and Refresh, with Notifications, Safari Automation and Google Chrome Automation each Granted and an Open button.",
     "section": "permissions"
   },
   {
     "file": "permissions-dark.png",
     "file2x": "permissions-dark@2x.png",
     "width": 530,
-    "height": 762,
+    "height": 414,
     "appearance": "dark",
     "title": "Settings: Permissions (dark)",
     "shows": "The Permissions group in dark appearance.",
@@ -316,7 +316,7 @@
     "height": 1412,
     "appearance": "light",
     "title": "Settings: whole window",
-    "shows": "The whole Settings window at full height, every group visible: General, Permissions, Defaults, Notifications, Gmail, Data and About.",
+    "shows": "The whole Settings window at full height with every group: General, Permissions, Defaults, Notifications, Gmail, Data and About.",
     "section": "settings"
   },
   {
@@ -338,5 +338,35 @@
     "title": "Prompt: enable browser automation",
     "shows": "The 'Enable Browser Automation' warning dialog with the Privacy & Security path and the Open Automation Settings, Reset Automation Permission and OK buttons.",
     "section": "permissions"
+  },
+  {
+    "file": "settings-permissions.png",
+    "file2x": "settings-permissions@2x.png",
+    "width": 530,
+    "height": 414,
+    "appearance": "light",
+    "title": "Settings: Permissions group",
+    "shows": "The Permissions group alone, whole: Open System Automation Settings and Refresh, with Notifications, Safari Automation and Google Chrome Automation each Granted and an Open button.",
+    "section": "permissions"
+  },
+  {
+    "file": "settings-defaults.png",
+    "file2x": "settings-defaults@2x.png",
+    "width": 530,
+    "height": 350,
+    "appearance": "light",
+    "title": "Settings: Defaults",
+    "shows": "The Defaults group alone, whole: Default check interval and Page load delay pickers with the caption.",
+    "section": "settings"
+  },
+  {
+    "file": "settings-data-about.png",
+    "file2x": "settings-data-about@2x.png",
+    "width": 530,
+    "height": 417,
+    "appearance": "light",
+    "title": "Settings: Data and About",
+    "shows": "The Data group (config location, Open Config Folder, Clear Saved Cookies/Sessions) and the About group with the app version.",
+    "section": "settings"
   }
 ]

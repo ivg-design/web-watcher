@@ -29,7 +29,9 @@ struct SettingsView: View {
 
     private static var windowHeight: CGFloat {
         #if DEBUG
-        if ScreenshotMode.isActive, let h = ScreenshotMode.settingsHeight { return h }
+        if ScreenshotMode.isActive {
+            if let h = ScreenshotMode.settingsHeight { return h }
+        }
         #endif
         return 650
     }
@@ -66,6 +68,7 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    .ssGroup("general")
 
                     // Permissions Section
                     GroupBox(label: Label("Permissions", systemImage: "checkmark.shield")) {
@@ -117,6 +120,7 @@ struct SettingsView: View {
                         .padding(.vertical, 4)
                     }
                     .id("permissions")
+                    .ssGroup("permissions")
 
                     // Default Settings Section
                     GroupBox(label: Label("Defaults", systemImage: "slider.horizontal.3")) {
@@ -150,6 +154,7 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    .ssGroup("defaults")
 
                     // Notifications Section
                     GroupBox(label: Label("Notifications", systemImage: "bell")) {
@@ -188,6 +193,7 @@ struct SettingsView: View {
                         .padding(.vertical, 4)
                     }
                     .id("notifications")
+                    .ssGroup("notifications")
 
                     // Gmail Section
                     GroupBox(label: Label("Gmail", systemImage: "envelope")) {
@@ -214,6 +220,7 @@ struct SettingsView: View {
                         .padding(.vertical, 4)
                     }
                     .id("gmail")
+                    .ssGroup("gmail")
 
                     // Data Section
                     GroupBox(label: Label("Data", systemImage: "folder")) {
@@ -239,6 +246,7 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    .ssGroup("data")
 
                     // About Section
                     GroupBox(label: Label("About", systemImage: "info.circle")) {
@@ -256,6 +264,7 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    .ssGroup("about")
                 }
                 .padding()
             }
@@ -529,7 +538,7 @@ struct SettingsView: View {
                                 Text(interval.displayName).tag(interval)
                             }
                         }
-                        .frame(width: 130)
+                        .fixedSize()
                     }
                 }
 
@@ -788,3 +797,15 @@ struct SettingsView: View {
 }
 
 import WebKit
+
+
+extension View {
+    /// Debug screenshot runs can show a single Settings group (`ScreenshotMode.settingsOnly`); otherwise a no-op.
+    @ViewBuilder func ssGroup(_ id: String) -> some View {
+        #if DEBUG
+        if ScreenshotMode.isActive, let only = ScreenshotMode.settingsOnly, !only.contains(id) { EmptyView() } else { self }
+        #else
+        self
+        #endif
+    }
+}

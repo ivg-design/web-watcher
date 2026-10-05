@@ -880,7 +880,7 @@ struct WatcherEditorView: View {
         ]
         steps.append(contentsOf: report.steps)
 
-        if !usesProfile && anchorSelector.isEmpty {
+        if !usesProfile && anchorSelector.isEmpty && watchType.needsZeroConfirmation {
             steps.append(DoctorStep(
                 label: "Zero can be confirmed",
                 passed: false,
