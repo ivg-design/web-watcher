@@ -8,34 +8,34 @@ export interface DocSection { title: string; docs: DocMeta[] }
 
 export const DOC_SECTIONS: DocSection[] = [
   { title: "Getting started", docs: [
-    { slug: "install", title: "Install", summary: "Download, move to Applications, open from the menu bar." },
-    { slug: "permissions", title: "Permissions (3 switches)", summary: "Safari JavaScript from Apple Events, Automation, Notifications." },
-    { slug: "first-watcher", title: "Your first watcher", summary: "From open Safari tab to first notification in under a minute." },
+    { slug: "install", title: "Install", summary: "What your Mac needs, how to install and verify the download, and how to update." },
+    { slug: "permissions", title: "Permissions", summary: "The Safari setting and the two macOS permissions: what each is for and how to grant it." },
+    { slug: "first-watcher", title: "Your first watcher", summary: "The shortest path from an open Safari page to a watcher that checks on its own." },
   ] },
   { title: "Watching pages", docs: [
-    { slug: "finding-the-element", title: "Finding the element", summary: "The assistant walks you Page, Element, Confirm. You never type a selector." },
-    { slug: "scan-vs-pick", title: "Scan page vs Pick in Safari", summary: "Two ways to choose what to watch, and when to use each." },
-    { slug: "watch-types", title: "Watch types", summary: "Badge number, text change, Anything Changes Inside and the rest." },
-    { slug: "site-profiles", title: "Site profiles & recipes", summary: "One click fills in the right strategy, selector and refresh behaviour." },
-    { slug: "force-refresh", title: "Force refresh & hidden tabs", summary: "Why Safari background tabs go stale and how WebWatcher handles it." },
-    { slug: "example-watchers", title: "Example watchers", summary: "Contra, Reddit, LinkedIn, Rive Community and GitHub, with exact fields." },
+    { slug: "finding-the-element", title: "Finding the element", summary: "How the Page, Element and Confirm steps choose what a watcher reads." },
+    { slug: "scan-vs-pick", title: "Scan or pick", summary: "When to use the automatic scan list and when to use Pick in Safari." },
+    { slug: "watch-types", title: "Watch types", summary: "What counts as a change: a number rising, text changing, an element appearing, or anything changing inside." },
+    { slug: "site-profiles", title: "Site profiles", summary: "Built-in recipes for LinkedIn, Reddit, Rive Community and Contra, and a tab-title option for any site." },
+    { slug: "force-refresh", title: "Force refresh and hidden tabs", summary: "Why a watcher reads a stale value and how to make WebWatcher reload the tab." },
+    { slug: "example-watchers", title: "Example watchers", summary: "Five complete watchers with every field value: Contra, Reddit, LinkedIn, Rive Community and GitHub." },
   ] },
   { title: "Gmail", docs: [
-    { slug: "sign-in-with-google", title: "Sign in with Google", summary: "Built-in OAuth client, smallest scope, tokens in Keychain." },
-    { slug: "sender-and-domain-watchers", title: "Sender & domain watchers", summary: "Watch an address, several, or a whole domain with a live unread count." },
-    { slug: "notification-templates", title: "Notification templates", summary: "Placeholders for title and body of email notifications." },
-    { slug: "gmail-limitations", title: "Limitations", summary: "Inbox only, Gmail only, and a rare domain-watcher edge case." },
+    { slug: "sign-in-with-google", title: "Sign in with Google", summary: "Connect a Google account, what access it grants, and how to use your own OAuth client." },
+    { slug: "sender-and-domain-watchers", title: "Sender and domain watchers", summary: "Create a watcher for an address or a domain, and what its notification and buttons do." },
+    { slug: "notification-templates", title: "Notification templates", summary: "Placeholders and defaults for the title and body of email notifications." },
+    { slug: "gmail-limitations", title: "Gmail limits", summary: "Inbox only, Gmail only, the polling delay, the 25-message window and Testing-mode expiry." },
   ] },
   { title: "Notifications", docs: [
-    { slug: "custom-notifications", title: "Custom icon, title, body", summary: "Make each watcher recognisable at a glance." },
-    { slug: "herald-delivery", title: "Herald delivery", summary: "Persistent banners with action buttons through Herald." },
+    { slug: "custom-notifications", title: "Custom notifications", summary: "Set an icon, title, body and sound for each page watcher, and preview the result." },
+    { slug: "herald-delivery", title: "Herald delivery", summary: "Send notifications to Herald for banners that stay on screen, with action buttons." },
   ] },
   { title: "Reference", docs: [
     { slug: "settings", title: "Settings", summary: "Every control in the Settings window, with its default and when to change it." },
     { slug: "watcher-options", title: "Watcher options", summary: "Every field in the page watcher editor and the Gmail sender editor." },
-    { slug: "data-and-privacy", title: "Data & privacy", summary: "What is stored, where, and what the app talks to." },
-    { slug: "troubleshooting", title: "Troubleshooting", summary: "Error messages and their fixes." },
-    { slug: "building-from-source", title: "Building from source", summary: "swift build, Xcode, and optional Google sign-in." },
+    { slug: "data-and-privacy", title: "Data and privacy", summary: "Every file and Keychain item WebWatcher stores, and everything it connects to." },
+    { slug: "troubleshooting", title: "Troubleshooting", summary: "Every status and error message WebWatcher shows, with its cause and fix." },
+    { slug: "building-from-source", title: "Building from source", summary: "Build with Swift Package Manager or Xcode, and embed a Google client for built-in sign-in." },
   ] },
 ];
 

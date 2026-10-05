@@ -42,6 +42,43 @@ function pngSize(href: string): [number, number] | null {
 
 const hasFile = (href: string) => existsSync(join(process.cwd(), "public", href));
 
+interface ShotFile { src: string; src2x?: string; w?: number; h?: number; shows?: string }
+interface ManifestEntry { file: string; file2x?: string; width?: number; height?: number; appearance?: string; title?: string; shows?: string; section?: string }
+
+let manifestCache: Map<string, ManifestEntry> | null = null;
+/** public/shots/manifest.json, keyed by file name. Accepts a plain array or { images | shots: [...] }. Empty when absent. */
+function shotManifest(): Map<string, ManifestEntry> {
+  if (manifestCache) return manifestCache;
+  const map = new Map<string, ManifestEntry>();
+  try {
+    const raw = JSON.parse(readFileSync(join(process.cwd(), "public", "shots", "manifest.json"), "utf8"));
+    const list: ManifestEntry[] = Array.isArray(raw) ? raw : raw.images ?? raw.shots ?? Object.values(raw);
+    for (const e of list) if (e && typeof e.file === "string") map.set(e.file.replace(/^.*\//, ""), e);
+  } catch { /* no manifest: fall back to the files */ }
+  manifestCache = map;
+  return map;
+}
+
+function shotFile(href: string): ShotFile | null {
+  if (!hasFile(href)) return null;
+  const dir = href.slice(0, href.lastIndexOf("/") + 1);
+  const e = shotManifest().get(href.slice(dir.length));
+  const guess = /\.png$/.test(href) ? href.replace(/\.png$/, "@2x.png") : "";
+  const src2x = e?.file2x ? dir + e.file2x.replace(/^.*\//, "") : guess;
+  // The file is the authority on its own size; the manifest fills in when it is not a PNG.
+  const size = pngSize(href) ?? (e?.width && e?.height ? ([e.width, e.height] as [number, number]) : null);
+  return { src: href, src2x: src2x && hasFile(src2x) ? src2x : undefined, w: size?.[0], h: size?.[1], shows: e?.shows };
+}
+
+/** The file a page names, plus its dark twin when the set has one (name-dark.png beside name.png or name-light.png). */
+function shotVariants(href: string): { main: ShotFile; dark?: ShotFile } {
+  const stem = href.replace(/(-light|-dark)?\.png$/, "");
+  const light = shotFile(href) ?? shotFile(`${stem}-light.png`) ?? shotFile(`${stem}.png`) ?? shotFile(`${stem}-dark.png`);
+  const dark = shotFile(`${stem}-dark.png`);
+  const main = light ?? { src: href };
+  return { main, dark: dark && dark.src !== main.src ? dark : undefined };
+}
+
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -79,26 +116,31 @@ export function renderMarkdown(src: string, basePath = ""): { html: string; head
         return `<a href="${escapeHtml(fix(href))}"${rel}>${this.parser.parseInline(tokens)}</a>`;
       },
       image({ href, title, text: rawText }: Tokens.Image) {
-        // ![alt text](/shots/name.png "Caption: what to look at"). The 2x file is what the enlarge view shows.
+        // ![alt text](/shots/name.png "Caption: what to look at"). Sizes, the 2x file and a light/dark pair come
+        // from public/shots/manifest.json when it lists the image, else from the PNG itself.
         const local = href.startsWith("/") && !href.startsWith("//");
-        const size = local ? pngSize(href) : null;
-        const retina = local && /\.png$/.test(href) ? href.replace(/\.png$/, "@2x.png") : "";
-        const has2x = !!retina && hasFile(retina);
-        const srcset = has2x ? ` srcset="${escapeHtml(fix(href))} 1x, ${escapeHtml(fix(retina))} 2x"` : "";
-        const alt = decodeEntities(rawText);
+        const v = local ? shotVariants(href) : { main: { src: href } as ShotFile };
+        const { main, dark } = v;
+        const alt = decodeEntities(rawText) || main.shows || "";
         const caption = title ? (new Marked({ gfm: true }).parseInline(title) as string) : escapeHtml(alt);
-        const dims = size ? ` width="${size[0]}" height="${size[1]}"` : "";
-        const tall = size && size[1] > size[0] * 1.2 ? " tall" : "";
-        const full = escapeHtml(fix(has2x ? retina : href));
-        const img = `<img src="${escapeHtml(fix(href))}" alt="${escapeHtml(alt)}"${srcset}${dims} loading="lazy" decoding="async" />`;
-        return `<figure class="shot${tall}"><button type="button" class="shot__zoom" data-full="${full}"${dims ? ` data-w="${size![0]}" data-h="${size![1]}"` : ""} aria-label="Enlarge image: ${escapeHtml(alt)}">${img}<span class="shot__hint" aria-hidden="true">Enlarge</span></button><figcaption>${caption}</figcaption></figure>`;
+        const set = (f: ShotFile) => (f.src2x ? `${escapeHtml(fix(f.src))} 1x, ${escapeHtml(fix(f.src2x))} 2x` : "");
+        const dims = main.w && main.h ? ` width="${main.w}" height="${main.h}"` : "";
+        const tall = main.w && main.h && main.h > main.w * 1.2 ? " tall" : "";
+        const srcset = set(main) ? ` srcset="${set(main)}"` : "";
+        const img = `<img src="${escapeHtml(fix(main.src))}" alt="${escapeHtml(alt)}"${srcset}${dims} loading="lazy" decoding="async" />`;
+        const pic = dark
+          ? `<picture><source media="(prefers-color-scheme: dark)" srcset="${set(dark) || escapeHtml(fix(dark.src))}" />${img}</picture>`
+          : img;
+        const full = escapeHtml(fix(main.src2x || main.src));
+        const fullDark = dark ? ` data-full-dark="${escapeHtml(fix(dark.src2x || dark.src))}"` : "";
+        return `<figure class="shot${tall}"><button type="button" class="shot__zoom" data-full="${full}"${fullDark}${dims ? ` data-w="${main.w}" data-h="${main.h}"` : ""} aria-label="Enlarge image: ${escapeHtml(alt)}">${pic}<span class="shot__hint" aria-hidden="true">Enlarge</span></button><figcaption>${caption}</figcaption></figure>`;
       },
       strong({ tokens }: Tokens.Strong) {
         const inner = this.parser.parseInline(tokens);
         // **Settings > Notifications > Delivery** is a menu path: each segment is a label, joined by chevrons.
         if (/ (?:>|&gt;) /.test(inner) && !/<code/.test(inner)) {
           const segs = inner.split(/ (?:>|&gt;) /).map((x) => `<span class="path__s">${x}</span>`);
-          return `<strong class="path">${segs.join('<span class="path__c" aria-hidden="true">\u203a</span><span class="sr-only"> then </span>')}</strong>`;
+          return `<strong class="path">${segs.join('<span class="path__c" aria-hidden="true">\u203a</span><span class="path__t"> then </span>')}</strong>`;
         }
         return `<strong>${inner}</strong>`;
       },

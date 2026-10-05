@@ -121,13 +121,48 @@ for (const p of ["/docs/first-watcher", "/docs/install"]) {
 }
 const txt = async (p) => (await (await fetch(BASE + p)).text()).replace(/<[^>]+>/g, " ").replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, " ");
 const fw = await txt("/docs/first-watcher");
-ok(/Badge and count watchers notify when the number goes up/.test(fw) && !/only notifies when the value changes/.test(fw), "first-watcher: rises-only copy");
+ok(/When the number goes up/.test(fw) && !/only notifies when the value changes/.test(fw), "first-watcher: rises-only copy");
 const cn = await txt("/docs/custom-notifications");
-ok(/text watchers notify on any change/.test(cn) && !/only notifies when the value changes/.test(cn), "custom-notifications: rises-only copy");
-ok(/Delete moves the messages to Trash/.test(await txt("/docs/sender-and-domain-watchers")), "sender watchers: Delete moves to Trash");
-ok(/group by site/.test(await txt("/docs/herald-delivery")) && /group by sender address/.test(await txt("/docs/herald-delivery")), "herald-delivery: stacking by site and by sender");
+ok(/The number goes up/.test(cn) && /The text changes/.test(cn) && !/only notifies when the value changes/.test(cn), "custom-notifications: rises-only copy");
+ok(/Trash/.test(await txt("/docs/sender-and-domain-watchers")) && !/permanently deletes/i.test(await txt("/docs/sender-and-domain-watchers")), "sender watchers: Delete moves to Trash");
+ok(/By site for page watchers and by sender address/.test(await txt("/docs/herald-delivery")), "herald-delivery: stacking by site and by sender");
 const llms = await (await fetch(BASE + "/llms.txt")).text();
 ok(/gmail\.modify/.test(llms) && !/read-only/i.test(llms), "llms.txt: gmail.modify, not read-only");
+
+// The docs describe the app as it is now: no version history outside the changelog (owner rule).
+// Quoted app strings and code are data, so they are skipped; "macOS 13" is the system requirement.
+const HISTORY = /\b(new in\b|what['\u2019]s new|since (?:version |v)?\d|as of (?:version |v)?\d|previously|formerly|no longer|(?<!is |are |be |been |being |was |were )used to\b|in earlier versions|older versions|before (?:version |v)?\d+\.\d|v?\d+\.\d+\.\d+|version \d+\.\d|replaces the (?:old|previous)|migrat(?:e|ed|ion))/i;
+let changelogLinks = 0;
+for (const p of slugs) {
+  await go(p, 1440);
+  const r = await page.evaluate(() => {
+    const root = document.querySelector(".docs-article").cloneNode(true);
+    root.querySelectorAll("pre, code, .pager, .crumbs").forEach((e) => e.remove());
+    const blocks = [...root.querySelectorAll(".doc-lede, .prose p, .prose li, .prose td, .prose th, .prose h2, .prose h3, .prose h4, figcaption")]
+      .filter((e) => !e.querySelector("p, li, td")).map((e) => e.textContent.replace(/[\u201c"][^\u201d"]*[\u201d"]/g, " "));
+    return { blocks, cl: document.querySelectorAll('.docs-article a[href$="/changelog"]').length, fences: [...document.querySelectorAll(".prose pre code")].filter((c) => !/language-/.test(c.className)).length, wide: [...document.querySelectorAll(".prose table")].filter((t) => t.rows[0].cells.length > 4).length, dash: [...root.querySelectorAll(".doc-lede, .prose p, .prose li, .prose td, .prose h2, .prose h3")].filter((e) => !e.querySelector("p, li, td") && /\u2014/.test(e.textContent.replace(/[\u201c"][^\u201d"]*[\u201d"]/g, " ").replace(/Any site \u2014 tab title \(N\)|Not yet confirmed \u2014 click Check|Confirmed zero \u2014 [^|.]*\.|Snapshot taken \u2014 [^|.]*\./g, " "))).map((e) => e.textContent.slice(0, 60)) };
+  });
+  const hits = r.blocks.map((t) => (HISTORY.exec(t) ? `${HISTORY.exec(t)[0]} :: ${t.slice(0, 70)}` : "")).filter(Boolean);
+  ok(hits.length === 0, `no version-history framing ${p} ${JSON.stringify(hits)}`);
+  ok(r.cl <= 1, `at most one changelog link ${p} (${r.cl})`);
+  ok(r.fences === 0 && r.wide === 0, `every fenced block has a language, no table wider than four columns ${p}`);
+  ok(r.dash.length === 0, `no em dash outside quoted app strings ${p} ${JSON.stringify(r.dash)}`);
+  changelogLinks += r.cl;
+}
+
+// figures: framed button with an enlarge dialog that returns focus
+await go("/docs/settings", 1440, 900);
+await page.evaluate(() => document.querySelector(".shot__zoom").scrollIntoView({ block: "center" }));
+await page.focus(".shot__zoom");
+await page.keyboard.press("Enter");
+await page.waitForSelector("dialog.lightbox[open] img");
+const lb = await page.evaluate(() => { const i = document.querySelector("dialog.lightbox img"); return { src: i.getAttribute("src"), alt: i.alt.length, cap: document.querySelector("dialog.lightbox figcaption span").textContent.length, focus: document.activeElement.className }; });
+ok(/@2x|2x/.test(lb.src) && lb.alt > 8 && lb.cap > 8 && lb.focus === "lightbox__x", `figure enlarges into a dialog with alt, caption and focus on Close ${JSON.stringify(lb)}`);
+await page.keyboard.press("Escape");
+await page.waitForFunction(() => !document.querySelector("dialog.lightbox[open]"));
+ok(await page.evaluate(() => document.activeElement.classList.contains("shot__zoom")), "closing the enlarge dialog returns focus to the figure");
+const st = await page.evaluate(() => ({ steps: document.querySelectorAll(".prose ol.steps > li").length, see: document.querySelectorAll(".prose .see").length, call: [...document.querySelectorAll(".prose .callout")].every((c) => c.dataset.kind && c.querySelector(".callout__k")), shotsInP: document.querySelectorAll(".prose p figure, .prose p .shot").length }));
+ok(st.steps >= 2 && st.see >= 2 && st.call && st.shotsInP === 0, `steps, outcomes and named callouts render ${JSON.stringify(st)}`);
 
 // rail highlight while scrolling
 await go("/docs/finding-the-element", 1440, 700);

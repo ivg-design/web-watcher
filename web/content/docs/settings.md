@@ -4,7 +4,9 @@ This page describes every control in the WebWatcher Settings window: what it doe
 
 1. Click the WebWatcher icon in the menu bar.
 
-   **You see:** the popover with your watchers, **Add Watcher**, **Check All Now**, **Settings...** and **Quit**.
+   ![The WebWatcher popover: four page watchers with switches, an Email group with one Gmail watcher and an unread count, then Add Watcher, Check All Now, Settings and Quit](/shots/popover.png "Watchers are listed at the top. **Add Watcher**, **Check All Now**, **Settings...** and **Quit** are below them.")
+
+   **You see:** the popover. **Settings...** is near the bottom.
 
 2. Click **Settings...**.
 
@@ -16,7 +18,7 @@ A change takes effect as soon as you make it. **Done** closes the window; there 
 
 The General group controls how WebWatcher starts and how it opens pages.
 
-![The top of the Settings window: the General group with three checkboxes, then Permissions and Defaults](/shots/settings-general.png "The **General** group is the first three checkboxes. **Permissions** and **Defaults** follow it.")
+![The General group of the Settings window: Launch at login unchecked, Show badge in menu bar checked and Reuse existing browser tab by domain checked](/shots/settings-general.png "The **General** group has three checkboxes. This capture shows their defaults.")
 
 | Setting | What it does | Default | When to change it |
 |---|---|---|---|
@@ -30,7 +32,7 @@ The General group controls how WebWatcher starts and how it opens pages.
 
 The Permissions group shows whether macOS lets WebWatcher do its job, and gives you a button to fix each permission. For what each one is for and how to grant it, see [Permissions](/docs/permissions).
 
-![The Permissions group with three rows marked Granted, each with an Open button, above the Defaults and Notifications groups](/shots/permissions.png "Each row has a status dot and the word **Granted** when the permission is in place.")
+![The Permissions group: Open System Automation Settings and Refresh, then Notifications, Safari Automation and Google Chrome Automation, each marked Granted with an Open button](/shots/settings-permissions.png "Each row has a status dot and the word **Granted** when the permission is in place. The third row is named after the default browser, here Google Chrome.")
 
 | Control | What it does |
 |---|---|
@@ -38,11 +40,13 @@ The Permissions group shows whether macOS lets WebWatcher do its job, and gives 
 | Refresh | Reads the three permissions again. Use it after you change something in System Settings. |
 | Notifications | Shows whether macOS allows WebWatcher to post notifications. The button reads **Fix** when it does not and **Open** when it does. |
 | Safari Automation | Shows whether WebWatcher may send Apple Events to Safari. The button reads **Check** until the permission is granted. |
-| Default browser Automation | The same check for your default browser, named in the row. If Safari is your default browser, this row also reads **Safari Automation**. |
+| Default browser Automation | The same check for your default browser, named in the row, such as **Google Chrome Automation**. If Safari is your default browser, this row also reads **Safari Automation**. |
 
 ## Defaults
 
 The Defaults group holds two pickers.
+
+![The Defaults group: Default check interval set to 30 seconds and Page load delay set to 2 seconds, with a caption about heavy JavaScript](/shots/settings-defaults.png "The two pickers of the **Defaults** group, at their defaults.")
 
 | Setting | Options | Default |
 |---|---|---|
@@ -55,7 +59,7 @@ Both values are saved but not applied by the current build, as the note under Ge
 
 The Notifications group chooses which service shows your notifications.
 
-![The Notifications group: the Deliver notifications via picker set to Herald when available, a Herald status line, and the Open System Notification Settings button](/shots/settings-notifications.png "**Deliver notifications via** is the picker. The line under it reports whether Herald is running.")
+![The Notifications group: the Deliver notifications via picker set to Herald when available, the status line Herald: running (port 47321), and the Open System Notification Settings button](/shots/settings-notifications.png "**Deliver notifications via** is the picker. The line under it reports whether Herald is running.")
 
 ### Deliver notifications via
 
@@ -81,7 +85,7 @@ This button opens the Notifications pane of System Settings. Banner style, sound
 
 The Gmail group lists the Google accounts WebWatcher can read and how often it asks Gmail for new mail. You need it only if you use [Gmail sender watchers](/docs/sender-and-domain-watchers).
 
-![The Gmail group with one connected account, the Add Gmail Account button, the Poll interval picker and the collapsed Advanced row, above the Data and About groups](/shots/settings-gmail.png "One connected account. The switch pauses it, the red × removes it.")
+![The Gmail group with one connected account showing 3 unread, a switch and a red remove button, the Notify for every new email checkbox, Add Gmail Account, the Poll interval picker and the collapsed Advanced row](/shots/settings-gmail.png "One connected account. The switch pauses it and the red × removes it. **Poll interval** is to the right of **Add Gmail Account**.")
 
 ### Accounts
 
@@ -115,11 +119,15 @@ This row expands to show which Google OAuth client WebWatcher signs in with. Mos
 
 ## Data
 
+The Data group shows where your watchers are stored and has two maintenance buttons.
+
 | Control | What it does |
 |---|---|
 | Config location | Shows the folder that holds your watchers: `~/Library/Application Support/WebWatcher/`. |
 | Open Config Folder | Opens that folder in Finder. Copy `watchers.json` from it to back up your watchers. |
 | Clear Saved Cookies/Sessions | Deletes the website data stored by WebWatcher's own web view. It does not sign you out of anything in Safari, and it does not delete watchers. |
+
+![The Data group with Config location, Open Config Folder and Clear Saved Cookies/Sessions, and the About group with the name Web Watcher and a version number](/shots/settings-data-about.png "**Data** and **About** are the last two groups in the window.")
 
 [Data and privacy](/docs/data-and-privacy) lists every file the app writes.
 
@@ -134,4 +142,5 @@ The About group shows the app's name and its version. Quote that version when yo
 | A Permissions row does not read **Granted** after you allowed it. | The window read the status before you changed it. | Click **Refresh**. |
 | The status line reads "Herald not running — using macOS notifications". | Herald is not open. | Open Herald. WebWatcher uses it from the next notification. |
 | **Add Gmail Account** is dimmed, with "This build has no Google client configured — see Advanced below." | You are running a build without a Google OAuth client. | Import one under **Advanced: use your own Google OAuth client**. |
+
 | An account reads "Error:" and a **Reconnect** button appears. | Google ended the session. This happens every 7 days if your own OAuth client is in Testing mode. | Click **Reconnect** and sign in again. |

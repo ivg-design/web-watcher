@@ -19,7 +19,7 @@ export default function Lightbox() {
       const cap = btn.closest("figure")?.querySelector("figcaption");
       opener.current = btn;
       setOpen({
-        src: btn.dataset.full || img?.currentSrc || "",
+        src: (matchMedia("(prefers-color-scheme: dark)").matches && btn.dataset.fullDark) || btn.dataset.full || img?.currentSrc || "",
         alt: img?.alt || "",
         caption: cap?.textContent || "",
         w: Number(btn.dataset.w) || undefined,

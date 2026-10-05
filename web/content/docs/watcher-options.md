@@ -7,6 +7,8 @@ This page is the reference for every field in the two watcher editors: the one f
 
    **You see:** a window titled **Add Watcher** or **Edit Watcher**. A new watcher has two tabs at the top, **Web page** and **Gmail sender**. The tab decides which of the two editors below you get.
 
+   ![The Add Watcher window with the Web page and Gmail sender tabs at the top, Web page selected](/shots/add-watcher-page.png "The two tabs at the top appear only for a new watcher.")
+
 3. Change what you need, then click **Save**.
 
    **You see:** the window closes and the watcher is checked straight away.
@@ -17,7 +19,7 @@ This page is the reference for every field in the two watcher editors: the one f
 
 A web page watcher reads one element of a page that is open in Safari. The fields run from top to bottom in the order below.
 
-![The Edit Watcher window for a page watcher: Site, Name, the three Which element steps, Check Interval, Watch Type and the expanded Advanced section](/shots/watcher-editor.png "The editor for a page watcher. **Advanced** is expanded here; it is collapsed when the window opens.")
+![The Edit Watcher window for a page watcher: Site, Name, the three Which element? steps with the Confirm card, Check Interval, Watch Type, and the collapsed Advanced and Notification sections above Delete and Save](/shots/watcher-editor.png "The editor for a page watcher. **Advanced** and **Notification** are collapsed when the window opens.")
 
 ### Main fields
 
@@ -26,12 +28,14 @@ A web page watcher reads one element of a page that is open in Safari. The field
 | Site | Chooses a built-in recipe for a known site, or **Custom (choose elements yourself)**. A recipe fills in the selector and the reading strategy for you. | Custom. | Pick your site if it is in the list. See [Site profiles](/docs/site-profiles). |
 | Name | Names the watcher in the menu and in its notifications. | Empty. | Give every watcher a name you will recognise in a banner. |
 | Which element? | Runs the three steps Page, Element and Confirm that find the element to watch. | | See [Finding the element](/docs/finding-the-element). |
-| Check Interval | Sets how often WebWatcher reads the page: 15 or 30 seconds, or 1, 2, 5, 10 or 30 minutes. | 30 seconds. | Lengthen it for pages that change rarely, or when you use **Force refresh before checking**, because every check then reloads the tab. |
+| Check Interval | Sets how often WebWatcher reads the page: 15 or 30 seconds, or 1, 2, 5, 10 or 30 minutes. | 30 seconds. | Lengthen it for pages that change rarely, or when you use **Force refresh before checking**, because each check of a background tab then reloads it. |
 | Watch Type | Decides what counts as a change. | Badge/Number. | The Confirm step sets it from the element you picked. See [Watch types](/docs/watch-types). |
 
 ### Advanced
 
 Click **Advanced** to expand it. These fields are filled in by the element picker. Change them by hand only when the picker cannot reach the element.
+
+![The Edit Watcher window with Advanced and Notification expanded: Selector Type, CSS Selector with Help, Anchor with Suggest, Strategy with Clear, two checkboxes, Action URL, API Lookup Command, then the Notification controls](/shots/watcher-editor-advanced.png "Both sections expanded. **Advanced** runs from **Selector Type** to **API Lookup Command (optional)**; **Notification** follows it.")
 
 | Field | What it does | Default | When to change it |
 |---|---|---|---|
@@ -41,7 +45,7 @@ Click **Advanced** to expand it. These fields are filled in by the element picke
 | Anchor (recommended) | Holds the selector of an element that is always on the page, next to the badge. With an anchor, a missing badge is read as zero. Without one, WebWatcher cannot tell zero from a page that failed to load. **Suggest** proposes anchors found on the page. It is hidden when a site recipe is selected. | Set by the picker when it can. | The Confirm step reports "No anchor set — a missing badge is ambiguous". |
 | Strategy | Shows how the value is read: Accessibility label, Anchor + badge, Tab title (N), Anchor + any number, or Manual. It is read-only. **Clear** resets it to Manual. | Set by the picker. | Clear it only if you typed your own selector and want it used as written. |
 | Open the page automatically if no tab is found | Opens the watcher's URL in Safari when no matching tab exists. | On. | Turn it off if you do not want WebWatcher to open tabs for you. The watcher then reports that the tab was not found. |
-| Force refresh before checking | Reloads the Safari tab before every check. | Off. | The watcher shows a stale value. See [Force refresh and hidden tabs](/docs/force-refresh). |
+| Force refresh before checking | Reloads the Safari tab before a check whenever the tab is not the one in front. A tab you are looking at is never reloaded. | Off. | The watcher shows a stale value. See [Force refresh and hidden tabs](/docs/force-refresh). |
 | Settle delay | Sets the wait after a reload before reading, from 0.5 to 5.0 seconds in steps of 0.5. It is shown while Force refresh is on. | 2.0 seconds. | Raise it for pages that draw their badge late. |
 | Action URL (optional) | Sets the page that opens when you click the notification or the watcher's row. | Empty, which opens the watched URL. | The page you watch is not the page you want to land on. |
 | API Lookup Command (optional) | Runs a shell command when you open the watcher, and opens the URL the command prints. | Empty. | The destination is different every time, for example the newest message. See below. |
@@ -54,10 +58,10 @@ A minimal CSS selector, valid for any element with the class `badge`:
 .badge
 ```
 
-A realistic one, for a notification count that lives in an attribute. Put the selector in **CSS Selector** and `initial-count` in **Badge Attribute (optional)**:
+A realistic one, for a count that a web component keeps in an attribute. Put the selector in **CSS Selector** and the attribute's name, here `data-count`, in **Badge Attribute (optional)**:
 
 ```css
-dynamic-badge[data-id="notification-count-element"]
+nav-badge[data-id="inbox-count"]
 ```
 
 The same kind of element as XPath:
@@ -109,7 +113,7 @@ A watcher that uses a site recipe has a **Run Diagnosis** button at the bottom o
 
 A Gmail sender watcher counts unread Inbox mail from the senders you list. It needs a connected Google account. See [Sign in with Google](/docs/sign-in-with-google).
 
-![The Edit Email Watcher window: Name, Gmail account, a Senders field with two entries, Play sound and the collapsed Notification section](/shots/gmail-sender-editor.png "Two senders are listed: one address and one domain. The line at the bottom states how often mail is checked.")
+![The Edit Email Watcher window: Name, the Gmail account picker with Connect another account, a Senders field with an address and a domain listed, Play sound, the collapsed Notification section, Delete and Save](/shots/gmail-sender-editor.png "Two senders are listed: one address and one domain. The line under **Notification** states how often mail is checked.")
 
 | Field | What it does | Default |
 |---|---|---|

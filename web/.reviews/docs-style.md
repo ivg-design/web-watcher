@@ -68,7 +68,8 @@ At most two per page. A callout never carries a step or a setting.
 - Plain, grammatical, factual. Say why as well as what. Second person, present tense, active voice.
 - No marketing words (simple, powerful, seamless, just, easily), no time or effort estimates, no em dashes.
 - Proper nouns exact: WebWatcher, Herald, Safari, Finder, Gmail, IVG Design, Notification Center, System Settings.
-- UI strings exactly as the app shows them, in bold for controls and in double quotes for messages.
+- UI strings exactly as the app shows them, in bold for controls and in double quotes for messages. A quoted
+  message keeps the app's own punctuation, which is the only place an em dash or an arrow may appear.
 - Never a real secret, OAuth client id, email address or personal data. Use `you@example.com`, `@example.com`,
   `YOUR_CLIENT_ID`.
 
@@ -87,10 +88,13 @@ thing, and a how-to has one at each step where the screen changes.
 ![Alt text: what the image contains, for someone who cannot see it](/shots/settings-general.png "Caption: what to look at, with **control names** as the image shows them.")
 ```
 
-- Only the real captures in `public/shots/` (made by the app's `WW_SCREENSHOTS` Debug mode). Before using one,
-  check it against the current source: an image that shows a control that is gone, or lacks one that exists, is
-  not used and goes on the shot list in `.reviews/docs-restructure-inventory.md`.
+- Only the real captures in `public/shots/`, which are made from the current source and arrive framed on a
+  gradient with a shadow. `public/shots/manifest.json` lists each one (file, 2x file, size, appearance, a `shows`
+  sentence). Never edit, reframe or generate an image. If the manifest has no image for something a page
+  describes, the page goes without and the shot goes on the wish-list in `.reviews/docs-restructure-inventory.md`
+  (page, sentence, window, state).
 - Names in the text match the labels visible in the image, character for character.
 - The alt text describes the image; the caption (the quoted title) tells the reader what to look at. They differ.
-- The renderer frames every figure the same way, sets width and height from the file, lazy-loads it and opens
-  the 2x file in a dialog when the image is clicked. Do not write `<img>` by hand.
+- The renderer reads the manifest: it sets width and height (no layout shift), serves 1x and 2x, pairs a
+  `name-dark.png` with its light twin, lazy-loads, and opens the 2x file in a dialog when the image is clicked.
+  The figure adds no background, border or shadow of its own. Do not write `<img>` by hand.

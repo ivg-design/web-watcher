@@ -213,27 +213,29 @@ body:has(.docs-shell), body:has(.cl-page) { background: var(--p-bg); }
 
 /* Menu paths and keys */
 .prose .path { font-weight: 600; }
+.prose .path__t { font-size: 0; }
 .prose .path__c { color: var(--muted); font-weight: 500; padding-inline: 0.32em; }
 .prose kbd { display: inline-block; font-family: var(--font-mono); font-size: 0.82em; font-weight: 500; line-height: 1.5; padding: 0 6px; min-width: 1.9em; text-align: center; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--surface); color: var(--p-ink); white-space: nowrap; }
 
 /* Tables: a header band, comfortable rows, the first column names the thing. */
-.table-wrap { background: var(--surface); overflow: hidden; }
+.table-wrap { background: var(--surface); }
+.prose th:first-child { border-top-left-radius: 7px; }
+.prose th:last-child { border-top-right-radius: 7px; }
 .prose th { border-bottom: 1px solid var(--line); background: var(--soft); white-space: nowrap; }
 .prose tbody tr:first-child td { border-top: 0; }
 .prose td { padding: 13px 16px; }
 @media (max-width: 640px) { .table-wrap { background: none; overflow: visible; } .prose td:first-child { font-size: 16px; padding-bottom: 6px; } .prose td + td { padding-top: 6px; } .prose tbody tr:first-child td { border-top: 0; } }
 
-/* Figures: one frame for every capture. The image keeps its intrinsic size (never upscaled, never wider than
-   the column); the caption is part of the figure; clicking the image opens the 2x file in a dialog. */
-.prose .shot { margin: 26px 0 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; max-width: 100%; }
-.prose .shot__zoom { position: relative; display: block; width: 100%; padding: 20px; background: var(--soft); border: 0; border-bottom: 1px solid var(--line); cursor: zoom-in; text-align: center; }
-.prose .shot img, .prose .shot.tall img { display: block; width: auto; max-width: 100%; height: auto; margin-inline: auto; border: 0; border-radius: 10px; background: none; }
-.prose .shot__hint { position: absolute; right: 12px; bottom: 12px; font-family: var(--font-mono); font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 5px; background: var(--n-bg); color: var(--n-ink); opacity: 0; transition: opacity 0.12s; }
+/* Figures: the captures arrive framed on their own gradient with a shadow, so the figure adds no background,
+   border or shadow of its own. The image keeps its intrinsic size (never upscaled, never wider than the column);
+   the caption is part of the figure; clicking the image opens the 2x file in a dialog. */
+.prose .shot { margin: 28px 0 0; max-width: 100%; }
+.prose .shot__zoom { position: relative; display: block; max-width: 100%; padding: 0; background: none; border: 0; border-radius: 12px; cursor: zoom-in; line-height: 0; }
+.prose .shot picture { display: block; }
+.prose .shot img, .prose .shot.tall img { display: block; width: auto; max-width: 100%; height: auto; margin: 0; border: 0; border-radius: 12px; background: none; }
+.prose .shot__hint { position: absolute; right: 10px; bottom: 10px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; font-weight: 500; padding: 3px 9px; border-radius: 5px; background: var(--n-bg); color: var(--n-ink); opacity: 0; transition: opacity 0.12s; }
 .prose .shot__zoom:hover .shot__hint, .prose .shot__zoom:focus-visible .shot__hint { opacity: 1; }
-.prose .shot__zoom:focus-visible { outline-offset: -3px; }
-.prose .shot figcaption, .prose .shot.tall figcaption { margin: 0; padding: 11px 16px 12px; font-size: 14px; line-height: 1.55; color: var(--p-ink-2); text-align: left; }
-.prose ol.steps .shot__zoom { padding: 14px; }
-@media (max-width: 480px) { .prose .shot__zoom { padding: 12px; } }
+.prose .shot figcaption, .prose .shot.tall figcaption { margin: 12px 0 0; padding: 1px 0 1px 14px; border-left: 2px solid var(--p-ink); max-width: 62ch; font-size: 14px; line-height: 1.55; color: var(--p-ink-2); text-align: left; }
 @media (hover: none) { .prose .shot__hint { opacity: 1; } }
 
 .lightbox { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; margin: 0; display: none; place-items: center; overflow: hidden; }
