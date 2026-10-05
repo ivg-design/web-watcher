@@ -37,10 +37,10 @@ The Permissions group shows whether macOS lets WebWatcher do its job, and gives 
 | Control | What it does |
 |---|---|
 | Open System Automation Settings | Opens the Automation list in System Settings, where you allow WebWatcher to control Safari. |
-| Refresh | Reads the three permissions again. Use it after you change something in System Settings. |
+| Refresh | Reads the permissions again. Use it after you change something in System Settings. |
 | Notifications | Shows whether macOS allows WebWatcher to post notifications. The button reads **Fix** when it does not and **Open** when it does. |
 | Safari Automation | Shows whether WebWatcher may send Apple Events to Safari. The button reads **Check** until the permission is granted. |
-| Default browser Automation | The same check for your default browser, named in the row, such as **Google Chrome Automation**. If Safari is your default browser, this row also reads **Safari Automation**. |
+| Default browser Automation | The same check for your default browser, named in the row, such as **Google Chrome Automation**. The row is shown only when your default browser is not Safari. |
 
 ## Defaults
 

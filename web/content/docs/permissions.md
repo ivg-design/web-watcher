@@ -81,7 +81,7 @@ The Settings window reports each permission with a coloured dot, so you can see 
 
    ![The Permissions group in Settings: Open System Automation Settings and Refresh, then Notifications, Safari Automation and Google Chrome Automation, each marked Granted with an Open button](/shots/settings-permissions.png "Each row shows a status, here **Granted**, and a button. The last row is named after your default browser, which is Google Chrome in this capture.")
 
-   **You see:** three rows, **Notifications**, **Safari Automation** and a row named after your default browser, such as **Google Chrome Automation**.
+   **You see:** the rows **Notifications** and **Safari Automation**. When your default browser is not Safari, a third row is named after it, such as **Google Chrome Automation**.
 
 3. Read the status under each name.
 
@@ -91,7 +91,7 @@ The Settings window reports each permission with a coloured dot, so you can see 
 | Not granted | Red | macOS denied it. | Click the row's button, then switch it on in System Settings. |
 | Not yet confirmed — click Check | Orange | macOS has not revealed the answer without showing a prompt. | Click **Check** and answer the prompt. |
 
-The button on each row depends on the state. The **Notifications** button reads **Fix** when it is not granted and **Open** when it is. The Automation buttons read **Check** until granted and **Open** after that. **Open System Automation Settings** at the top opens the Automation pane, and **Refresh** reads all three again after you change something in System Settings. Every control in the group is also described in [Settings](/docs/settings).
+The button on each row depends on the state. The **Notifications** button reads **Fix** when it is not granted and **Open** when it is. The Automation buttons read **Check** until granted and **Open** after that. **Open System Automation Settings** at the top opens the Automation pane, and **Refresh** reads them again after you change something in System Settings. Every control in the group is also described in [Settings](/docs/settings).
 
 ## If it does not work
 
