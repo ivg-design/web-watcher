@@ -164,3 +164,102 @@
 
 /* The root body token is still the v2 blue-grey; docs and changelog sit on bone. */
 body:has(.docs-shell), body:has(.cl-page) { background: var(--p-bg); }
+
+/* ===== Docs structure: sections, steps, outcomes, callouts, code, menu paths, keys (.reviews/docs-style.md) ===== */
+.prose h2 { border-top: 1px solid var(--line); padding-top: 30px; margin-top: 52px; }
+.prose > h2:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.prose h3 { font-stretch: 62%; font-weight: 800; letter-spacing: -0.01em; font-size: 24px; line-height: 1.15; margin-top: 36px; }
+.prose h4 { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--muted); margin-top: 28px; }
+.prose p, .prose li { text-wrap: pretty; }
+.prose li > p + p, .prose li > p + ul, .prose li > ul + p { margin-top: 8px; }
+
+/* Steps: every ordered list is a procedure. Mono two-digit numerals on graphite, joined by a hairline. */
+.prose ol.steps { list-style: none; padding: 0; display: block; counter-reset: step; margin-top: 22px; }
+.prose ol.steps > li { position: relative; counter-increment: step; padding: 2px 0 22px 58px; min-height: 32px; }
+.prose ol.steps > li:last-child { padding-bottom: 0; }
+.prose ol.steps > li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 0; width: 38px; height: 30px; display: grid; place-items: center; background: var(--n-bg); color: var(--n-ink); border-radius: 6px; font-family: var(--font-mono); font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.prose ol.steps > li::after { content: ""; position: absolute; left: 18.5px; top: 36px; bottom: 6px; width: 1px; background: var(--line); }
+.prose ol.steps > li:last-child::after { display: none; }
+.prose ol.steps > li > * + * { margin-top: 10px; }
+.prose ol.steps .shot { margin-top: 14px; }
+.prose ol.steps ul { margin-top: 8px; }
+@media (max-width: 480px) { .prose ol.steps > li { padding-left: 48px; } .prose ol.steps > li::before { width: 34px; } .prose ol.steps > li::after { left: 16.5px; } }
+
+/* "You see": the visible outcome of a step or a procedure. */
+.prose .see { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: baseline; padding: 9px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: 15px; line-height: 1.6; }
+.prose .see__k { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--muted); white-space: nowrap; }
+.prose .see__k::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--p-ink); margin-right: 8px; vertical-align: 1px; }
+@media (max-width: 480px) { .prose .see { grid-template-columns: minmax(0, 1fr); } }
+
+/* Callouts: > **Note.** / > **Tip.** / > **Warning.** */
+.callout { display: grid; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--p-ink-2); border-radius: 4px; padding: 14px 20px 16px; font-size: 15.5px; line-height: 1.65; }
+.callout > * + * { margin-top: 0; }
+.callout__k { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--p-ink-2); }
+.callout__b > * + * { margin-top: 8px; }
+.callout[data-kind="tip"] { border-left-color: var(--p-ink); background: transparent; }
+.callout[data-kind="tip"] .callout__k { color: var(--p-ink); }
+.callout[data-kind="warning"] { border-left-color: var(--n-signal); background: color-mix(in oklch, var(--n-signal) 6%, var(--p-bg-2)); border-color: color-mix(in oklch, var(--n-signal) 28%, var(--p-line)); border-left-color: var(--n-signal); }
+.callout[data-kind="warning"] .callout__k { color: oklch(0.47 0.19 27); }
+
+/* Code: a labelled block. Terminal commands sit on graphite, like the menu bar; data sits on paper. */
+.prose .code { margin: 18px 0 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); max-width: 100%; }
+.prose .code__k { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--muted); padding: 8px 18px; border-bottom: 1px solid var(--line); background: var(--soft); overflow-wrap: anywhere; }
+.prose .code pre { border: 0; border-radius: 0; background: none; margin: 0; }
+.prose .code[data-lang="bash"], .prose .code[data-lang="sh"] { background: var(--n-bg); border-color: var(--n-bg); }
+.prose .code[data-lang="bash"] .code__k, .prose .code[data-lang="sh"] .code__k { background: var(--n-bg-2); color: var(--n-ink-2); border-bottom-color: var(--n-line); }
+.prose .code[data-lang="bash"] pre, .prose .code[data-lang="sh"] pre { color: var(--n-ink); }
+.prose .code[data-lang="bash"] .ln::before, .prose .code[data-lang="sh"] .ln::before { content: "$ "; color: var(--n-muted); user-select: none; -webkit-user-select: none; }
+.prose ol.steps .code { margin-top: 12px; }
+
+/* Menu paths and keys */
+.prose .path { font-weight: 600; }
+.prose .path__c { color: var(--muted); font-weight: 500; padding-inline: 0.32em; }
+.prose kbd { display: inline-block; font-family: var(--font-mono); font-size: 0.82em; font-weight: 500; line-height: 1.5; padding: 0 6px; min-width: 1.9em; text-align: center; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--surface); color: var(--p-ink); white-space: nowrap; }
+
+/* Tables: a header band, comfortable rows, the first column names the thing. */
+.table-wrap { background: var(--surface); overflow: hidden; }
+.prose th { border-bottom: 1px solid var(--line); background: var(--soft); white-space: nowrap; }
+.prose tbody tr:first-child td { border-top: 0; }
+.prose td { padding: 13px 16px; }
+@media (max-width: 640px) { .table-wrap { background: none; overflow: visible; } .prose td:first-child { font-size: 16px; padding-bottom: 6px; } .prose td + td { padding-top: 6px; } .prose tbody tr:first-child td { border-top: 0; } }
+
+/* Figures: one frame for every capture. The image keeps its intrinsic size (never upscaled, never wider than
+   the column); the caption is part of the figure; clicking the image opens the 2x file in a dialog. */
+.prose .shot { margin: 26px 0 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; max-width: 100%; }
+.prose .shot__zoom { position: relative; display: block; width: 100%; padding: 20px; background: var(--soft); border: 0; border-bottom: 1px solid var(--line); cursor: zoom-in; text-align: center; }
+.prose .shot img, .prose .shot.tall img { display: block; width: auto; max-width: 100%; height: auto; margin-inline: auto; border: 0; border-radius: 10px; background: none; }
+.prose .shot__hint { position: absolute; right: 12px; bottom: 12px; font-family: var(--font-mono); font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 5px; background: var(--n-bg); color: var(--n-ink); opacity: 0; transition: opacity 0.12s; }
+.prose .shot__zoom:hover .shot__hint, .prose .shot__zoom:focus-visible .shot__hint { opacity: 1; }
+.prose .shot__zoom:focus-visible { outline-offset: -3px; }
+.prose .shot figcaption, .prose .shot.tall figcaption { margin: 0; padding: 11px 16px 12px; font-size: 14px; line-height: 1.55; color: var(--p-ink-2); text-align: left; }
+.prose ol.steps .shot__zoom { padding: 14px; }
+@media (max-width: 480px) { .prose .shot__zoom { padding: 12px; } }
+@media (hover: none) { .prose .shot__hint { opacity: 1; } }
+
+.lightbox { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; margin: 0; display: none; place-items: center; overflow: hidden; }
+.lightbox[open] { display: grid; }
+.lightbox::backdrop { background: rgb(20 22 28 / 0.82); }
+.lightbox__fig { margin: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; max-width: min(96vw, 1100px); max-height: 94vh; background: var(--p-bg-2); color: var(--p-ink); border-radius: 12px; overflow: hidden; }
+.lightbox__fig img { display: block; width: auto; height: auto; max-width: 100%; max-height: calc(94vh - 64px); margin-inline: auto; object-fit: contain; background: var(--n-bg); }
+.lightbox__fig figcaption { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 10px 12px 10px 18px; font-size: 14px; line-height: 1.5; border-top: 1px solid var(--p-line); }
+.lightbox__x { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding-inline: 12px; border: 1px solid var(--p-line); border-radius: 8px; background: var(--p-bg); color: var(--p-ink); font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; }
+.lightbox__x:hover { border-color: var(--p-ink); }
+.lightbox :focus-visible { outline-color: var(--p-ink); }
+
+/* Tables restack by the width of the article, not the window: the three-column layout squeezes the article at 1100 to 1280. */
+.docs-article .prose { container-type: inline-size; container-name: prose; }
+@container prose (max-width: 600px) {
+  .table-wrap { border: 0; overflow: visible; background: none; }
+  .prose table, .prose tbody, .prose tr, .prose td { display: block; width: 100%; }
+  .prose thead { display: none; }
+  .prose tr { border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; background: var(--surface); }
+  .prose tr:last-child { margin-bottom: 0; }
+  .prose td { border: 0; padding: 4px 0; white-space: normal !important; }
+  .prose td::before { content: attr(data-label); display: block; font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 500; }
+  .prose td:first-child { font-size: 16px; padding-bottom: 6px; }
+  .prose td:first-child::before { display: none; }
+}
+.prose td:empty { display: none; }
+@container prose (min-width: 601px) { .prose td:empty { display: table-cell; } }
+.doc-lede a { color: var(--p-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.doc-lede a:hover { text-decoration-thickness: 2px; }

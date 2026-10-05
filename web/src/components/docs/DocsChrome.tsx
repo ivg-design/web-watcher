@@ -7,6 +7,7 @@ import { ArrowUpRight, Menu, Search, X } from "lucide-react";
 import { asset, REPO_URL } from "@/lib/config";
 import type { SearchItem } from "@/lib/docs";
 import DocsSearch from "./DocsSearch";
+import Lightbox from "./Lightbox";
 
 export interface NavSection { title: string; docs: { slug: string; title: string }[] }
 
@@ -139,6 +140,7 @@ export default function DocsChrome({
       </div>
 
       {searchOpen && <DocsSearch index={index} onClose={() => setSearchOpen(false)} />}
+      <Lightbox />
     </>
   );
 }

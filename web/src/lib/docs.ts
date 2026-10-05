@@ -31,7 +31,8 @@ export const DOC_SECTIONS: DocSection[] = [
     { slug: "herald-delivery", title: "Herald delivery", summary: "Persistent banners with action buttons through Herald." },
   ] },
   { title: "Reference", docs: [
-    { slug: "settings", title: "Settings", summary: "Every option and where it lives." },
+    { slug: "settings", title: "Settings", summary: "Every control in the Settings window, with its default and when to change it." },
+    { slug: "watcher-options", title: "Watcher options", summary: "Every field in the page watcher editor and the Gmail sender editor." },
     { slug: "data-and-privacy", title: "Data & privacy", summary: "What is stored, where, and what the app talks to." },
     { slug: "troubleshooting", title: "Troubleshooting", summary: "Error messages and their fixes." },
     { slug: "building-from-source", title: "Building from source", summary: "swift build, Xcode, and optional Google sign-in." },

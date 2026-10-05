@@ -21,6 +21,11 @@ export function decodeEntities(s: string): string {
   });
 }
 
+/** The label shown above a fenced block, by language. A fence may override it: ```json watchers.json */
+const CODE_LABELS: Record<string, string> = {
+  bash: "Terminal", sh: "Terminal", json: "JSON", css: "CSS selector", xpath: "XPath", text: "Text", url: "URL", template: "Template",
+};
+
 const sizeCache = new Map<string, [number, number] | null>();
 
 /** Reads width/height from the PNG IHDR of public/<href>; null when missing or not a PNG. */
@@ -73,23 +78,63 @@ export function renderMarkdown(src: string, basePath = ""): { html: string; head
         const rel = external ? ' target="_blank" rel="noopener noreferrer"' : "";
         return `<a href="${escapeHtml(fix(href))}"${rel}>${this.parser.parseInline(tokens)}</a>`;
       },
-      image({ href, text: rawText }: Tokens.Image) {
+      image({ href, title, text: rawText }: Tokens.Image) {
+        // ![alt text](/shots/name.png "Caption: what to look at"). The 2x file is what the enlarge view shows.
         const local = href.startsWith("/") && !href.startsWith("//");
         const size = local ? pngSize(href) : null;
         const retina = local && /\.png$/.test(href) ? href.replace(/\.png$/, "@2x.png") : "";
-        const srcset = retina && hasFile(retina) ? ` srcset="${escapeHtml(fix(href))} 1x, ${escapeHtml(fix(retina))} 2x"` : "";
-        const text = decodeEntities(rawText);
+        const has2x = !!retina && hasFile(retina);
+        const srcset = has2x ? ` srcset="${escapeHtml(fix(href))} 1x, ${escapeHtml(fix(retina))} 2x"` : "";
+        const alt = decodeEntities(rawText);
+        const caption = title ? (new Marked({ gfm: true }).parseInline(title) as string) : escapeHtml(alt);
         const dims = size ? ` width="${size[0]}" height="${size[1]}"` : "";
         const tall = size && size[1] > size[0] * 1.2 ? " tall" : "";
-        return `<figure class="shot${tall}"><img src="${escapeHtml(fix(href))}" alt="${escapeHtml(text)}"${srcset}${dims} loading="lazy" decoding="async" /><figcaption>${escapeHtml(text)}</figcaption></figure>`;
+        const full = escapeHtml(fix(has2x ? retina : href));
+        const img = `<img src="${escapeHtml(fix(href))}" alt="${escapeHtml(alt)}"${srcset}${dims} loading="lazy" decoding="async" />`;
+        return `<figure class="shot${tall}"><button type="button" class="shot__zoom" data-full="${full}"${dims ? ` data-w="${size![0]}" data-h="${size![1]}"` : ""} aria-label="Enlarge image: ${escapeHtml(alt)}">${img}<span class="shot__hint" aria-hidden="true">Enlarge</span></button><figcaption>${caption}</figcaption></figure>`;
+      },
+      strong({ tokens }: Tokens.Strong) {
+        const inner = this.parser.parseInline(tokens);
+        // **Settings > Notifications > Delivery** is a menu path: each segment is a label, joined by chevrons.
+        if (/ (?:>|&gt;) /.test(inner) && !/<code/.test(inner)) {
+          const segs = inner.split(/ (?:>|&gt;) /).map((x) => `<span class="path__s">${x}</span>`);
+          return `<strong class="path">${segs.join('<span class="path__c" aria-hidden="true">\u203a</span><span class="sr-only"> then </span>')}</strong>`;
+        }
+        return `<strong>${inner}</strong>`;
+      },
+      paragraph({ tokens }: Tokens.Paragraph) {
+        const first = tokens[0];
+        // "**You see:** ..." after a step is the visible outcome of that step.
+        if (first?.type === "strong" && /^You see:?$/.test(first.text)) {
+          return `<p class="see"><span class="see__k">You see</span><span class="see__v">${this.parser.parseInline(tokens.slice(1)).trim()}</span></p>\n`;
+        }
+        // Inside a list item marked hands over one pre-rendered text token.
+        if (tokens.length === 1 && first?.type === "text") {
+          const html = this.parser.parseInline(tokens).trim();
+          const see = /^<strong>You see:?<\/strong>\s*/.exec(html);
+          if (see) return `<p class="see"><span class="see__k">You see</span><span class="see__v">${html.slice(see[0].length)}</span></p>\n`;
+          if (/^<figure[\s\S]*<\/figure>$/.test(html)) return html + "\n";
+        }
+        // A figure stands on its own: never inside a paragraph.
+        if (tokens.length === 1 && first.type === "image") return this.parser.parseInline(tokens) + "\n";
+        return `<p>${this.parser.parseInline(tokens)}</p>\n`;
       },
       blockquote({ tokens }: Tokens.Blockquote) {
-        return `<aside class="callout">${this.parser.parse(tokens)}</aside>\n`;
+        // One convention: "> **Note.** ...", "> **Tip.** ..." or "> **Warning.** ...".
+        let body = this.parser.parse(tokens);
+        const m = /^<p><strong>(Note|Tip|Warning)[.:]?<\/strong>\s*/.exec(body);
+        const kind = m ? m[1].toLowerCase() : "note";
+        if (m) body = "<p>" + body.slice(m[0].length);
+        const label = m ? m[1] : "Note";
+        return `<aside class="callout" data-kind="${kind}" role="note"><p class="callout__k">${label}</p><div class="callout__b">${body}</div></aside>\n`;
       },
       code({ text, lang }: Tokens.Code) {
+        const [id = "", ...rest] = (lang ?? "").trim().split(/\s+/);
         const lines = text.replace(/\n$/, "").split("\n").map((l) => `<span class="ln">${escapeHtml(l) || " "}</span>`).join("");
-        const cls = lang ? ` class="language-${escapeHtml(lang.split(/\s/)[0])}"` : "";
-        return `<pre><code${cls}>${lines}</code></pre>\n`;
+        const cls = id ? ` class="language-${escapeHtml(id)}"` : "";
+        const label = rest.join(" ") || CODE_LABELS[id] || id;
+        const cap = label ? `<figcaption class="code__k">${escapeHtml(label)}</figcaption>` : "";
+        return `<figure class="code"${id ? ` data-lang="${escapeHtml(id)}"` : ""}>${cap}<pre><code${cls}>${lines}</code></pre></figure>\n`;
       },
       table(token: Tokens.Table) {
         const head = token.header.map((c) => `<th>${this.parser.parseInline(c.tokens)}</th>`).join("");
@@ -101,7 +146,8 @@ export function renderMarkdown(src: string, basePath = ""): { html: string; head
       },
     },
   });
-  return { html: nowrapHtml(marked.parse(src) as string), headings };
+  const html = (marked.parse(src) as string).replace(/<ol( start="\d+")?>/g, '<ol class="steps"$1>');
+  return { html: nowrapHtml(html), headings };
 }
 
 /** Renders a single line of trusted Markdown (code spans, bold, links) without a wrapping paragraph. */
