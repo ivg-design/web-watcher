@@ -1,5 +1,5 @@
 // swift-tools-version: 5.9
-// WebWatcher v1.10.10 (Build 35)
+// WebWatcher v1.10.11 (Build 36)
 // https://github.com/ivg-design/web-watcher
 
 import PackageDescription

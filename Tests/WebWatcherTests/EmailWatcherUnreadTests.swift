@@ -95,7 +95,10 @@ final class EmailWatcherUnreadTests: XCTestCase {
     func testOpenURLRules() {
         var w = EmailWatcher(accountId: UUID(), senders: ["a@b.com", "@c.com"])
         w.lastMatchThreadId = "th"
-        XCTAssertEqual(w.openURL(accountIndex: 2)?.absoluteString, "https://mail.google.com/mail/u/2/#inbox")
+        // Nothing unread: still the sender-filtered list (all their mail), never the bare inbox.
+        XCTAssertEqual(w.openURL(accountIndex: 2), SenderMatcher.gmailSearchURL(accountIndex: 2, senders: w.senders, unreadOnly: false))
+        XCTAssertTrue(w.openURL(accountIndex: 2)?.absoluteString.contains("#search/from") == true)
+        XCTAssertFalse(w.openURL(accountIndex: 2)?.absoluteString.contains("unread") == true)
         // One unread opens the same filtered search as several: never a single thread, which may be the wrong one.
         w.unreadCount = 1
         XCTAssertEqual(w.openURL(accountIndex: 2), SenderMatcher.gmailSearchURL(accountIndex: 2, senders: w.senders))

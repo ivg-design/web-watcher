@@ -109,11 +109,12 @@ struct EmailWatcher: Identifiable, Codable, Equatable {
         return lastMatchDate == nil ? "No email yet" : "No unread"
     }
 
-    /// Any unread → Gmail's search for the unread inbox mail from these senders, which is exactly what the count
-    /// counts, so what opens always matches the number. (Opening the "last match" thread instead could land on a
-    /// different, already read conversation.) Nothing unread → the inbox.
+    /// Always Gmail's search for mail from these senders, never a single thread and never the bare inbox. With unread
+    /// mail it is the unread inbox mail, which is exactly what the count counts; with none it is all their mail,
+    /// newest first. (Opening the "last match" thread could land on a different, already read conversation.)
+    /// A watcher with no senders has nothing to filter by and opens the inbox.
     func openURL(accountIndex: Int) -> URL? {
-        if unreadCount >= 1, let search = Self.searchURL(accountIndex: accountIndex, senders: senders) {
+        if let search = SenderMatcher.gmailSearchURL(accountIndex: accountIndex, senders: senders, unreadOnly: unreadCount >= 1) {
             return search
         }
         return URL(string: "https://mail.google.com/mail/u/\(accountIndex)/#inbox")
@@ -241,10 +242,11 @@ enum SenderMatcher {
     /// Gmail web search URL for the unread mail from `senders`:
     /// `https://mail.google.com/mail/u/N/#search/<encoded "from:(a OR b) is:unread in:inbox">`.
     /// Domain patterns use the same bare "from:b.com" token as `gmailQuery`.
-    static func gmailSearchURL(accountIndex: Int, senders: [String]) -> URL? {
+    /// With `unreadOnly` false it is all mail from the senders (`from:(a OR b)`), for when nothing is unread.
+    static func gmailSearchURL(accountIndex: Int, senders: [String], unreadOnly: Bool = true) -> URL? {
         let terms = senders.map { $0.hasPrefix("@") ? String($0.dropFirst()) : $0 }
         guard !terms.isEmpty else { return nil }
-        let query = "from:(\(terms.joined(separator: " OR "))) is:unread in:inbox"
+        let query = "from:(\(terms.joined(separator: " OR ")))" + (unreadOnly ? " is:unread in:inbox" : "")
         var allowed = CharacterSet.alphanumerics
         allowed.insert(charactersIn: "-._~")
         guard let encoded = query.addingPercentEncoding(withAllowedCharacters: allowed) else { return nil }

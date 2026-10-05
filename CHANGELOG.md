@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.11] (Build 36) - 2026-10-05
+
+### Changed
+
+- The email watcher's link always opens Gmail filtered to the watched senders: their unread inbox mail when there is some, otherwise all their mail. It no longer opens the bare inbox.
+
 ## [1.10.10] (Build 35) - 2026-10-05
 
 ### Changed

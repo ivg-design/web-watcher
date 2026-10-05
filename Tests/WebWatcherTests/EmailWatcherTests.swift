@@ -105,9 +105,11 @@ final class EmailWatcherTests: XCTestCase {
         XCTAssertFalse(w.openURL(accountIndex: 0)?.absoluteString.contains("t1") == true)
     }
 
-    func testOpenURLFallsBackToInboxWithoutAMatch() {
+    func testOpenURLFallsBackToInboxOnlyWithoutSenders() {
         let w = EmailWatcher(accountId: UUID())
         XCTAssertEqual(w.openURL(accountIndex: 1)?.absoluteString, "https://mail.google.com/mail/u/1/#inbox")
+        let withSender = EmailWatcher(accountId: UUID(), senders: ["a@b.com"])
+        XCTAssertEqual(withSender.openURL(accountIndex: 1)?.absoluteString, "https://mail.google.com/mail/u/1/#search/from%3A%28a%40b.com%29")
     }
 
     // MARK: - EmailWatcherStore
