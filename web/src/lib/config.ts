@@ -1,7 +1,7 @@
 export const REPO = "ivg-design/web-watcher";
 export const REPO_URL = `https://github.com/${REPO}`;
 export const RELEASES_URL = `${REPO_URL}/releases`;
-export const HERALD_URL = "https://github.com/ivg-design/herald";
+export const HERALD_URL = "https://forge.mograph.life/apps/herald/";
 export const DEMO_VIDEO_URL =
   "https://github.com/user-attachments/assets/8adbf24e-0b20-4d1a-8bc1-d2593f2a02f7";
 /** The demo recorded from WebWatcher 1.10.9's staged demo mode (scripts/record-demo.sh): H.264 + VP9, 1440 px, 60 fps; idle holds trimmed to about a second each, 15 s. */
@@ -29,8 +29,8 @@ export const FORGE_LINKS = [
   { label: "Herald", href: HERALD_URL },
   { label: "RAV", href: "https://forge.mograph.life/apps/rav/" },
   { label: "LERP", href: "https://forge.mograph.life/apps/lerp/" },
-  { label: "fNav+", href: "https://forge.mograph.life/apps/fnav-plus/" },
-  { label: "Services", href: "https://contra.com/ivg_design" },
+  { label: "fNav+", href: "https://forge.mograph.life/apps/fnav/" },
+  { label: "Services", href: "https://services.mograph.life/" },
 ];
 
 /** Prefix applied to root-relative links and public files only when served under forge.mograph.life/apps/webwatcher. */
