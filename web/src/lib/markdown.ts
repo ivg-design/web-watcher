@@ -193,14 +193,15 @@ export function renderMarkdown(src: string, basePath = ""): { html: string; head
 }
 
 /** Renders a single line of trusted Markdown (code spans, bold, links) without a wrapping paragraph. */
-export function renderInline(src: string): string {
+export function renderInline(src: string, basePath = ""): string {
   const marked = new Marked({ gfm: true });
   marked.use({
     renderer: {
       link({ href, tokens }: Tokens.Link) {
         const external = /^https?:/.test(href);
         const rel = external ? ' target="_blank" rel="noopener noreferrer"' : "";
-        return `<a href="${escapeHtml(href)}"${rel}>${this.parser.parseInline(tokens)}</a>`;
+        const target = href.startsWith("/") && !href.startsWith("//") ? basePath + href : href;
+        return `<a href="${escapeHtml(target)}"${rel}>${this.parser.parseInline(tokens)}</a>`;
       },
     },
   });

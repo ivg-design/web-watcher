@@ -58,7 +58,7 @@ export function getDoc(slug: string, basePath = BASE_PATH): RenderedDoc | null {
   const src = readFileSync(join(process.cwd(), "content", "docs", `${slug}.md`), "utf8");
   // A leading plain paragraph is the page lede; the rest is the body.
   const m = src.match(/^\s*([^#>\-*|`\d!\s][^\n]*(?:\n[^\n#>\-*|`!][^\n]*)*)\n\n([\s\S]*)$/);
-  const lede = m ? renderInline(m[1]) : "";
+  const lede = m ? renderInline(m[1], basePath) : "";
   const { html, headings } = renderMarkdown(m ? m[2] : src, basePath);
   return { meta: ALL_DOCS[i], html, lede, headings, prev: ALL_DOCS[i - 1] ?? null, next: ALL_DOCS[i + 1] ?? null };
 }
